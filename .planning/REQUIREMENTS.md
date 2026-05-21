@@ -100,54 +100,63 @@ Reconocidos pero diferidos; no en el roadmap actual.
 
 ## Traceability
 
-Se rellena durante la creación del roadmap.
+> Nota: las etiquetas (FASE 2-5) del spec CLAUDE.md mapean a las fases del roadmap así:
+> FASE 2 → Phase 1 (CV), FASE 3 → Phase 2 (Norm+Dedup), FASE 4 → Phase 3 (Scoring),
+> FASE 5 → Phase 4 (API+Persistencia) + Phase 5 (Observabilidad+Docs).
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CV-01 | TBD | Pending |
-| CV-02 | TBD | Pending |
-| CV-03 | TBD | Pending |
-| NORM-01 | TBD | Pending |
-| NORM-02 | TBD | Pending |
-| NORM-03 | TBD | Pending |
-| NORM-04 | TBD | Pending |
-| DEDUP-01 | TBD | Pending |
-| DEDUP-02 | TBD | Pending |
-| DEDUP-03 | TBD | Pending |
-| SCORE-01 | TBD | Pending |
-| SCORE-02 | TBD | Pending |
-| SCORE-03 | TBD | Pending |
-| SCORE-04 | TBD | Pending |
-| SCORE-05 | TBD | Pending |
-| SCORE-06 | TBD | Pending |
-| SCORE-07 | TBD | Pending |
-| SCORE-08 | TBD | Pending |
-| API-01 | TBD | Pending |
-| API-02 | TBD | Pending |
-| API-03 | TBD | Pending |
-| API-04 | TBD | Pending |
-| API-05 | TBD | Pending |
-| API-06 | TBD | Pending |
-| API-07 | TBD | Pending |
-| STORE-01 | TBD | Pending |
-| STORE-02 | TBD | Pending |
-| STORE-03 | TBD | Pending |
-| OBS-01 | TBD | Pending |
-| OBS-02 | TBD | Pending |
-| OBS-03 | TBD | Pending |
-| DOC-01 | TBD | Pending |
-| DOC-02 | TBD | Pending |
-| DOC-03 | TBD | Pending |
-| QA-01 | TBD | Pending |
-| QA-02 | TBD | Pending |
-| QA-03 | TBD | Pending |
-| QA-04 | TBD | Pending |
+| CV-01 | Phase 1 | Pending |
+| CV-02 | Phase 1 | Pending |
+| CV-03 | Phase 1 | Pending |
+| QA-01 | Phase 1 | Pending |
+| NORM-01 | Phase 2 | Pending |
+| NORM-02 | Phase 2 | Pending |
+| NORM-03 | Phase 2 | Pending |
+| NORM-04 | Phase 2 | Pending |
+| DEDUP-01 | Phase 2 | Pending |
+| DEDUP-02 | Phase 2 | Pending |
+| DEDUP-03 | Phase 2 | Pending |
+| QA-02 | Phase 2 | Pending |
+| QA-03 | Phase 2 | Pending |
+| SCORE-01 | Phase 3 | Pending |
+| SCORE-02 | Phase 3 | Pending |
+| SCORE-03 | Phase 3 | Pending |
+| SCORE-04 | Phase 3 | Pending |
+| SCORE-05 | Phase 3 | Pending |
+| SCORE-06 | Phase 3 | Pending |
+| SCORE-07 | Phase 3 | Pending |
+| SCORE-08 | Phase 3 | Pending |
+| QA-04 | Phase 3 | Pending |
+| API-01 | Phase 4 | Pending |
+| API-02 | Phase 4 | Pending |
+| API-03 | Phase 4 | Pending |
+| API-04 | Phase 4 | Pending |
+| API-05 | Phase 4 | Pending |
+| API-06 | Phase 4 | Pending |
+| API-07 | Phase 4 | Pending |
+| STORE-01 | Phase 4 | Pending |
+| STORE-02 | Phase 4 | Pending |
+| STORE-03 | Phase 4 | Pending |
+| OBS-01 | Phase 5 | Pending |
+| OBS-02 | Phase 5 | Pending |
+| OBS-03 | Phase 5 | Pending |
+| DOC-01 | Phase 5 | Pending |
+| DOC-02 | Phase 5 | Pending |
+| DOC-03 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 37 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 37 ⚠️
+- v1 requirements: 38 total (el doc inicial decía "37"; el conteo real de IDs únicos es 38)
+- Mapped to phases: 38 ✓
+- Unmapped: 0 ✓
+
+**Por fase:**
+- Phase 1 (Parseo de CV): 4 — CV-01, CV-02, CV-03, QA-01
+- Phase 2 (Normalización y Deduplicación): 9 — NORM-01..04, DEDUP-01..03, QA-02, QA-03
+- Phase 3 (Heurística de Scoring): 9 — SCORE-01..08, QA-04
+- Phase 4 (API y Persistencia): 10 — API-01..07, STORE-01..03
+- Phase 5 (Observabilidad, Robustez y Docs): 6 — OBS-01..03, DOC-01..03
 
 ---
 *Requirements defined: 2026-05-22*
-*Last updated: 2026-05-22 after initial definition*
+*Last updated: 2026-05-22 after roadmap creation (traceability mapped)*

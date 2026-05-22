@@ -37,7 +37,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Volver a pedir el parseo del mismo CV usa la versión cacheada y NO vuelve a llamar al LLM; solo se re-parsea si el PDF cambia
   3. El parseo usa Pydantic + Instructor y produce una salida estructurada válida (no texto libre) que valida contra el schema `CVProfile`
   4. Existe un test que parsea un PDF de ejemplo (fixture) con el LLM mockeado y verifica los campos clave del `CVProfile`
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 01-01-PLAN.md — Wave 0 setup: deps via uv, pytest config, tests/ tree + conftest fixtures (PDF builder, mocked instructor client)
+- [ ] 01-02-PLAN.md — extractor.py (pymupdf bytes→text) + cache.py (sha256 JSON CVProfile cache, CV-03) + tests
+- [ ] 01-03-PLAN.md — llm_client.py (instructor.from_anthropic, response_model=CVProfile, CV-01/CV-02) + mocked test
+- [ ] 01-04-PLAN.md — parser.py orchestrator + app.cv export + QA-01 end-to-end test (mocked LLM, cache short-circuit)
 
 ### Phase 2: Normalización y Deduplicación
 **Goal**: El servicio convierte listas de ofertas crudas heterogéneas (de cualquier fuente) en `Job`s normalizados con id estable, y elimina duplicados tanto exactos como semánticos sin perder información, dejando un conjunto limpio de ofertas únicas.
@@ -92,7 +97,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Parseo de CV | 0/TBD | Not started | - |
+| 1. Parseo de CV | 0/4 | Planned | - |
 | 2. Normalización y Deduplicación | 0/TBD | Not started | - |
 | 3. Heurística de Scoring (núcleo) | 0/TBD | Not started | - |
 | 4. API y Persistencia | 0/TBD | Not started | - |

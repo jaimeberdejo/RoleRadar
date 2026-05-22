@@ -41,7 +41,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Wave 0 setup: deps via uv, pytest config, tests/ tree + conftest fixtures (PDF builder, mocked instructor client)
 - [x] 01-02-PLAN.md — extractor.py (pymupdf bytes→text) + cache.py (sha256 JSON CVProfile cache, CV-03) + tests
-- [ ] 01-03-PLAN.md — llm_client.py (instructor.from_anthropic, response_model=CVProfile, CV-01/CV-02) + mocked test
+- [x] 01-03-PLAN.md — llm_client.py (instructor.from_anthropic, response_model=CVProfile, CV-01/CV-02) + mocked test
 - [ ] 01-04-PLAN.md — parser.py orchestrator + app.cv export + QA-01 end-to-end test (mocked LLM, cache short-circuit)
 
 ### Phase 2: Normalización y Deduplicación
@@ -97,7 +97,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Parseo de CV | 2/4 | In Progress|  |
+| 1. Parseo de CV | 3/4 | In Progress|  |
 | 2. Normalización y Deduplicación | 0/TBD | Not started | - |
 | 3. Heurística de Scoring (núcleo) | 0/TBD | Not started | - |
 | 4. API y Persistencia | 0/TBD | Not started | - |

@@ -54,7 +54,12 @@ Plans:
   3. El servicio detecta y colapsa duplicados exactos (mismo hash) y duplicados semánticos (embeddings BGE-M3 locales sobre título + empresa + primeras N palabras, similitud coseno sobre umbral configurable)
   4. Al deduplicar conserva la oferta con la descripción más completa y guarda las URLs alternativas de las descartadas
   5. Existen tests de normalización por fuente y de dedup (duplicados obvios y casos semánticos) con embeddings mockeados
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 02-01-PLAN.md — Wave 0 setup: uv add sentence-transformers + tests/dedup/ + fixtures dedup en conftest (FakeEmbedder, payloads)
+- [ ] 02-02-PLAN.md — Normalización: normalize.py (NFD id sha256) + mappers.py (registry arbeitnow/generic AJUSTABLE) + normalize_jobs facade batch-resiliente + tests (NORM-01..04, QA-02)
+- [ ] 02-03-PLAN.md — Dedup helpers: embedder.py (Embedder Protocol + BgeM3Embedder lazy + FakeEmbedder) + exact.py + semantic.py (greedy coseno numpy) + merger.py + tests unitarios (DEDUP-01..03)
+- [ ] 02-04-PLAN.md — Integración: deduplicate() facade ensamblado + test end-to-end con FakeEmbedder (QA-03)
 
 ### Phase 3: Heurística de Scoring (núcleo)
 **Goal**: El servicio puntúa cada oferta única contra el perfil REAL de Jaime con honestidad, combinando lógica determinista y juicio del LLM, de modo que el ranking de puestos pese de forma graduada, los deal-breakers filtren en duro y el resultado sea fiable y explicable.
@@ -98,7 +103,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Parseo de CV | 4/4 | Complete   | 2026-05-22 |
-| 2. Normalización y Deduplicación | 0/TBD | Not started | - |
+| 2. Normalización y Deduplicación | 0/4 | Planned | - |
 | 3. Heurística de Scoring (núcleo) | 0/TBD | Not started | - |
 | 4. API y Persistencia | 0/TBD | Not started | - |
 | 5. Observabilidad, Robustez y Docs n8n | 0/TBD | Not started | - |

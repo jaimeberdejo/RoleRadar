@@ -21,8 +21,13 @@ from app.models.schemas import UserProfile
 
 logger = logging.getLogger(__name__)
 
+# Raíz del proyecto: app/config/loader.py → app/config → app → project root.
+# Resuelto en tiempo de import (relativo a __file__) para que el default de
+# load_user_profile sea robusto independientemente del CWD (WR-05).
+_PROJECT_ROOT = Path(__file__).parent.parent.parent
 
-def load_user_profile(path: str = "data/profile.yaml") -> UserProfile:
+
+def load_user_profile(path: str | Path | None = None) -> UserProfile:
     """Carga y valida el UserProfile desde un fichero YAML.
 
     Usa yaml.safe_load (nunca yaml.load — seguridad contra ejecución de código).
@@ -31,7 +36,9 @@ def load_user_profile(path: str = "data/profile.yaml") -> UserProfile:
 
     Args:
         path: Ruta al fichero YAML del perfil de usuario.
-              Por defecto: "data/profile.yaml".
+              Por defecto: None → resuelve a <project_root>/data/profile.yaml
+              usando __file__ (robusto ante cualquier CWD — WR-05).
+              Se puede pasar str o Path para sobreescribir (ej. tests).
 
     Returns:
         UserProfile validado con todos los campos del perfil.
@@ -42,11 +49,12 @@ def load_user_profile(path: str = "data/profile.yaml") -> UserProfile:
                     (incluyendo pesos que no suman 1.0). El mensaje incluye el detalle
                     del error de validación de Pydantic.
     """
+    resolved = Path(path) if path is not None else _PROJECT_ROOT / "data" / "profile.yaml"
     try:
-        with open(Path(path)) as f:
+        with open(resolved) as f:
             data = yaml.safe_load(f)
     except FileNotFoundError:
-        raise FileNotFoundError(f"No se encontró profile.yaml en: {path}")
+        raise FileNotFoundError(f"No se encontró profile.yaml en: {resolved}")
     try:
         profile = UserProfile.model_validate(data)
     except ValidationError as e:

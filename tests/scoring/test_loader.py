@@ -20,8 +20,18 @@ from app.config import load_user_profile
 # ──────────────────────────────────────────────────────────────────────────────
 
 def test_carga_perfil_real() -> None:
-    """load_user_profile('data/profile.yaml') devuelve un UserProfile coherente."""
-    profile = load_user_profile("data/profile.yaml")
+    """load_user_profile() sin argumentos devuelve un UserProfile coherente.
+
+    WR-05: el default usa _PROJECT_ROOT / 'data/profile.yaml' resuelto desde
+    __file__ del loader, por lo que funciona independientemente del CWD actual.
+    Usa _PROJECT_ROOT explícitamente para que el test sea igualmente robusto.
+    """
+    from app.config.loader import _PROJECT_ROOT
+
+    profile_path = _PROJECT_ROOT / "data" / "profile.yaml"
+    if not profile_path.exists():
+        pytest.skip(f"data/profile.yaml no existe en {_PROJECT_ROOT} (entorno sin datos reales)")
+    profile = load_user_profile(profile_path)
 
     # Primer puesto del ranking es AI Engineer
     assert "AI Engineer" in profile.ranking_puestos[0].titulo

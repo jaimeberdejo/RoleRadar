@@ -15,7 +15,20 @@ from unittest.mock import MagicMock
 import pymupdf
 import pytest
 
-from app.models.schemas import CVProfile, Experiencia
+from app.models.schemas import (
+    CVProfile,
+    DatosPersonales,
+    Experiencia,
+    Job,
+    LLMJobAssessment,
+    ModalidadRemoto,
+    PesosScoring,
+    PreferenciaRemoto,
+    PreferenciasUbicacion,
+    PuestoRanking,
+    RemoteJob,
+    UserProfile,
+)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -195,3 +208,203 @@ def sample_malformed_payload() -> dict:
         "company_name": 12345,
         "title": None,
     }
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Fixtures de scoring (Phase 3 — Olas 1 y 2)
+# Consumidas por tests/scoring/test_location.py y tests/scoring/test_scorer.py
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Constante módulo: LLMJobAssessment controlado y honesto que el mock del LLM devuelve.
+# Representa una oferta de AI Engineer con buen match en skills y seniority razonable.
+EXPECTED_ASSESSMENT = LLMJobAssessment(
+    razonamiento="El candidato tiene Python y LLMs; la oferta pide exactamente eso.",
+    puesto_detectado="Ingeniero de IA / AI Engineer",
+    rango_puesto=1,
+    encaje_skills=85,
+    encaje_seniority=70,
+    matched_skills=["Python", "LLMs"],
+    missing_requirements=[],
+    reasons_for=["Match en skills principales"],
+    reasons_against=["Requiere Kubernetes (no en CV)"],
+    deal_breaker_hit_texto=False,
+    deal_breaker_cual_texto=None,
+)
+
+
+def make_scoring_client(assessment: LLMJobAssessment) -> MagicMock:
+    """Devuelve un MagicMock que imita la superficie instructor para scoring.
+
+    Mismo patrón que mock_llm_client (líneas 67-77): .messages.create() devuelve
+    el assessment controlado de forma determinista.
+
+    Args:
+        assessment: LLMJobAssessment que el mock debe devolver.
+
+    Returns:
+        MagicMock con .messages.create.return_value = assessment.
+    """
+    mock_client = MagicMock()
+    mock_client.messages.create.return_value = assessment
+    return mock_client
+
+
+@pytest.fixture
+def mock_scoring_client() -> MagicMock:
+    """Fixture (function scope): cliente LLM mockeado que devuelve EXPECTED_ASSESSMENT.
+
+    Consumido por tests/scoring/test_scorer.py y test_llm.py para aislar
+    la capa LLM de los tests de la heurística determinista.
+    """
+    return make_scoring_client(EXPECTED_ASSESSMENT)
+
+
+@pytest.fixture
+def sample_cv_profile() -> CVProfile:
+    """CVProfile mínimo de ejemplo para tests de scoring.
+
+    Skills: Python, LLMs, FastAPI — alineadas con EXPECTED_ASSESSMENT.matched_skills.
+    2 años de experiencia total como AI Engineer en Acme Corp.
+    Consumido por tests/scoring/test_scorer.py y test_llm.py.
+    """
+    return CVProfile(
+        experiencia=[
+            Experiencia(
+                empresa="Acme Corp",
+                rol="AI Engineer",
+                duracion="2 años",
+                tecnologias=["Python", "LLMs"],
+            )
+        ],
+        skills_tecnicas=["Python", "LLMs", "FastAPI"],
+        anios_experiencia_total=2.0,
+        dominios=["IA"],
+    )
+
+
+@pytest.fixture
+def sample_user_profile() -> UserProfile:
+    """UserProfile coherente con data/profile.yaml para tests de scoring.
+
+    Configuración real de Jaime:
+    - Ciudades preferidas: Barcelona; no dispuesto a reubicarse.
+    - Modalidad ideal: remote; acepta onsite solo en Barcelona.
+    - Ranking: 4 puestos reales con sinónimos.
+    - Deal-breakers: exige 5+ años, presencial fuera de Barcelona.
+    - Pesos por defecto (suman 1.0).
+
+    Consumido por tests/scoring/test_location.py, test_scorer.py y test_loader.py.
+    """
+    return UserProfile(
+        datos_personales=DatosPersonales(
+            nombre="Jaime Berdejo",
+            email="jaimeberdejo1902@gmail.com",
+            ubicacion_actual="Barcelona, España",
+        ),
+        preferencias_ubicacion=PreferenciasUbicacion(
+            ciudades_preferidas=["Barcelona"],
+            pais="España",
+            dispuesto_a_reubicarse=False,
+        ),
+        preferencia_remoto=PreferenciaRemoto(
+            modalidad_ideal=ModalidadRemoto.remote,
+            acepta_onsite_solo_en=["Barcelona"],
+        ),
+        ranking_puestos=[
+            PuestoRanking(
+                titulo="Ingeniero de IA / AI Engineer",
+                sinonimos=["AI Engineer", "LLM Engineer", "GenAI Engineer"],
+            ),
+            PuestoRanking(
+                titulo="Ingeniero de ML / ML Engineer",
+                sinonimos=["ML Engineer", "Machine Learning Engineer"],
+            ),
+            PuestoRanking(
+                titulo="Ingeniero de datos / Data Engineer",
+                sinonimos=["Data Engineer"],
+            ),
+            PuestoRanking(
+                titulo="MLOps Engineer",
+                sinonimos=["MLOps", "ML Platform Engineer"],
+            ),
+        ],
+        deal_breakers=[
+            "exige 5+ años de experiencia",
+            "presencial fuera de Barcelona",
+        ],
+        pesos=PesosScoring(),
+    )
+
+
+@pytest.fixture
+def sample_job_remote() -> Job:
+    """Oferta remota de AI Engineer.
+
+    Cubre la rama: remote + modalidad_ideal=remote → encaje_ubicacion alto.
+    Consumido por tests/scoring/test_location.py y test_scorer.py.
+    """
+    return Job(
+        id="remote-ai-engineer-techcorp",
+        title="AI Engineer",
+        company="TechCorp",
+        location="Remote",
+        remote=RemoteJob.remote,
+        description="We are looking for an AI Engineer with Python and LLMs experience.",
+        source="test",
+    )
+
+
+@pytest.fixture
+def sample_job_onsite_barcelona() -> Job:
+    """Oferta presencial en Barcelona de AI Engineer.
+
+    Cubre la rama: onsite + ciudad en acepta_onsite_solo_en → encaje_ubicacion alto.
+    Consumido por tests/scoring/test_location.py y test_scorer.py.
+    """
+    return Job(
+        id="onsite-ai-engineer-barcelona",
+        title="AI Engineer",
+        company="BarcelonaStartup",
+        location="Barcelona, España",
+        remote=RemoteJob.onsite,
+        description="Buscamos AI Engineer para trabajar en nuestra oficina de Barcelona.",
+        source="test",
+    )
+
+
+@pytest.fixture
+def sample_job_onsite_madrid() -> Job:
+    """Oferta presencial en Madrid de AI Engineer.
+
+    Cubre la rama: onsite + ciudad NO en preferidas + dispuesto_a_reubicarse=False
+    → encaje_ubicacion muy bajo + potencial deal-breaker de ubicación.
+    Consumido por tests/scoring/test_location.py y test_scorer.py.
+    """
+    return Job(
+        id="onsite-ai-engineer-madrid",
+        title="AI Engineer",
+        company="MadridCorp",
+        location="Madrid, España",
+        remote=RemoteJob.onsite,
+        description="Buscamos AI Engineer para trabajar presencialmente en Madrid.",
+        source="test",
+    )
+
+
+@pytest.fixture
+def sample_job_fuera_ranking() -> Job:
+    """Oferta remota de Frontend Designer (fuera del ranking de puestos).
+
+    Cubre la rama: rango_puesto=None → encaje_puesto = suelo (no 0).
+    Consumido por tests/scoring/test_scorer.py para verificar que ofertas
+    fuera de ranking no se descartan automáticamente.
+    """
+    return Job(
+        id="remote-frontend-designer",
+        title="Frontend Designer",
+        company="DesignAgency",
+        location="Remote",
+        remote=RemoteJob.remote,
+        description="We are looking for a creative Frontend Designer with React skills.",
+        source="test",
+    )

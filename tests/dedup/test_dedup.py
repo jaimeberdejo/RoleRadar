@@ -265,6 +265,50 @@ def test_deduplicate_no_fusion_with_orthogonal_embedder(embedder_ortogonal):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# IN-02: cadena de dos niveles — URLs del nivel exacto sobreviven al nivel semántico
+# ──────────────────────────────────────────────────────────────────────────────
+
+def test_deduplicate_exact_urls_survive_semantic_merge(embedder_identico):
+    """URLs acumuladas en el nivel exacto deben sobrevivir al merge semántico (IN-02 / CR-01).
+
+    Escenario:
+    - j_a y j_b son duplicados exactos (misma empresa+título) → se fusionan en
+      nivel 1; j_b es canónica (desc más larga), j_a.url va a urls_alternativas.
+    - j_c tiene título distinto (diferente clave exacta) pero el embedder_identico
+      hace que su similitud con la canónica del nivel 1 sea 1.0 → se fusionan en
+      nivel 2. j_c tiene la descripción más larga → se convierte en la nueva canónica.
+    - La canónica final debe contener TANTO 'url_b_primary' (url de j_b) COMO
+      'url_a' (acumulada en el nivel exacto).
+    """
+    j_a = make_job(
+        "id-a", "AI Eng", "Corp",
+        "Short.",
+        "https://example.com/a",
+    )
+    j_b = make_job(
+        "id-b", "AI Eng", "Corp",
+        "Medium description here.",
+        "https://example.com/b",
+    )
+    j_c = make_job(
+        "id-c", "LLM Eng", "Corp2",
+        "Very long description that beats everything else.",
+        "https://example.com/c",
+    )
+
+    result = deduplicate([j_a, j_b, j_c], embedder=embedder_identico)
+
+    assert len(result) == 1, f"Esperado 1 job, obtenidos {len(result)}"
+    alt_urls = result[0].urls_alternativas
+    assert "https://example.com/a" in alt_urls, (
+        "La URL acumulada en el nivel exacto debe sobrevivir al merge semántico."
+    )
+    assert "https://example.com/b" in alt_urls, (
+        "La URL primaria del representante descartado en el nivel semántico debe estar presente."
+    )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Verificación de invariante: el embedder real (modelo BGE-M3) no se usa en tests
 # ──────────────────────────────────────────────────────────────────────────────
 

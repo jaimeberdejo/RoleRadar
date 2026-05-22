@@ -1,0 +1,22 @@
+[project]
+name = "buscadordeempleo"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "anthropic>=0.104.0",
+    "instructor>=1.15.1",
+    "pydantic>=2.13.4",
+    "pymupdf>=1.27.2.3",
+    "python-dotenv>=1.2.2",
+    "pyyaml>=6.0.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

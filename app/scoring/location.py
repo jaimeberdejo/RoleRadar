@@ -29,6 +29,7 @@ matchea "Barcelona" porque se usa `c in loc` no igualdad exacta).
 from __future__ import annotations
 
 import logging
+import re
 import unicodedata
 
 from app.models.schemas import Job, ModalidadRemoto, RemoteJob, UserProfile
@@ -59,17 +60,23 @@ def _normalize_city(name: str) -> str:
 
 
 def _ciudad_aceptada(location: str | None, ciudades: list[str]) -> bool:
-    """True si location normalizada CONTIENE alguna ciudad aceptada normalizada.
+    """True si location normalizada contiene alguna ciudad aceptada normalizada.
 
-    Usa substring match (no igualdad exacta) para que "Barcelona, España"
-    matchee "Barcelona" (Pitfall 6 de RESEARCH.md).
+    Usa word-boundary matching (\\b) en lugar de substring puro para evitar
+    falsos positivos como "Oria" dentro de "Victoria" o "Bar" dentro de "Barbastro"
+    (WR-04). Sigue permitiendo que "Barcelona, España" matchee "Barcelona" porque
+    la coma/espacio actúa como límite de palabra (\\b reconoce [a-z]/[^a-z] como
+    frontera).
 
     Returns False de forma segura si location es None o vacío (T-03-06).
     """
     if not location:
         return False
     loc_norm = _normalize_city(location)
-    return any(_normalize_city(c) in loc_norm for c in ciudades)
+    return any(
+        re.search(r"\b" + re.escape(_normalize_city(c)) + r"\b", loc_norm)
+        for c in ciudades
+    )
 
 
 # ---------------------------------------------------------------------------

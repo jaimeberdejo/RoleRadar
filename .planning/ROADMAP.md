@@ -71,7 +71,12 @@ Plans:
   3. La ubicación/remoto se evalúa correctamente: remote permitido → alto; onsite/hybrid alto solo en ciudades aceptadas; presencial fuera de Barcelona sin reubicación → muy bajo; y la seniority pedida se compara contra la experiencia real del `CVProfile`, bajando el encaje y apareciendo en `missing_requirements` sin descartar sola
   4. Si se dispara un deal-breaker, `recommendation = skip` y `deal_breaker_hit = true` explicando cuál (único filtro duro); el score es honesto en `reasons_for`, `reasons_against`, `matched_skills` y `missing_requirements`, y el prompt al LLM incluye CVProfile real + ranking con sinónimos + preferencias + deal-breakers + la oferta
   5. Tests exhaustivos de la heurística (LLM mockeado) verifican que el ranking pesa bien, que un deal-breaker fuerza skip, y que la ubicación se evalúa correcto
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 03-01-PLAN.md — Wave 0 setup: LLMJobAssessment + PesosScoring validator (suma=1.0) en schemas.py + tests/scoring/ tree + fixtures de scoring (mock LLM client, sample UserProfile/CVProfile/Jobs)
+- [ ] 03-02-PLAN.md — Deterministas paralelos: config/loader.py (UserProfile desde profile.yaml, SCORE-06) + scoring/ranking.py (decay del ranking, SCORE-02) + tests
+- [ ] 03-03-PLAN.md — Determinista: scoring/location.py (evaluar_ubicacion, reglas + NFD city match, SCORE-03) + tests de las 8 ramas
+- [ ] 03-04-PLAN.md — NÚCLEO: scoring/llm.py (assess_job, SCORE-07/08) + scoring/scorer.py (orquestador 6 pasos, SCORE-01/04/05/06) + facade + QA-04 tests exhaustivos
 
 ### Phase 4: API y Persistencia
 **Goal**: El servicio queda expuesto como una API HTTP/JSON consumible por n8n que orquesta parseo + normalización + dedup + scoring de punta a punta, persiste el histórico con fecha y recuerda qué ofertas ya se vieron entre runs.

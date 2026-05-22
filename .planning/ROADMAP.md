@@ -20,7 +20,7 @@ verificable de forma aislada antes de cablearla al conjunto.
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Parseo de CV** - PDF → `CVProfile` estructurado y cacheado vía Pydantic + Instructor
+- [x] **Phase 1: Parseo de CV** - PDF → `CVProfile` estructurado y cacheado vía Pydantic + Instructor (completed 2026-05-22)
 - [ ] **Phase 2: Normalización y Deduplicación** - Ofertas crudas heterogéneas → `Job`s únicos, sin duplicados exactos ni semánticos
 - [ ] **Phase 3: Heurística de Scoring (núcleo)** - Cada oferta única recibe un `JobScore` honesto: ranking como peso, ubicación, seniority, deal-breakers
 - [ ] **Phase 4: API y Persistencia** - Endpoints FastAPI que orquestan todo + almacenamiento SQLite-first con control de ya-vistas
@@ -42,7 +42,7 @@ Plans:
 - [x] 01-01-PLAN.md — Wave 0 setup: deps via uv, pytest config, tests/ tree + conftest fixtures (PDF builder, mocked instructor client)
 - [x] 01-02-PLAN.md — extractor.py (pymupdf bytes→text) + cache.py (sha256 JSON CVProfile cache, CV-03) + tests
 - [x] 01-03-PLAN.md — llm_client.py (instructor.from_anthropic, response_model=CVProfile, CV-01/CV-02) + mocked test
-- [ ] 01-04-PLAN.md — parser.py orchestrator + app.cv export + QA-01 end-to-end test (mocked LLM, cache short-circuit)
+- [x] 01-04-PLAN.md — parser.py orchestrator + app.cv export + QA-01 end-to-end test (mocked LLM, cache short-circuit)
 
 ### Phase 2: Normalización y Deduplicación
 **Goal**: El servicio convierte listas de ofertas crudas heterogéneas (de cualquier fuente) en `Job`s normalizados con id estable, y elimina duplicados tanto exactos como semánticos sin perder información, dejando un conjunto limpio de ofertas únicas.
@@ -97,7 +97,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Parseo de CV | 3/4 | In Progress|  |
+| 1. Parseo de CV | 4/4 | Complete   | 2026-05-22 |
 | 2. Normalización y Deduplicación | 0/TBD | Not started | - |
 | 3. Heurística de Scoring (núcleo) | 0/TBD | Not started | - |
 | 4. API y Persistencia | 0/TBD | Not started | - |

@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 01-01-PLAN.md (Wave 0 test scaffolding)
-last_updated: "2026-05-22T00:15:58.127Z"
+status: verifying
+stopped_at: "Completed 01-04-PLAN.md (Phase 1 complete: parse_cv orchestrator + QA-01 acceptance test)"
+last_updated: "2026-05-22T00:20:12.501Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
-  percent: 75
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-05-22)
 
 Phase: 01 (Parseo de CV) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-05-22
 
-Progress: [████████░░] 75%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [████████░░] 75%
 | Phase 01 P01 | 2 | 3 tasks | 10 files |
 | Phase 01-parseo-de-cv P02 | 2 | 2 tasks | 4 files |
 | Phase 01-parseo-de-cv P03 | 2 | 2 tasks | 2 files |
+| Phase 01-parseo-de-cv P04 | 1 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,8 @@ Recent decisions affecting current work:
 - [Setup]: Construir FASES 2-5 en este milestone — sistema completo usable de verdad
 - [Roadmap]: Scoring (FASE 4) tiene su propia fase dedicada (Phase 3) por ser el núcleo
 - [Phase ?]: Use pymupdf for in-memory PDF fixture generation instead of reportlab — pymupdf already a core dep
+- [Phase ?]: Cache-first ordering: hash+cache check before any extraction or LLM call — repeated malformed PDFs are cheap
+- [Phase ?]: Mock at import site: patch app.cv.parser.build_instructor_client (not definition site) so patched name is intercepted in parser namespace
 
 ### Pending Todos
 
@@ -93,6 +96,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T00:15:58.123Z
-Stopped at: Completed 01-01-PLAN.md (Wave 0 test scaffolding)
+Last session: 2026-05-22T00:20:12.498Z
+Stopped at: Completed 01-04-PLAN.md (Phase 1 complete: parse_cv orchestrator + QA-01 acceptance test)
 Resume file: None

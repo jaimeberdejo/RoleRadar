@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: "Completed 01-04-PLAN.md (Phase 1 complete: parse_cv orchestrator + QA-01 acceptance test)"
-last_updated: "2026-05-22T00:56:12.710Z"
+last_updated: "2026-05-22T01:02:27.900Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 8
-  completed_plans: 5
-  percent: 63
+  completed_plans: 6
+  percent: 75
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-22)
 ## Current Position
 
 Phase: 02 (Normalización y Deduplicación) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-05-22
 
-Progress: [██████░░░░] 63%
+Progress: [████████░░] 75%
 
 ## Performance Metrics
 
@@ -72,6 +72,10 @@ Recent decisions affecting current work:
 - [Phase ?]: Use pymupdf for in-memory PDF fixture generation instead of reportlab — pymupdf already a core dep
 - [Phase ?]: Cache-first ordering: hash+cache check before any extraction or LLM call — repeated malformed PDFs are cheap
 - [Phase ?]: Mock at import site: patch app.cv.parser.build_instructor_client (not definition site) so patched name is intercepted in parser namespace
+- [Phase ?]: NFD not NFC for accent normalization
+- [Phase ?]: NFD decomposes precomposed chars; NFC keeps them intact
+- [Phase ?]: stable_job_id returns full 64-char sha256 hex — matches Phase 1 _HEX_RE pattern from cv/cache.py
+- [Phase ?]: arbeitnow remote=False maps to RemoteJob.unknown — not onsite; RemoteJob.remote only when remote=True
 
 ### Pending Todos
 
@@ -96,6 +100,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T00:56:12.706Z
+Last session: 2026-05-22T01:02:15.911Z
 Stopped at: Completed 01-04-PLAN.md (Phase 1 complete: parse_cv orchestrator + QA-01 acceptance test)
 Resume file: None

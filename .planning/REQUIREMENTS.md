@@ -19,10 +19,10 @@ Requisitos del milestone (FASES 2-5). Cada uno mapea a una fase del roadmap.
 
 ### NORM — Normalización de ofertas (FASE 3)
 
-- [ ] **NORM-01**: El servicio acepta una lista de ofertas crudas heterogéneas + un identificador de fuente y devuelve `Job`s normalizados
-- [ ] **NORM-02**: Cada `Job` recibe un `id` estable (hash de empresa + título normalizado + ubicación)
-- [ ] **NORM-03**: El parseo por fuente está aislado en funciones de mapeo claramente marcadas y ajustables (sin asumir formatos de API de memoria)
-- [ ] **NORM-04**: Una oferta mal formada no tumba el batch — se procesa lo que se puede y se reporta lo que falló
+- [x] **NORM-01**: El servicio acepta una lista de ofertas crudas heterogéneas + un identificador de fuente y devuelve `Job`s normalizados
+- [x] **NORM-02**: Cada `Job` recibe un `id` estable (hash de empresa + título normalizado + ubicación)
+- [x] **NORM-03**: El parseo por fuente está aislado en funciones de mapeo claramente marcadas y ajustables (sin asumir formatos de API de memoria)
+- [x] **NORM-04**: Una oferta mal formada no tumba el batch — se procesa lo que se puede y se reporta lo que falló
 
 ### DEDUP — Deduplicación semántica (FASE 3)
 
@@ -110,10 +110,10 @@ Reconocidos pero diferidos; no en el roadmap actual.
 | CV-02 | Phase 1 | Complete |
 | CV-03 | Phase 1 | Complete |
 | QA-01 | Phase 1 | Complete |
-| NORM-01 | Phase 2 | Pending |
-| NORM-02 | Phase 2 | Pending |
-| NORM-03 | Phase 2 | Pending |
-| NORM-04 | Phase 2 | Pending |
+| NORM-01 | Phase 2 | Complete |
+| NORM-02 | Phase 2 | Complete |
+| NORM-03 | Phase 2 | Complete |
+| NORM-04 | Phase 2 | Complete |
 | DEDUP-01 | Phase 2 | Pending |
 | DEDUP-02 | Phase 2 | Pending |
 | DEDUP-03 | Phase 2 | Pending |

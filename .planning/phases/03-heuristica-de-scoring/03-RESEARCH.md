@@ -681,17 +681,19 @@ def _ciudad_aceptada(location: str | None, ciudades: list[str]) -> bool:
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **¿Los parámetros de decay y bandas deben vivir en profile.yaml o como defaults en código?**
+1. **¿Los parámetros de decay y bandas deben vivir en profile.yaml o como defaults en código?** — RESOLVED
    - Lo que sabemos: CONTEXT.md dice "Parámetros configurables (defaults en código; opcionalmente leíbles de profile.yaml)"
    - Lo que está claro: Los defaults en código son suficientes para esta fase. Profile.yaml ya tiene los pesos. Añadir paso/suelo/bandas a profile.yaml añadiría schema pero también flexibilidad real.
-   - Recomendación: Defaults en código para esta fase (simplifica el schema de UserProfile). Si el usuario quiere ajustar post-uso, se añade a profile.yaml en v2. El planner debe elegir.
+   - Recomendación: Defaults en código para esta fase (simplifica el schema de UserProfile). Si el usuario quiere ajustar post-uso, se añade a profile.yaml en v2.
+   - **Resolution:** Defaults en código (constantes configurables por argumento) en esta fase; los pesos siguen viniendo de profile.yaml. Ajuste vía profile.yaml diferido a v2.
 
-2. **¿Cómo serializar CVProfile al LLM?**
+2. **¿Cómo serializar CVProfile al LLM?** — RESOLVED
    - Lo que sabemos: `cv_profile.model_dump_json()` produce JSON compacto pero el LLM puede leerlo.
    - Lo que está claro: Texto estructurado legible (markdown-style) produce mejores resultados de juicio que JSON anidado.
-   - Recomendación: Helper `_format_cv()` que genera texto como "Skills: Python, LLMs, FastAPI\nExperiencia: AI Engineer en Acme Corp (2 años)\n..." — más natural para evaluación. El planner debe decidir el formato exacto.
+   - Recomendación: Helper `_format_cv()` que genera texto legible — más natural para evaluación.
+   - **Resolution:** Helper `_format_cv()` que genera texto estructurado legible (no JSON crudo) para el prompt de juicio del LLM.
 
 ---
 

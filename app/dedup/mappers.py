@@ -181,6 +181,18 @@ def generic_mapper(raw: dict, source: str) -> Job:
     else:
         remote_val = RemoteJob.unknown
 
+    # Convertir posted_at / created_at a ISO 8601 si es timestamp numérico (WR-03).
+    # Espeja la lógica de arbeitnow_mapper: Job.posted_at es Optional[str].
+    _ts_raw = raw.get("posted_at") or raw.get("created_at")
+    posted_at: str | None = None
+    if isinstance(_ts_raw, str):
+        posted_at = _ts_raw
+    elif isinstance(_ts_raw, (int, float)):
+        try:
+            posted_at = datetime.fromtimestamp(int(_ts_raw), tz=timezone.utc).isoformat()
+        except (ValueError, OSError, OverflowError):
+            pass  # timestamp inválido → posted_at queda None
+
     return Job(
         id=stable_job_id(company, title, location or ""),
         title=title,
@@ -191,7 +203,7 @@ def generic_mapper(raw: dict, source: str) -> Job:
         salary=None,
         url=url,
         source=source,
-        posted_at=raw.get("posted_at") or raw.get("created_at"),
+        posted_at=posted_at,
         raw=raw,
     )
 

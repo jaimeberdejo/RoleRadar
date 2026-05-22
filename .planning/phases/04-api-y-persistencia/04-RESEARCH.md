@@ -699,7 +699,9 @@ def test_parse_cv(api_client, sample_pdf_bytes):
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> Resolutions adopted: (1) `_current` metadata file pointer written by /cv/parse; (2) single-transaction bulk upsert; (3) `seen` column in DB, `ya_visto` in the API response computed from `was_seen()` BEFORE upsert. The `ya_visto` field goes on an API-level response model wrapping `ScoredJob` (do not mutate the core `ScoredJob` schema) — planner's discretion on exact model name.
 
 1. **CVProfile cache pointer for `get_cached_cv_profile`**
    - What we know: The Phase 1 cache stores one JSON file per PDF hash in `data/.cache/`.

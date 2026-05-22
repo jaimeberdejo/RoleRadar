@@ -26,9 +26,9 @@ Requisitos del milestone (FASES 2-5). Cada uno mapea a una fase del roadmap.
 
 ### DEDUP — Deduplicación semántica (FASE 3)
 
-- [ ] **DEDUP-01**: Deduplicación por hash exacto (empresa + título normalizado)
-- [ ] **DEDUP-02**: Deduplicación semántica con embeddings BGE-M3 locales sobre (título + empresa + primeras N palabras de descripción), agrupando por similitud coseno con umbral configurable
-- [ ] **DEDUP-03**: Al deduplicar se conserva la oferta con descripción más completa y se guardan las URLs alternativas
+- [x] **DEDUP-01**: Deduplicación por hash exacto (empresa + título normalizado)
+- [x] **DEDUP-02**: Deduplicación semántica con embeddings BGE-M3 locales sobre (título + empresa + primeras N palabras de descripción), agrupando por similitud coseno con umbral configurable
+- [x] **DEDUP-03**: Al deduplicar se conserva la oferta con descripción más completa y se guardan las URLs alternativas
 
 ### SCORE — Heurística de scoring (FASE 4) ← núcleo
 
@@ -114,9 +114,9 @@ Reconocidos pero diferidos; no en el roadmap actual.
 | NORM-02 | Phase 2 | Complete |
 | NORM-03 | Phase 2 | Complete |
 | NORM-04 | Phase 2 | Complete |
-| DEDUP-01 | Phase 2 | Pending |
-| DEDUP-02 | Phase 2 | Pending |
-| DEDUP-03 | Phase 2 | Pending |
+| DEDUP-01 | Phase 2 | Complete |
+| DEDUP-02 | Phase 2 | Complete |
+| DEDUP-03 | Phase 2 | Complete |
 | QA-02 | Phase 2 | Complete |
 | QA-03 | Phase 2 | Complete |
 | SCORE-01 | Phase 3 | Pending |

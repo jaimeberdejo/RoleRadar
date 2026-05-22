@@ -58,7 +58,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — Wave 0 setup: uv add sentence-transformers + tests/dedup/ + fixtures dedup en conftest (FakeEmbedder, payloads)
 - [x] 02-02-PLAN.md — Normalización: normalize.py (NFD id sha256) + mappers.py (registry arbeitnow/generic AJUSTABLE) + normalize_jobs facade batch-resiliente + tests (NORM-01..04, QA-02)
-- [ ] 02-03-PLAN.md — Dedup helpers: embedder.py (Embedder Protocol + BgeM3Embedder lazy + FakeEmbedder) + exact.py + semantic.py (greedy coseno numpy) + merger.py + tests unitarios (DEDUP-01..03)
+- [x] 02-03-PLAN.md — Dedup helpers: embedder.py (Embedder Protocol + BgeM3Embedder lazy + FakeEmbedder) + exact.py + semantic.py (greedy coseno numpy) + merger.py + tests unitarios (DEDUP-01..03)
 - [ ] 02-04-PLAN.md — Integración: deduplicate() facade ensamblado + test end-to-end con FakeEmbedder (QA-03)
 
 ### Phase 3: Heurística de Scoring (núcleo)

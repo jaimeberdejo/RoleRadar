@@ -15,12 +15,24 @@ Mitigaciones de seguridad (T-03-08, T-03-09):
 """
 from __future__ import annotations
 
+import html
 import os
 
 import instructor
 from anthropic import Anthropic
 
 from app.models.schemas import CVProfile, Job, LLMJobAssessment, PuestoRanking, UserProfile
+
+
+def _escape_for_prompt(text: str) -> str:
+    """Escapa caracteres XML significativos en campos de la oferta para evitar cierre
+    prematuro de los delimitadores XML del prompt (CR-03 anti prompt-injection).
+
+    Escapa < > & para que un campo de oferta que contenga '</oferta>' no pueda
+    romper la separación estructural del prompt. El LLM recibe &lt; &gt; &amp;
+    en los campos de oferta (dato), no en las etiquetas de estructura (instrucción).
+    """
+    return html.escape(text, quote=False)
 
 
 def build_instructor_client() -> instructor.Instructor:
@@ -88,15 +100,21 @@ def _format_ranking(ranking: list[PuestoRanking]) -> str:
 
 
 def _format_job(job: Job) -> str:
-    """Renderiza Job como texto estructurado legible para el LLM."""
+    """Renderiza Job como texto estructurado legible para el LLM.
+
+    Los campos de la oferta (title, company, location, description) son contenido
+    externo no confiable y se escapan con _escape_for_prompt para evitar que un
+    valor como '</oferta>' cierre prematuramente el delimitador XML del prompt
+    (CR-03 anti prompt-injection).
+    """
     lines: list[str] = [
-        f"Título: {job.title}",
-        f"Empresa: {job.company}",
-        f"Ubicación: {job.location or 'No especificada'}",
+        f"Título: {_escape_for_prompt(job.title)}",
+        f"Empresa: {_escape_for_prompt(job.company)}",
+        f"Ubicación: {_escape_for_prompt(job.location or 'No especificada')}",
         f"Modalidad: {job.remote.value}",
     ]
     if job.description:
-        lines.append(f"Descripción:\n{job.description}")
+        lines.append(f"Descripción:\n{_escape_for_prompt(job.description)}")
     return "\n".join(lines)
 
 

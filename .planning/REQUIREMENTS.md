@@ -13,9 +13,9 @@ Requisitos del milestone (FASES 2-5). Cada uno mapea a una fase del roadmap.
 
 ### CV — Parseo de CV (FASE 2)
 
-- [ ] **CV-01**: El servicio acepta un CV en PDF y extrae un `CVProfile` estructurado vía Pydantic + Instructor (LLM)
-- [ ] **CV-02**: El `CVProfile` incluye experiencia, skills técnicas, formación, años de experiencia total (estimado) y dominios
-- [ ] **CV-03**: El `CVProfile` se cachea y solo se re-parsea si el CV cambia (no re-parsear en cada run)
+- [x] **CV-01**: El servicio acepta un CV en PDF y extrae un `CVProfile` estructurado vía Pydantic + Instructor (LLM)
+- [x] **CV-02**: El `CVProfile` incluye experiencia, skills técnicas, formación, años de experiencia total (estimado) y dominios
+- [x] **CV-03**: El `CVProfile` se cachea y solo se re-parsea si el CV cambia (no re-parsear en cada run)
 
 ### NORM — Normalización de ofertas (FASE 3)
 
@@ -106,9 +106,9 @@ Reconocidos pero diferidos; no en el roadmap actual.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CV-01 | Phase 1 | Pending |
-| CV-02 | Phase 1 | Pending |
-| CV-03 | Phase 1 | Pending |
+| CV-01 | Phase 1 | Complete |
+| CV-02 | Phase 1 | Complete |
+| CV-03 | Phase 1 | Complete |
 | QA-01 | Phase 1 | Complete |
 | NORM-01 | Phase 2 | Pending |
 | NORM-02 | Phase 2 | Pending |

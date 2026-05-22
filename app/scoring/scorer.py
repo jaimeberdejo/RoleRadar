@@ -41,14 +41,15 @@ def score_job(
     user_profile: UserProfile,
     client: instructor.Instructor | None = None,
 ) -> JobScore:
-    """Puntúa una oferta contra el perfil del usuario en 6 pasos.
+    """Puntúa una oferta contra el perfil del usuario en 7 pasos.
 
-    Paso 1: Evaluación determinista de ubicación → encaje_ubicacion + deal_breaker_loc.
-    Paso 2: Evaluación LLM → LLMJobAssessment (skills, seniority, puesto, deal-breaker texto).
-    Paso 3: Decay del ranking → encaje_puesto (determinista sobre rango del LLM).
-    Paso 4: score_total ponderado (determinista, fórmula exacta con pesos de profile).
-    Paso 5: Recommendation por bandas (determinista sobre score_total).
-    Paso 6: Deal-breaker override — ÚLTIMO, para que score_total sea honesto.
+    Paso 1: Cliente lazy — construye el cliente instructor si no se inyecta.
+    Paso 2: Evaluación determinista de ubicación → encaje_ubicacion + deal_breaker_loc.
+    Paso 3: Evaluación LLM → LLMJobAssessment (skills, seniority, puesto, deal-breaker texto).
+    Paso 4: Decay del ranking → encaje_puesto (determinista sobre rango del LLM).
+    Paso 5: score_total ponderado (determinista, fórmula exacta con pesos de profile).
+    Paso 6: Recommendation por bandas (determinista sobre score_total).
+    Paso 7: Deal-breaker override — ÚLTIMO, para que score_total sea honesto.
 
     Args:
         job:          Oferta normalizada (Job de Fase 2, ya deduplicada).

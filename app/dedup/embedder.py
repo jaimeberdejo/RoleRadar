@@ -140,10 +140,11 @@ class FakeEmbedder:
 
         Returns:
             np.ndarray float32 de shape (len(texts), dim), L2-normalizado.
-            Si texts es vacío, devuelve array vacío de shape (0,).
+            Si texts es vacío, devuelve array vacío de shape (0, dim) (WR-05).
         """
         if not texts:
-            return np.array([], dtype=np.float32)
+            # Shape (0, dim) para cumplir el contrato del Protocol (WR-05).
+            return np.empty((0, self._dim), dtype=np.float32)
 
         resultado: list[np.ndarray] = []
         for texto in texts:
@@ -158,8 +159,11 @@ class FakeEmbedder:
                 h = int(hashlib.sha256(texto.encode("utf-8")).hexdigest(), 16)
                 rng = np.random.default_rng(h % (2**32))
                 v = rng.standard_normal(self._dim).astype(np.float32)
-                norma = np.linalg.norm(v)
-                v = v / (norma + 1e-9)  # L2-normalizar evitando división por cero
+
+            # L2-normalizar todos los paths para que dot(v, v) == 1.0 (WR-04).
+            # Guarda contra vector cero para evitar división por cero.
+            norma = np.linalg.norm(v)
+            v = v / (norma + 1e-9)
 
             resultado.append(v)
 

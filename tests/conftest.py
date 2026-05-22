@@ -179,13 +179,14 @@ def sample_malformed_payload() -> dict:
     """Payload inválido que provoca fallo de validación Pydantic en el mapper.
 
     Los valores de tipo incorrecto (company_name=entero, title=None) hacen que
-    la validación de Job falle con ValidationError. Este payload se usa para
+    el mapper falle antes de llegar a Pydantic. Este payload se usa para
     verificar que una oferta mal formada va al campo `errors` del resultado de
     normalize_jobs() y NO tumba el batch completo (NORM-04).
 
     Por qué es inválido:
-    - "company_name": 12345  → tipo int en lugar de str
-    - "title": None          → campo requerido con valor nulo
+    - "company_name": 12345  → tipo int; unicodedata.normalize(int) lanza TypeError
+      en normalize_field(), llamada desde stable_job_id() antes de que Pydantic valide.
+    - "title": None          → normalize_field(None) también lanza TypeError.
 
     Returns:
         dict con valores de tipo incorrecto para provocar ValidationError.

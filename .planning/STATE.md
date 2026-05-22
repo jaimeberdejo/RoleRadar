@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 01-04-PLAN.md (Phase 1 complete: parse_cv orchestrator + QA-01 acceptance test)"
-last_updated: "2026-05-22T02:02:35.910Z"
+stopped_at: "Completed 03-03-PLAN.md (location evaluator evaluar_ubicacion, SCORE-03)"
+last_updated: "2026-05-22T04:22:00.000Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 5
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-05-22)
 ## Current Position
 
 Phase: 03 (Heurística de Scoring (núcleo)) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-05-22
 
@@ -59,6 +59,7 @@ Progress: [████████░░] 83%
 | Phase 02-normalizacion-y-deduplicacion P03 | 262 | 2 tasks | 5 files |
 | Phase 02-normalizacion-y-deduplicacion P04 | 3 | 2 tasks | 2 files |
 | Phase 03-heuristica-de-scoring P02 | 15 | 2 tasks | 5 files |
+| Phase 03-heuristica-de-scoring P03 | 12 | 1 task | 2 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,8 @@ Recent decisions affecting current work:
 - [Phase ?]: arbeitnow remote=False maps to RemoteJob.unknown — not onsite; RemoteJob.remote only when remote=True
 - [Phase ?]: Parametros de decay (paso, suelo, maximo) como defaults en codigo — no en profile.yaml. Simplifica schema de UserProfile; ajuste diferido a v2.
 - [Phase ?]: yaml.safe_load exclusivamente en loader para mitigar ejecucion de codigo arbitrario (T-03-04).
+- [Phase ?]: NFD replicado localmente en scoring/location.py — no importar app.dedup para mantener tests de scoring torch-free (Pitfall 7).
+- [Phase ?]: Substring city match en evaluar_ubicacion: any(norm(c) in norm(loc)) para que 'Barcelona, España' matchee 'Barcelona'.
 
 ### Pending Todos
 
@@ -105,6 +108,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T02:02:32.687Z
-Stopped at: Completed 01-04-PLAN.md (Phase 1 complete: parse_cv orchestrator + QA-01 acceptance test)
+Last session: 2026-05-22T04:22:00.000Z
+Stopped at: Completed 03-03-PLAN.md (location evaluator evaluar_ubicacion, SCORE-03)
 Resume file: None

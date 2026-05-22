@@ -1,0 +1,35 @@
+"""Protocolo de persistencia para el servicio BuscadorDeEmpleo.
+
+Define la interfaz que deben satisfacer SQLiteStorage y SupabaseStorage,
+usando typing.Protocol (PEP 544) para subtipado estructural — sin herencia.
+
+Contratos:
+    init_db: crea tablas si no existen; idempotente.
+    upsert_scored_jobs: persiste lista de ofertas puntuadas; idempotente por job.id.
+    was_seen: True si el job_id fue persistido en un run anterior.
+    get_history: devuelve ofertas guardadas, paginable con limit/offset.
+"""
+from __future__ import annotations
+
+from typing import Protocol, runtime_checkable
+
+from app.models.schemas import ScoredJob
+
+
+@runtime_checkable
+class Storage(Protocol):
+    """Interfaz de persistencia. SQLiteStorage y SupabaseStorage deben satisfacerla.
+
+    Contratos:
+    - upsert_scored_jobs: idempotente por job.id; actualiza si ya existe.
+    - was_seen: True si el job_id fue persistido en un run anterior.
+    - get_history: paginable con limit/offset; devuelve dicts serializables a JSON.
+    """
+
+    def init_db(self) -> None: ...
+
+    def upsert_scored_jobs(self, scored: list[ScoredJob]) -> None: ...
+
+    def was_seen(self, job_id: str) -> bool: ...
+
+    def get_history(self, limit: int = 50, offset: int = 0) -> list[dict]: ...

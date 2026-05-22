@@ -32,7 +32,7 @@ Requisitos del milestone (FASES 2-5). Cada uno mapea a una fase del roadmap.
 
 ### SCORE — Heurística de scoring (FASE 4) ← núcleo
 
-- [ ] **SCORE-01**: Para cada oferta única, el servicio devuelve un `JobScore` con `score_total`, `recommendation` y desglose (encaje_puesto / skills / ubicación / seniority)
+- [x] **SCORE-01**: Para cada oferta única, el servicio devuelve un `JobScore` con `score_total`, `recommendation` y desglose (encaje_puesto / skills / ubicación / seniority)
 - [ ] **SCORE-02**: El ranking de puestos actúa como PESO graduado (función de decaimiento configurable), no como filtro binario; una oferta fuera de ranking no se descarta sola
 - [ ] **SCORE-03**: Ubicación y remoto se evalúan según preferencias (remote permitido → alto; onsite/hybrid alto solo en ciudades aceptadas; presencial fuera sin reubicación → muy bajo)
 - [ ] **SCORE-04**: Seniority se compara contra la experiencia real del `CVProfile`; pedir mucho más baja el encaje y aparece en `missing_requirements`, pero no descarta solo
@@ -119,7 +119,7 @@ Reconocidos pero diferidos; no en el roadmap actual.
 | DEDUP-03 | Phase 2 | Complete |
 | QA-02 | Phase 2 | Complete |
 | QA-03 | Phase 2 | Complete |
-| SCORE-01 | Phase 3 | Pending |
+| SCORE-01 | Phase 3 | Complete |
 | SCORE-02 | Phase 3 | Pending |
 | SCORE-03 | Phase 3 | Pending |
 | SCORE-04 | Phase 3 | Pending |

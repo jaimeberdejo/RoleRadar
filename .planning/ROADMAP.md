@@ -73,7 +73,7 @@ Plans:
   5. Tests exhaustivos de la heurística (LLM mockeado) verifican que el ranking pesa bien, que un deal-breaker fuerza skip, y que la ubicación se evalúa correcto
 **Plans**: 4 plans
 Plans:
-- [ ] 03-01-PLAN.md — Wave 0 setup: LLMJobAssessment + PesosScoring validator (suma=1.0) en schemas.py + tests/scoring/ tree + fixtures de scoring (mock LLM client, sample UserProfile/CVProfile/Jobs)
+- [x] 03-01-PLAN.md — Wave 0 setup: LLMJobAssessment + PesosScoring validator (suma=1.0) en schemas.py + tests/scoring/ tree + fixtures de scoring (mock LLM client, sample UserProfile/CVProfile/Jobs)
 - [ ] 03-02-PLAN.md — Deterministas paralelos: config/loader.py (UserProfile desde profile.yaml, SCORE-06) + scoring/ranking.py (decay del ranking, SCORE-02) + tests
 - [ ] 03-03-PLAN.md — Determinista: scoring/location.py (evaluar_ubicacion, reglas + NFD city match, SCORE-03) + tests de las 8 ramas
 - [ ] 03-04-PLAN.md — NÚCLEO: scoring/llm.py (assess_job, SCORE-07/08) + scoring/scorer.py (orquestador 6 pasos, SCORE-01/04/05/06) + facade + QA-04 tests exhaustivos
@@ -109,6 +109,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Parseo de CV | 4/4 | Complete   | 2026-05-22 |
 | 2. Normalización y Deduplicación | 4/4 | Complete   | 2026-05-22 |
-| 3. Heurística de Scoring (núcleo) | 0/TBD | Not started | - |
+| 3. Heurística de Scoring (núcleo) | 1/4 | In Progress|  |
 | 4. API y Persistencia | 0/TBD | Not started | - |
 | 5. Observabilidad, Robustez y Docs n8n | 0/TBD | Not started | - |

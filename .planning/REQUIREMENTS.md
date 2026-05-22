@@ -72,8 +72,8 @@ Requisitos del milestone (FASES 2-5). Cada uno mapea a una fase del roadmap.
 ### QA — Tests (mapeados a su fase)
 
 - [x] **QA-01**: Test de parseo de CV con fixture PDF de ejemplo (LLM mockeado)
-- [ ] **QA-02**: Tests de normalización por fuente
-- [ ] **QA-03**: Tests de dedup (detecta duplicados obvios y casos semánticos; embeddings mockeados)
+- [x] **QA-02**: Tests de normalización por fuente
+- [x] **QA-03**: Tests de dedup (detecta duplicados obvios y casos semánticos; embeddings mockeados)
 - [ ] **QA-04**: Tests exhaustivos de la heurística de scoring (el ranking pesa bien, un deal-breaker fuerza skip, la ubicación se evalúa correcto; LLM mockeado)
 
 ## v2 Requirements
@@ -117,8 +117,8 @@ Reconocidos pero diferidos; no en el roadmap actual.
 | DEDUP-01 | Phase 2 | Pending |
 | DEDUP-02 | Phase 2 | Pending |
 | DEDUP-03 | Phase 2 | Pending |
-| QA-02 | Phase 2 | Pending |
-| QA-03 | Phase 2 | Pending |
+| QA-02 | Phase 2 | Complete |
+| QA-03 | Phase 2 | Complete |
 | SCORE-01 | Phase 3 | Pending |
 | SCORE-02 | Phase 3 | Pending |
 | SCORE-03 | Phase 3 | Pending |

@@ -56,7 +56,7 @@ Plans:
   5. Existen tests de normalización por fuente y de dedup (duplicados obvios y casos semánticos) con embeddings mockeados
 **Plans**: 4 plans
 Plans:
-- [ ] 02-01-PLAN.md — Wave 0 setup: uv add sentence-transformers + tests/dedup/ + fixtures dedup en conftest (FakeEmbedder, payloads)
+- [x] 02-01-PLAN.md — Wave 0 setup: uv add sentence-transformers + tests/dedup/ + fixtures dedup en conftest (FakeEmbedder, payloads)
 - [ ] 02-02-PLAN.md — Normalización: normalize.py (NFD id sha256) + mappers.py (registry arbeitnow/generic AJUSTABLE) + normalize_jobs facade batch-resiliente + tests (NORM-01..04, QA-02)
 - [ ] 02-03-PLAN.md — Dedup helpers: embedder.py (Embedder Protocol + BgeM3Embedder lazy + FakeEmbedder) + exact.py + semantic.py (greedy coseno numpy) + merger.py + tests unitarios (DEDUP-01..03)
 - [ ] 02-04-PLAN.md — Integración: deduplicate() facade ensamblado + test end-to-end con FakeEmbedder (QA-03)
@@ -103,7 +103,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Parseo de CV | 4/4 | Complete   | 2026-05-22 |
-| 2. Normalización y Deduplicación | 0/4 | Planned | - |
+| 2. Normalización y Deduplicación | 1/4 | In Progress|  |
 | 3. Heurística de Scoring (núcleo) | 0/TBD | Not started | - |
 | 4. API y Persistencia | 0/TBD | Not started | - |
 | 5. Observabilidad, Robustez y Docs n8n | 0/TBD | Not started | - |

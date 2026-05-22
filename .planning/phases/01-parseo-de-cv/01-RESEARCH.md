@@ -511,22 +511,25 @@ with pymupdf.open(stream=pdf_bytes, filetype="pdf") as doc:
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Ubicación configurable del caché**
+1. **Ubicación configurable del caché** — RESOLVED
    - What we know: La decisión bloqueada dice `data/.cache/` como path
    - What's unclear: ¿debe ser configurable vía env var para facilitar los tests sin monkeypatch de chdir?
    - Recommendation: Añadir `CV_CACHE_DIR` env var con default `data/.cache/`. Coste mínimo, elimina un pitfall de tests.
+   - **Resolution:** Adoptado. `CV_CACHE_DIR` (default `data/.cache/`) implementado en plans 01-02 y 01-04.
 
-2. **Estrategia del PDF fixture**
+2. **Estrategia del PDF fixture** — RESOLVED
    - What we know: La decisión dice "generarlo de forma reproducible (p.ej. con pymupdf/reportlab) o incluir un PDF mínimo versionado"
    - What's unclear: pymupdf ya es dependencia core (no solo test); usar pymupdf en conftest.py para generar el fixture evita añadir reportlab solo para tests
    - Recommendation: Generar el fixture con pymupdf en conftest.py (ya disponible). Solo añadir reportlab si se necesita formato más rico.
+   - **Resolution:** Adoptado. Fixture PDF in-memory generado con pymupdf en `tests/conftest.py` (plan 01-01).
 
-3. **max_tokens para la llamada al LLM**
+3. **max_tokens para la llamada al LLM** — RESOLVED
    - What we know: claude-haiku-4-5 soporta 64k tokens de output; un CVProfile completo no supera los 2.000 tokens de salida
    - What's unclear: ¿cuánto establecer como límite para no malgastar budget?
    - Recommendation: `max_tokens=4096` es suficiente para cualquier CVProfile razonable y cuesta poco.
+   - **Resolution:** Adoptado. `max_tokens=4096` en `app/cv/llm_client.py` (plan 01-03).
 
 ---
 

@@ -19,11 +19,18 @@ def extract_text_from_pdf(pdf_bytes: bytes) -> str:
         Texto completo del PDF, páginas separadas por doble salto de línea.
 
     Raises:
-        ValueError: Si el PDF no contiene capa de texto extraíble
-            (ej. PDF escaneado sólo imagen — OCR no está soportado en v1).
+        ValueError: Si los bytes no son un PDF válido, están vacíos, o el PDF
+            no contiene capa de texto extraíble (ej. PDF escaneado sólo imagen
+            — OCR no está soportado en v1).
     """
-    with pymupdf.open(stream=pdf_bytes, filetype="pdf") as doc:
-        pages_text = [page.get_text() for page in doc]
+    try:
+        with pymupdf.open(stream=pdf_bytes, filetype="pdf") as doc:
+            pages_text = [page.get_text() for page in doc]
+    except (pymupdf.FileDataError, pymupdf.EmptyFileError) as exc:
+        raise ValueError(
+            f"No se pudo abrir el PDF: {exc}. "
+            "Comprueba que el fichero es un PDF válido y no está vacío."
+        ) from exc
     text = "\n\n".join(pages_text).strip()
     if not text:
         raise ValueError(

@@ -182,6 +182,7 @@ class LLMJobAssessment(BaseModel):
     )
     rango_puesto: Optional[int] = Field(
         default=None,
+        ge=1,
         description="Posición en el ranking (1=top, 1-based). None si 'fuera de ranking'.",
     )
     encaje_skills: int = Field(

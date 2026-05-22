@@ -81,3 +81,19 @@ def test_parametros_suelo_custom() -> None:
 def test_maximo_custom() -> None:
     """El maximo custom determina el valor para rango=1."""
     assert encaje_puesto_desde_rango(1, maximo=80) == 80
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# IN-03 / WR-02: rango no positivo lanza ValueError (1-based, 0/negativos inválidos)
+# ──────────────────────────────────────────────────────────────────────────────
+
+@pytest.mark.parametrize("rango", [0, -1, -100])
+def test_rango_no_positivo_lanza(rango: int) -> None:
+    """IN-03 / WR-02: rango=0 o negativo lanza ValueError (la función es 1-based).
+
+    Antes del fix CR-01+WR-02, rango=0 producía score=115 (por encima de maximo=100),
+    lo que causaba un ValidationError en Desglose(encaje_puesto=115). Ahora lanza
+    ValueError explícito antes de calcular.
+    """
+    with pytest.raises(ValueError, match="rango debe ser >= 1"):
+        encaje_puesto_desde_rango(rango)

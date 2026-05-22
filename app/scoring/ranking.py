@@ -54,5 +54,7 @@ def encaje_puesto_desde_rango(
     """
     if rango is None:
         return suelo
+    if rango < 1:
+        raise ValueError(f"rango debe ser >= 1 (1-based), se recibió: {rango}")
     score = maximo - (rango - 1) * paso
-    return max(suelo, score)
+    return min(maximo, max(suelo, score))

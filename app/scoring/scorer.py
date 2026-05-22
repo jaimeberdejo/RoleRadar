@@ -75,7 +75,7 @@ def score_job(
     encaje_puesto = encaje_puesto_desde_rango(assessment.rango_puesto)
 
     # Paso 5: score_total ponderado (determinista)
-    # Fórmula: round(clamp(encaje_puesto*p.puesto + skills*p.skills + ubicacion*p.ubicacion + seniority*p.seniority))
+    # Fórmula: clamp(round(encaje_puesto*p.puesto + skills*p.skills + ubicacion*p.ubicacion + seniority*p.seniority), 0, 100)
     pesos = user_profile.pesos
     raw = (
         encaje_puesto * pesos.puesto

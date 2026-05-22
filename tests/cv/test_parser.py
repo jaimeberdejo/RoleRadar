@@ -65,3 +65,17 @@ def test_cache_avoids_second_llm_call(
 
     assert mock_llm_client.messages.create.call_count == 1
     assert first_result.skills_tecnicas == second_result.skills_tecnicas
+
+
+def test_parse_cv_raises_for_invalid_pdf(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    """IN-03: parse_cv lanza ValueError para bytes que no son un PDF válido.
+
+    Verifica el contrato documentado en el docstring de parse_cv: bytes no-PDF
+    no deben producir una excepción pymupdf raw, sino un ValueError limpio.
+    """
+    monkeypatch.setenv("CV_CACHE_DIR", str(tmp_path / ".cache"))
+    with pytest.raises(ValueError):
+        parse_cv(b"not a pdf")

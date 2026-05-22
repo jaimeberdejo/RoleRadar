@@ -63,8 +63,9 @@ def arbeitnow_mapper(raw: dict, source: str) -> Job:
     location = raw.get("location", "")
 
     # Strip HTML tags de la descripción (Pitfall 6: Arbeitnow usa HTML)
-    # El HTML original queda preservado en Job.raw para trazabilidad
-    raw_desc = raw.get("description", "")
+    # El HTML original queda preservado en Job.raw para trazabilidad.
+    # `or ""` trata tanto clave ausente como valor None/falsy explícito (WR-01).
+    raw_desc = raw.get("description") or ""
     clean_desc = re.sub(r"<[^>]+>", " ", raw_desc).strip()
 
     # remote bool → enum: True → remote; False → unknown (no inferimos onsite sin evidencia)

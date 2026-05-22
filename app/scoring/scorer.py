@@ -92,7 +92,11 @@ def score_job(
     # Razón: score_total refleja la calidad real ("esta oferta habría sido un 85
     # si no fuera por la ubicación") — permite análisis futuros y es más honesto.
     deal_breaker_hit = bool(deal_breaker_loc or assessment.deal_breaker_hit_texto)
-    deal_breaker_cual: str | None = deal_breaker_loc or assessment.deal_breaker_cual_texto
+    # CR-02: combinar ambas razones cuando los dos deal-breakers disparan simultáneamente.
+    # Antes se usaba `deal_breaker_loc or assessment.deal_breaker_cual_texto`, lo que
+    # silenciosamente descartaba la razón del LLM cuando deal_breaker_loc era truthy.
+    _db_parts = [p for p in (deal_breaker_loc, assessment.deal_breaker_cual_texto) if p]
+    deal_breaker_cual: str | None = "; ".join(_db_parts) if _db_parts else None
     if deal_breaker_hit:
         recommendation = Recommendation.skip
 

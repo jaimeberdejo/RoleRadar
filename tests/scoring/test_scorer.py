@@ -404,3 +404,55 @@ def test_fuera_de_ranking_no_descarta(
     assert score.recommendation != Recommendation.skip, (
         f"Fuera de ranking NO debe descartarse solo, se obtuvo {score.recommendation}"
     )
+
+
+# ---------------------------------------------------------------------------
+# CR-02 / IN-03: ambos deal-breakers (ubicación + texto LLM) reportados juntos
+# ---------------------------------------------------------------------------
+
+def test_ambos_deal_breakers_reportados(
+    sample_job_onsite_madrid,
+    sample_cv_profile,
+    sample_user_profile,
+) -> None:
+    """CR-02 / IN-03: cuando disparan AMBOS deal-breakers (ubicación + texto LLM),
+    deal_breaker_cual incluye las dos razones separadas por '; '.
+
+    Antes del fix, el 'or' corto-circuitaba y la razón del LLM se silenciaba.
+    """
+    assessment = _base_assessment(
+        rango_puesto=1,
+        encaje_skills=85,
+        encaje_seniority=70,
+        deal_breaker_hit_texto=True,
+        deal_breaker_cual_texto="exige 5+ años de experiencia",
+    )
+    client = make_scoring_client(assessment)
+
+    score = score_job(
+        sample_job_onsite_madrid, sample_cv_profile, sample_user_profile, client=client
+    )
+
+    # Ambos deal-breakers deben forzar skip
+    assert score.recommendation == Recommendation.skip, (
+        f"Con ambos deal-breakers activos debe ser skip, se obtuvo {score.recommendation}"
+    )
+    assert score.deal_breaker_hit is True
+
+    # La razón de ubicación (Madrid) debe estar presente
+    assert score.deal_breaker_cual is not None
+    assert "Madrid" in score.deal_breaker_cual, (
+        f"deal_breaker_cual debe mencionar Madrid (deal-breaker ubicación), "
+        f"se obtuvo: {score.deal_breaker_cual}"
+    )
+
+    # La razón textual del LLM también debe estar presente
+    assert "exige 5+ años" in score.deal_breaker_cual, (
+        f"deal_breaker_cual debe incluir la razón del LLM ('exige 5+ años'), "
+        f"se obtuvo: {score.deal_breaker_cual}"
+    )
+
+    # score_total se preserva honesto (no se pone a 0 por el override)
+    assert score.score_total > 0, (
+        f"score_total debe preservarse honesto, se obtuvo {score.score_total}"
+    )

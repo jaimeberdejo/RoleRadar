@@ -21,7 +21,7 @@ verificable de forma aislada antes de cablearla al conjunto.
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Parseo de CV** - PDF → `CVProfile` estructurado y cacheado vía Pydantic + Instructor (completed 2026-05-22)
-- [ ] **Phase 2: Normalización y Deduplicación** - Ofertas crudas heterogéneas → `Job`s únicos, sin duplicados exactos ni semánticos
+- [x] **Phase 2: Normalización y Deduplicación** - Ofertas crudas heterogéneas → `Job`s únicos, sin duplicados exactos ni semánticos (completed 2026-05-22)
 - [ ] **Phase 3: Heurística de Scoring (núcleo)** - Cada oferta única recibe un `JobScore` honesto: ranking como peso, ubicación, seniority, deal-breakers
 - [ ] **Phase 4: API y Persistencia** - Endpoints FastAPI que orquestan todo + almacenamiento SQLite-first con control de ya-vistas
 - [ ] **Phase 5: Observabilidad, Robustez y Docs n8n** - Logging estructurado, stub Langfuse, batch resiliente y README con integración n8n
@@ -59,7 +59,7 @@ Plans:
 - [x] 02-01-PLAN.md — Wave 0 setup: uv add sentence-transformers + tests/dedup/ + fixtures dedup en conftest (FakeEmbedder, payloads)
 - [x] 02-02-PLAN.md — Normalización: normalize.py (NFD id sha256) + mappers.py (registry arbeitnow/generic AJUSTABLE) + normalize_jobs facade batch-resiliente + tests (NORM-01..04, QA-02)
 - [x] 02-03-PLAN.md — Dedup helpers: embedder.py (Embedder Protocol + BgeM3Embedder lazy + FakeEmbedder) + exact.py + semantic.py (greedy coseno numpy) + merger.py + tests unitarios (DEDUP-01..03)
-- [ ] 02-04-PLAN.md — Integración: deduplicate() facade ensamblado + test end-to-end con FakeEmbedder (QA-03)
+- [x] 02-04-PLAN.md — Integración: deduplicate() facade ensamblado + test end-to-end con FakeEmbedder (QA-03)
 
 ### Phase 3: Heurística de Scoring (núcleo)
 **Goal**: El servicio puntúa cada oferta única contra el perfil REAL de Jaime con honestidad, combinando lógica determinista y juicio del LLM, de modo que el ranking de puestos pese de forma graduada, los deal-breakers filtren en duro y el resultado sea fiable y explicable.
@@ -103,7 +103,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Parseo de CV | 4/4 | Complete   | 2026-05-22 |
-| 2. Normalización y Deduplicación | 2/4 | In Progress|  |
+| 2. Normalización y Deduplicación | 4/4 | Complete   | 2026-05-22 |
 | 3. Heurística de Scoring (núcleo) | 0/TBD | Not started | - |
 | 4. API y Persistencia | 0/TBD | Not started | - |
 | 5. Observabilidad, Robustez y Docs n8n | 0/TBD | Not started | - |

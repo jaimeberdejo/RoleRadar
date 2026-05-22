@@ -22,7 +22,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Parseo de CV** - PDF → `CVProfile` estructurado y cacheado vía Pydantic + Instructor (completed 2026-05-22)
 - [x] **Phase 2: Normalización y Deduplicación** - Ofertas crudas heterogéneas → `Job`s únicos, sin duplicados exactos ni semánticos (completed 2026-05-22)
-- [ ] **Phase 3: Heurística de Scoring (núcleo)** - Cada oferta única recibe un `JobScore` honesto: ranking como peso, ubicación, seniority, deal-breakers
+- [x] **Phase 3: Heurística de Scoring (núcleo)** - Cada oferta única recibe un `JobScore` honesto: ranking como peso, ubicación, seniority, deal-breakers (completed 2026-05-22)
 - [ ] **Phase 4: API y Persistencia** - Endpoints FastAPI que orquestan todo + almacenamiento SQLite-first con control de ya-vistas
 - [ ] **Phase 5: Observabilidad, Robustez y Docs n8n** - Logging estructurado, stub Langfuse, batch resiliente y README con integración n8n
 
@@ -76,7 +76,7 @@ Plans:
 - [x] 03-01-PLAN.md — Wave 0 setup: LLMJobAssessment + PesosScoring validator (suma=1.0) en schemas.py + tests/scoring/ tree + fixtures de scoring (mock LLM client, sample UserProfile/CVProfile/Jobs)
 - [x] 03-02-PLAN.md — Deterministas paralelos: config/loader.py (UserProfile desde profile.yaml, SCORE-06) + scoring/ranking.py (decay del ranking, SCORE-02) + tests
 - [x] 03-03-PLAN.md — Determinista: scoring/location.py (evaluar_ubicacion, reglas + NFD city match, SCORE-03) + tests de las 8 ramas
-- [ ] 03-04-PLAN.md — NÚCLEO: scoring/llm.py (assess_job, SCORE-07/08) + scoring/scorer.py (orquestador 6 pasos, SCORE-01/04/05/06) + facade + QA-04 tests exhaustivos
+- [x] 03-04-PLAN.md — NÚCLEO: scoring/llm.py (assess_job, SCORE-07/08) + scoring/scorer.py (orquestador 6 pasos, SCORE-01/04/05/06) + facade + QA-04 tests exhaustivos
 
 ### Phase 4: API y Persistencia
 **Goal**: El servicio queda expuesto como una API HTTP/JSON consumible por n8n que orquesta parseo + normalización + dedup + scoring de punta a punta, persiste el histórico con fecha y recuerda qué ofertas ya se vieron entre runs.
@@ -109,6 +109,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Parseo de CV | 4/4 | Complete   | 2026-05-22 |
 | 2. Normalización y Deduplicación | 4/4 | Complete   | 2026-05-22 |
-| 3. Heurística de Scoring (núcleo) | 3/4 | In Progress|  |
+| 3. Heurística de Scoring (núcleo) | 4/4 | Complete   | 2026-05-22 |
 | 4. API y Persistencia | 0/TBD | Not started | - |
 | 5. Observabilidad, Robustez y Docs n8n | 0/TBD | Not started | - |

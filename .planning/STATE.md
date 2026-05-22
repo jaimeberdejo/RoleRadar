@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: "Completed 03-03-PLAN.md (location evaluator evaluar_ubicacion, SCORE-03)"
-last_updated: "2026-05-22T04:22:00.000Z"
+status: verifying
+stopped_at: Completed 03-04-PLAN.md (Phase 3 complete)
+last_updated: "2026-05-22T02:14:26.322Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 12
-  completed_plans: 10
-  percent: 83
+  completed_plans: 12
+  percent: 100
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-05-22)
 
 Phase: 03 (Heurística de Scoring (núcleo)) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-05-22
 
-Progress: [████████░░] 83%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [████████░░] 83%
 | Phase 02-normalizacion-y-deduplicacion P04 | 3 | 2 tasks | 2 files |
 | Phase 03-heuristica-de-scoring P02 | 15 | 2 tasks | 5 files |
 | Phase 03-heuristica-de-scoring P03 | 12 | 1 task | 2 files |
+| Phase 03-heuristica-de-scoring P04 | 253 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,9 @@ Recent decisions affecting current work:
 - [Phase ?]: yaml.safe_load exclusivamente en loader para mitigar ejecucion de codigo arbitrario (T-03-04).
 - [Phase ?]: NFD replicado localmente en scoring/location.py — no importar app.dedup para mantener tests de scoring torch-free (Pitfall 7).
 - [Phase ?]: Substring city match en evaluar_ubicacion: any(norm(c) in norm(loc)) para que 'Barcelona, España' matchee 'Barcelona'.
+- [Phase ?]: deal-breaker override last: score_total stays honest, only recommendation→skip
+- [Phase ?]: fixed system prompt (anti prompt-injection): offer in XML <oferta> section, system is string literal
+- [Phase ?]: scoring module never imports app.dedup: scorer receives deduplicated Jobs (keeps tests fast <1s)
 
 ### Pending Todos
 
@@ -108,6 +112,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T04:22:00.000Z
-Stopped at: Completed 03-03-PLAN.md (location evaluator evaluar_ubicacion, SCORE-03)
+Last session: 2026-05-22T02:14:26.319Z
+Stopped at: Completed 03-04-PLAN.md (Phase 3 complete)
 Resume file: None

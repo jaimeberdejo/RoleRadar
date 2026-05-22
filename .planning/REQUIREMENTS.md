@@ -35,11 +35,11 @@ Requisitos del milestone (FASES 2-5). Cada uno mapea a una fase del roadmap.
 - [x] **SCORE-01**: Para cada oferta única, el servicio devuelve un `JobScore` con `score_total`, `recommendation` y desglose (encaje_puesto / skills / ubicación / seniority)
 - [x] **SCORE-02**: El ranking de puestos actúa como PESO graduado (función de decaimiento configurable), no como filtro binario; una oferta fuera de ranking no se descarta sola
 - [x] **SCORE-03**: Ubicación y remoto se evalúan según preferencias (remote permitido → alto; onsite/hybrid alto solo en ciudades aceptadas; presencial fuera sin reubicación → muy bajo)
-- [ ] **SCORE-04**: Seniority se compara contra la experiencia real del `CVProfile`; pedir mucho más baja el encaje y aparece en `missing_requirements`, pero no descarta solo
-- [ ] **SCORE-05**: Si se dispara un deal-breaker → `recommendation = skip`, `deal_breaker_hit = true` y se explica cuál (filtro duro)
+- [x] **SCORE-04**: Seniority se compara contra la experiencia real del `CVProfile`; pedir mucho más baja el encaje y aparece en `missing_requirements`, pero no descarta solo
+- [x] **SCORE-05**: Si se dispara un deal-breaker → `recommendation = skip`, `deal_breaker_hit = true` y se explica cuál (filtro duro)
 - [x] **SCORE-06**: `score_total` es combinación ponderada de los cuatro sub-encajes con pesos configurables desde `profile.yaml` (defaults: puesto 35% / skills 30% / ubicación 20% / seniority 15%)
-- [ ] **SCORE-07**: El score es honesto: `reasons_for`, `reasons_against`, `matched_skills` (skills reales que pide la oferta) y `missing_requirements` sin inflar
-- [ ] **SCORE-08**: El prompt al LLM incluye CVProfile real, ranking de puestos con sinónimos, preferencias de ubicación/remoto, deal-breakers y la oferta
+- [x] **SCORE-07**: El score es honesto: `reasons_for`, `reasons_against`, `matched_skills` (skills reales que pide la oferta) y `missing_requirements` sin inflar
+- [x] **SCORE-08**: El prompt al LLM incluye CVProfile real, ranking de puestos con sinónimos, preferencias de ubicación/remoto, deal-breakers y la oferta
 
 ### API — Endpoints FastAPI (FASE 5)
 
@@ -74,7 +74,7 @@ Requisitos del milestone (FASES 2-5). Cada uno mapea a una fase del roadmap.
 - [x] **QA-01**: Test de parseo de CV con fixture PDF de ejemplo (LLM mockeado)
 - [x] **QA-02**: Tests de normalización por fuente
 - [x] **QA-03**: Tests de dedup (detecta duplicados obvios y casos semánticos; embeddings mockeados)
-- [ ] **QA-04**: Tests exhaustivos de la heurística de scoring (el ranking pesa bien, un deal-breaker fuerza skip, la ubicación se evalúa correcto; LLM mockeado)
+- [x] **QA-04**: Tests exhaustivos de la heurística de scoring (el ranking pesa bien, un deal-breaker fuerza skip, la ubicación se evalúa correcto; LLM mockeado)
 
 ## v2 Requirements
 
@@ -122,12 +122,12 @@ Reconocidos pero diferidos; no en el roadmap actual.
 | SCORE-01 | Phase 3 | Complete |
 | SCORE-02 | Phase 3 | Complete |
 | SCORE-03 | Phase 3 | Complete |
-| SCORE-04 | Phase 3 | Pending |
-| SCORE-05 | Phase 3 | Pending |
+| SCORE-04 | Phase 3 | Complete |
+| SCORE-05 | Phase 3 | Complete |
 | SCORE-06 | Phase 3 | Complete |
-| SCORE-07 | Phase 3 | Pending |
-| SCORE-08 | Phase 3 | Pending |
-| QA-04 | Phase 3 | Pending |
+| SCORE-07 | Phase 3 | Complete |
+| SCORE-08 | Phase 3 | Complete |
+| QA-04 | Phase 3 | Complete |
 | API-01 | Phase 4 | Pending |
 | API-02 | Phase 4 | Pending |
 | API-03 | Phase 4 | Pending |

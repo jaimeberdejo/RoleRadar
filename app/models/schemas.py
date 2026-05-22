@@ -225,6 +225,17 @@ class LLMJobAssessment(BaseModel):
         ),
     )
 
+    @model_validator(mode="after")
+    def check_deal_breaker_consistency(self) -> "LLMJobAssessment":
+        """WR-01: coerce deal_breaker_cual_texto a None cuando deal_breaker_hit_texto=False.
+
+        Evita el estado contradictorio deal_breaker_hit_texto=False + deal_breaker_cual_texto
+        no-None, que puede confundir a consumidores downstream (scorer.py, n8n).
+        """
+        if not self.deal_breaker_hit_texto:
+            self.deal_breaker_cual_texto = None
+        return self
+
 
 class ScoredJob(BaseModel):
     """Lo que devuelve /jobs/process: la oferta + su puntuación."""

@@ -704,17 +704,19 @@ If A1 is wrong: add `trust_remote_code=True` to `SentenceTransformer("BAAI/bge-m
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Full 64-char hex id vs truncated**
+1. **Full 64-char hex id vs truncated** — RESOLVED
    - What we know: Phase 1 cache uses full 64-char hex validated by regex; `Job.id: str` has no length constraint
    - What's unclear: Whether the planner should use full 64 or truncate to 16/32 for readability
    - Recommendation: Use full 64-char hex for consistency with Phase 1 conventions
+   - **Resolution:** Adoptado. `stable_job_id()` devuelve sha256 hexdigest completo (64 chars) en plan 02-02.
 
-2. **HTML stripping depth for arbeitnow descriptions**
+2. **HTML stripping depth for arbeitnow descriptions** — RESOLVED
    - What we know: Arbeitnow descriptions contain HTML entities (`&nbsp;`, escaped URLs) in addition to tags
    - What's unclear: Whether the embedding quality is significantly affected by leaving HTML entities vs decoding them
    - Recommendation: For Phase 2, strip tags only (`re.sub(r"<[^>]+>", " ", html)`); add `html.unescape()` if dedup quality is poor in practice
+   - **Resolution:** Adoptado. Strip de tags en el mapper arbeitnow (plan 02-02); `html.unescape()` diferido hasta ver calidad real.
 
 3. **dedup_umbral wiring to profile.yaml**
    - What we know: `UserProfile.dedup_umbral = 0.85` exists in schemas; CONTEXT.md says "accept umbral as parameter with default 0.85; wiring can be Phase 4"

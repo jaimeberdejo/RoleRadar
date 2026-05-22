@@ -58,8 +58,11 @@ def normalize_field(s: str) -> str:
 def stable_job_id(company: str, title: str, location: str) -> str:
     """Genera un identificador estable para una oferta a partir de sus campos clave.
 
-    Construye la clave ``normalize(company)|normalize(title)|normalize(location)``
-    y devuelve el sha256 hexadecimal de 64 caracteres (completo, sin truncar).
+    Construye la clave uniendo los campos normalizados con ``\\x00`` (byte nulo)
+    como separador y devuelve el sha256 hexadecimal de 64 caracteres (completo,
+    sin truncar). El byte nulo no puede aparecer en la salida de normalize_field
+    (que solo produce texto Unicode), eliminando las colisiones por inyección de
+    separador que ocurrirían con ``|`` (WR-02).
     Mismo patrón que app/cv/cache.pdf_hash — consistente con ``_HEX_RE``.
 
     Args:
@@ -76,11 +79,9 @@ def stable_job_id(company: str, title: str, location: str) -> str:
         >>> stable_job_id("Acme", "Dev", "BCN") == stable_job_id("acme", "dev", "bcn")
         True
     """
-    key = (
-        normalize_field(company)
-        + "|"
-        + normalize_field(title)
-        + "|"
-        + normalize_field(location)
-    )
+    key = "\x00".join([
+        normalize_field(company),
+        normalize_field(title),
+        normalize_field(location),
+    ])
     return hashlib.sha256(key.encode("utf-8")).hexdigest()

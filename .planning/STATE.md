@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: "Completed 01-04-PLAN.md (Phase 1 complete: parse_cv orchestrator + QA-01 acceptance test)"
-last_updated: "2026-05-22T01:57:38.296Z"
+last_updated: "2026-05-22T02:02:35.910Z"
 last_activity: 2026-05-22
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 12
-  completed_plans: 9
-  percent: 75
+  completed_plans: 10
+  percent: 83
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-22)
 ## Current Position
 
 Phase: 03 (Heurística de Scoring (núcleo)) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-05-22
 
-Progress: [████████░░] 75%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Progress: [████████░░] 75%
 | Phase 01-parseo-de-cv P04 | 1 | 2 tasks | 3 files |
 | Phase 02-normalizacion-y-deduplicacion P03 | 262 | 2 tasks | 5 files |
 | Phase 02-normalizacion-y-deduplicacion P04 | 3 | 2 tasks | 2 files |
+| Phase 03-heuristica-de-scoring P02 | 15 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,8 @@ Recent decisions affecting current work:
 - [Phase ?]: NFD decomposes precomposed chars; NFC keeps them intact
 - [Phase ?]: stable_job_id returns full 64-char sha256 hex — matches Phase 1 _HEX_RE pattern from cv/cache.py
 - [Phase ?]: arbeitnow remote=False maps to RemoteJob.unknown — not onsite; RemoteJob.remote only when remote=True
+- [Phase ?]: Parametros de decay (paso, suelo, maximo) como defaults en codigo — no en profile.yaml. Simplifica schema de UserProfile; ajuste diferido a v2.
+- [Phase ?]: yaml.safe_load exclusivamente en loader para mitigar ejecucion de codigo arbitrario (T-03-04).
 
 ### Pending Todos
 
@@ -102,6 +105,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22T01:57:38.291Z
+Last session: 2026-05-22T02:02:32.687Z
 Stopped at: Completed 01-04-PLAN.md (Phase 1 complete: parse_cv orchestrator + QA-01 acceptance test)
 Resume file: None

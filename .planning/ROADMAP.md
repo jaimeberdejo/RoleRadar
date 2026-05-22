@@ -74,7 +74,7 @@ Plans:
 **Plans**: 4 plans
 Plans:
 - [x] 03-01-PLAN.md — Wave 0 setup: LLMJobAssessment + PesosScoring validator (suma=1.0) en schemas.py + tests/scoring/ tree + fixtures de scoring (mock LLM client, sample UserProfile/CVProfile/Jobs)
-- [ ] 03-02-PLAN.md — Deterministas paralelos: config/loader.py (UserProfile desde profile.yaml, SCORE-06) + scoring/ranking.py (decay del ranking, SCORE-02) + tests
+- [x] 03-02-PLAN.md — Deterministas paralelos: config/loader.py (UserProfile desde profile.yaml, SCORE-06) + scoring/ranking.py (decay del ranking, SCORE-02) + tests
 - [ ] 03-03-PLAN.md — Determinista: scoring/location.py (evaluar_ubicacion, reglas + NFD city match, SCORE-03) + tests de las 8 ramas
 - [ ] 03-04-PLAN.md — NÚCLEO: scoring/llm.py (assess_job, SCORE-07/08) + scoring/scorer.py (orquestador 6 pasos, SCORE-01/04/05/06) + facade + QA-04 tests exhaustivos
 

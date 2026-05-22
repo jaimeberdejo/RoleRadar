@@ -1,0 +1,50 @@
+# Perfil del usuario — editable SIN tocar código.
+# El CV se parsea aparte (PDF) y se combina con esto.
+
+datos_personales:
+  nombre: "Jaime Berdejo"
+  email: "jaimeberdejo1902@gmail.com"
+  telefono: ""
+  ubicacion_actual: "Barcelona, España"
+  derecho_a_trabajar_en: ["UE", "España"]
+  idiomas:
+    - { idioma: "Español", nivel: "Nativo" }
+    - { idioma: "Inglés", nivel: "C1" }
+
+preferencias_ubicacion:
+  ciudades_preferidas: ["Barcelona"]
+  pais: "España"
+  dispuesto_a_reubicarse: false
+
+preferencia_remoto:
+  modalidad_ideal: "remote"          # remote | hybrid | onsite | indiferente
+  acepta_onsite_solo_en: ["Barcelona"]
+
+# ORDENADO de mayor a menor prioridad (el primero = puesto nº1)
+ranking_puestos:
+  - titulo: "Ingeniero de IA / AI Engineer"
+    sinonimos: ["AI Engineer", "LLM Engineer", "GenAI Engineer"]
+  - titulo: "Ingeniero de ML / ML Engineer"
+    sinonimos: ["ML Engineer", "Machine Learning Engineer"]
+  - titulo: "Ingeniero de datos / Data Engineer"
+    sinonimos: ["Data Engineer"]
+  - titulo: "MLOps Engineer"
+    sinonimos: ["MLOps", "ML Platform Engineer"]
+
+expectativas:
+  salario_minimo: null
+  tipo_contrato_preferido: "indefinido"
+
+deal_breakers:
+  - "exige 5+ años de experiencia"
+  - "presencial fuera de Barcelona"
+
+# Pesos del score_total (deben sumar 1.0)
+pesos:
+  puesto: 0.35
+  skills: 0.30
+  ubicacion: 0.20
+  seniority: 0.15
+
+# Similitud coseno (0-1) por encima de la cual dos ofertas se consideran duplicadas
+dedup_umbral: 0.85

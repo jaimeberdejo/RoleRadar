@@ -1,3 +1,19 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: executing
+stopped_at: Completed 01-01-PLAN.md (Wave 0 test scaffolding)
+last_updated: "2026-05-22T00:07:31.773Z"
+last_activity: 2026-05-22
+progress:
+  total_phases: 5
+  completed_phases: 0
+  total_plans: 4
+  completed_plans: 1
+  percent: 25
+---
+
 # Project State
 
 ## Project Reference
@@ -5,20 +21,21 @@
 See: .planning/PROJECT.md (updated 2026-05-22)
 
 **Core value:** Puntuar y filtrar ofertas con honestidad contra el perfil REAL de Jaime (CV verdadero + ranking de puestos + preferencias); el ranking pesa graduado, los deal-breakers filtran en duro.
-**Current focus:** Phase 1 — Parseo de CV
+**Current focus:** Phase 01 — Parseo de CV
 
 ## Current Position
 
-Phase: 1 of 5 (Parseo de CV)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-05-22 — Roadmap created, 38 v1 requirements mapped across 5 phases
+Phase: 01 (Parseo de CV) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-05-22
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 25%
 
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 0
 - Average duration: — min
 - Total execution time: 0.0 hours
@@ -30,10 +47,12 @@ Progress: [░░░░░░░░░░] 0%
 | - | - | - | - |
 
 **Recent Trend:**
+
 - Last 5 plans: —
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 01 P01 | 2 | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -47,6 +66,7 @@ Recent decisions affecting current work:
 - [Setup]: SQLite primero, Supabase como upgrade — arrancar local sin deps externas
 - [Setup]: Construir FASES 2-5 en este milestone — sistema completo usable de verdad
 - [Roadmap]: Scoring (FASE 4) tiene su propia fase dedicada (Phase 3) por ser el núcleo
+- [Phase ?]: Use pymupdf for in-memory PDF fixture generation instead of reportlab — pymupdf already a core dep
 
 ### Pending Todos
 
@@ -71,6 +91,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-22
-Stopped at: ROADMAP.md and STATE.md created; REQUIREMENTS.md traceability updated
+Last session: 2026-05-22T00:07:31.769Z
+Stopped at: Completed 01-01-PLAN.md (Wave 0 test scaffolding)
 Resume file: None

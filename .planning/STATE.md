@@ -100,6 +100,9 @@ None yet.
 [Issues that affect future work]
 
 - REQUIREMENTS.md decía "37 total" pero el conteo real de IDs únicos es 38 (CV 3 + NORM 4 + DEDUP 3 + SCORE 8 + API 7 + STORE 3 + OBS 3 + DOC 3 + QA 4). Coverage corregido a 38/38.
+- ⛔ **BLOQUEO DE RED (2026-05-22) — Fase 4 pausada.** La red (DNS a PyPI) cayó durante la Fase 4. No se pueden instalar `fastapi`, `uvicorn[standard]`, `python-multipart` (ni `starlette`). `pyproject.toml` ya los lista pero NO están en `uv.lock` ni en `.venv`, así que **`uv run` falla** hasta que vuelva la red. Mientras tanto los tests de Fases 1-3 corren con `.venv/bin/python -m pytest tests/ --ignore=tests/api` (132 passed).
+  - **Fase 4 estado:** plan 04-01 ejecutado y commiteado (esqueleto app/api + app/storage sqlite/protocol/supabase + andamiaje tests/api), PERO sus tests NO se han podido verificar (falta fastapi/starlette — el "3 tests green" del executor no es fiable). Planes 04-02, 04-03, 04-04 NO ejecutados. Fase 4 NO está completa.
+  - **Para reanudar (cuando vuelva la red):** `uv add fastapi "uvicorn[standard]" python-multipart` → re-verificar 04-01 (`uv run pytest tests/api -q`) → `/gsd-autonomous --from 4` (o continuar 04-02..04-04). Fase 5 depende de la 4.
 
 ## Deferred Items
 

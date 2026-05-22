@@ -59,15 +59,25 @@ def merge_group(group: list[Job]) -> Job:
     # Seleccionar la oferta con descripción más completa (más larga)
     canonical = max(group, key=lambda j: len(j.description))
 
-    # Acumular URLs de los descartados (excluir None y la URL de la canónica)
-    urls_alternativas_nuevas = [
-        j.url
-        for j in group
-        if j is not canonical and j.url is not None
-    ]
+    # Acumular TODAS las URLs de todos los miembros del grupo (incluido el canónico),
+    # tanto el .url primario como el .urls_alternativas ya acumulado en pasadas anteriores.
+    # Esto preserva las URLs acumuladas en el nivel exacto cuando el canónico cambia
+    # en el nivel semántico (CR-01).
+    all_urls: list[str] = []
+    for j in group:
+        if j.url is not None:
+            all_urls.append(j.url)
+        all_urls.extend(j.urls_alternativas)
 
-    # Combinar URLs alternativas existentes con las nuevas
-    todas_las_alternativas = list(canonical.urls_alternativas) + urls_alternativas_nuevas
+    # Excluir la URL primaria de la canónica final (no es una "alternativa" de sí misma)
+    canonical_url = canonical.url
+    todas_las_alternativas_raw = [u for u in all_urls if u != canonical_url]
+
+    # Deduplicar preservando orden de inserción
+    seen: set[str] = set()
+    todas_las_alternativas = [
+        u for u in todas_las_alternativas_raw if not (u in seen or seen.add(u))  # type: ignore[func-returns-value]
+    ]
 
     logger.debug(
         "merge_group: %d jobs → canónica '%s @ %s' (desc=%d chars), %d URLs alternativas",

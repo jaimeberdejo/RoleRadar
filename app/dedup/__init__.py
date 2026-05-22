@@ -96,8 +96,11 @@ def deduplicate(
             embedding. Default 50.
 
     Returns:
-        Lista de Jobs únicos, fusionados y ordenados. Cada Job canónico acumula
-        las URLs de sus duplicados en ``urls_alternativas``.
+        Lista de Jobs únicos y fusionados. Los representantes se ordenan por
+        longitud de descripción descendente antes del clustering semántico para
+        selección de canónica determinista (ver WR-06/WR-07); el orden final
+        de la lista refleja ese orden de procesamiento. Cada Job canónico
+        acumula las URLs de sus duplicados en ``urls_alternativas``.
     """
     # Imports deferidos: evitan arrastrar numpy/torch al importar app.dedup (T-02-11)
     from app.dedup.exact import exact_group  # noqa: PLC0415
@@ -118,6 +121,13 @@ def deduplicate(
 
     # Fusionar cada grupo exacto a su oferta canónica (representante)
     representatives = [merge_group(g) for g in groups]
+
+    # Ordenar por longitud de descripción descendente antes del clustering semántico.
+    # El clustering greedy es dependiente del orden: el primer job de cada cluster
+    # actúa como semilla y se convierte en la oferta canónica potencial. Ordenar
+    # desc_length DESC garantiza que la oferta con más contexto sea siempre la semilla
+    # → selección de canónica determinista entre runs (WR-06, WR-07).
+    representatives.sort(key=lambda j: len(j.description), reverse=True)
 
     # Instanciar BgeM3Embedder de forma perezosa si no se inyectó uno
     if embedder is None:

@@ -66,7 +66,8 @@ def semantic_cluster(
 
     NOTA: el clustering es greedy (dependiente del orden). Para mayor determinismo
     en producción, ordenar los jobs por longitud de descripción descendente antes
-    de llamar (Pitfall 5 de RESEARCH.md). El facade deduplicate() aplica ese orden.
+    de llamar (Pitfall 5 de RESEARCH.md). El facade deduplicate() aplica ese orden
+    sobre los representantes antes de invocar esta función (WR-07).
 
     Args:
         jobs: Lista de ofertas a agrupar (los índices del resultado corresponden

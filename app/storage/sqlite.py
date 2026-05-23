@@ -1,7 +1,7 @@
 """Implementación SQLite de Storage para BuscadorDeEmpleo.
 
-Usa stdlib sqlite3 (sin SQLAlchemy). Seleccionada cuando SUPABASE_URL/KEY
-no están en el entorno. Configurable vía SQLITE_DB_PATH (default data/jobs.db).
+Usa stdlib sqlite3 (sin SQLAlchemy). Backend de persistencia local del
+servicio. Configurable vía SQLITE_DB_PATH (default data/jobs.db).
 
 Decisiones de diseño:
     - Conexión por llamada (_connect()): thread-safe con check_same_thread=False.

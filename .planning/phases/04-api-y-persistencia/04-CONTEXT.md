@@ -42,7 +42,7 @@ orquestación n8n en sí (la hace n8n por fuera), llamadas a APIs de empleo (n8n
 - **Abstracción `Storage` (Protocol/ABC)** con métodos tipo: `upsert_scored_jobs(scored: list[ScoredJob]) -> None`, `was_seen(job_id) -> bool` / `mark_seen(...)`, `get_history(...) -> list[...]`.
 - **`SQLiteStorage`** implementación completa con **stdlib `sqlite3`** (NO SQLAlchemy — evitar dep pesada). Tablas: `jobs` (id PK, title, company, location, remote, url, source, score_total, recommendation, score_json, first_seen, last_seen, notified/seen flag). Histórico con fecha (STORE-02).
 - **Control de ya-vistas (STORE-03)**: persistir los `Job.id` vistos; en /jobs/process marcar cada resultado con `ya_visto` = existía en runs anteriores; insertar/actualizar los nuevos. Así n8n no repite ofertas entre días.
-- **Upgrade a Supabase (STORE-01)**: `SupabaseStorage` como skeleton/adapter que implementa el mismo Protocol; se selecciona si `SUPABASE_URL`/`SUPABASE_KEY` están en el entorno; si no, `SQLiteStorage` (default funcional). El skeleton de Supabase puede quedar parcialmente implementado/diferido pero la SELECCIÓN y la interfaz deben existir. Credenciales desde entorno. Ruta SQLite configurable vía env (p.ej. `SQLITE_DB_PATH`, default `data/jobs.db`).
+- **Storage local (STORE-01)** — _ACTUALIZADO 2026-05-23: Supabase ELIMINADO del alcance._ Solo `SQLiteStorage` (stdlib sqlite3), ruta configurable vía `SQLITE_DB_PATH` (default `data/jobs.db`). 100% local, sin nube, sin selección por env de Supabase. El `Protocol` (`app/storage/protocol.py`) permite añadir otro backend en el futuro si hiciera falta DB en red.
 
 ### Inyección de dependencias (testabilidad)
 - El cliente LLM (scoring + cv parse) y el `Embedder` (dedup) se inyectan vía FastAPI `Depends`,

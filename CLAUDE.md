@@ -48,8 +48,10 @@ mi portfolio, así que la calidad de ingeniería importa.
 - Embeddings (dedup + matching CV): BGE-M3 (sentence-transformers o
   FlagEmbedding; elige y justifica)
 - Parseo de CV: soporta PDF (mi CV está en PDF). Usa pymupdf para extraer texto.
-- Persistencia: Supabase (Postgres + pgvector), credenciales desde entorno,
-  con fallback a SQLite local si no hay Supabase configurado.
+- Persistencia: SQLite local (stdlib sqlite3), ruta vía SQLITE_DB_PATH (default
+  data/jobs.db). [Actualizado 2026-05-23: Supabase/pgvector eliminado del alcance —
+  herramienta personal local; el dedup calcula embeddings en memoria por run, así que
+  pgvector no se usa.]
 - Observabilidad: deja la integración con Langfuse preparada (interfaz) para
   trazar las llamadas de scoring.
 - Tests: pytest. NUNCA hardcodees credenciales: .env + python-dotenv + .env.example
@@ -187,9 +189,12 @@ claros, y que una oferta mal formada no tumbe el batch entero (procesa lo que
 puedas, reporta lo que falló).
 
 ## Persistencia
-Supabase (pgvector para los embeddings de dedup) con fallback SQLite. Guarda
+SQLite local (stdlib sqlite3, sin nube; ruta vía SQLITE_DB_PATH). Guarda
 ofertas con fecha (histórico para ver evolución) y control de "ya notificadas"
 para que n8n no repita ofertas entre días.
+[Actualizado 2026-05-23: antes Supabase+pgvector; eliminado del alcance — el dedup
+calcula embeddings en memoria por run, así que pgvector no aporta. Si en el futuro se
+quisiera DB en red, el Protocol `app/storage/protocol.py` permite añadir otro backend.]
 
 ## Calidad de ingeniería (importa para portfolio)
 - Estructura modular: api/ (endpoints), models/, cv/ (parseo), dedup/, scoring/
@@ -231,8 +236,9 @@ FASE 4: LA HEURÍSTICA de scoring (lógica determinista + LLM, ranking como peso
 ubicación, seniority, deal breakers, score ponderado) + tests exhaustivos de la
 heurística. Para y OK. ← Es la fase más importante, dale el cuidado que merece.
 
-FASE 5: Endpoints FastAPI que orquestan todo, persistencia (Supabase + fallback
-SQLite), control de ya-vistas, README con la sección de n8n.
+FASE 5: Endpoints FastAPI que orquestan todo, persistencia (SQLite local;
+Supabase eliminado del alcance 2026-05-23), control de ya-vistas, README con la
+sección de n8n.
 
 En cada fase explica las decisiones de diseño no triviales. Pregunta si algo no
 está claro en vez de asumir. No metas dependencias pesadas innecesarias.

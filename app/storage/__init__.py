@@ -2,7 +2,7 @@
 
 Interfaz pública:
     Storage  — Protocol runtime_checkable de persistencia.
-    get_storage_backend() — selecciona la implementación según env vars.
+    get_storage_backend() — crea e inicializa el backend SQLite local.
 """
 from __future__ import annotations
 
@@ -14,26 +14,20 @@ __all__ = ["Storage", "get_storage_backend"]
 
 
 def get_storage_backend() -> Storage:
-    """Selecciona e inicializa el backend de storage según variables de entorno.
+    """Crea e inicializa el backend de persistencia (SQLite local).
 
-    Si SUPABASE_URL y SUPABASE_KEY están presentes → SupabaseStorage.
-    En caso contrario → SQLiteStorage(SQLITE_DB_PATH, default "data/jobs.db").
+    Ruta del fichero configurable vía la variable de entorno SQLITE_DB_PATH
+    (default "data/jobs.db"). 100% local, sin dependencias de red.
 
-    Los imports son DEFERIDOS dentro del cuerpo (anti-torch / anti-circular):
-    sqlite.py y supabase.py pueden no existir aún; el import diferido no se
-    ejecuta hasta que se llame a esta función.
+    El import es DEFERIDO dentro del cuerpo (anti-circular / mantiene el
+    paquete importable sin abrir disco hasta que se llama).
 
     Returns:
-        Instancia de Storage lista para usar (init_db ya llamado si SQLite).
+        Instancia de Storage lista para usar (init_db ya llamado).
     """
-    supabase_url = os.getenv("SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_KEY")
-    if supabase_url and supabase_key:
-        from app.storage.supabase import SupabaseStorage  # noqa: PLC0415
-        return SupabaseStorage()
-    else:
-        from app.storage.sqlite import SQLiteStorage  # noqa: PLC0415
-        db_path = os.getenv("SQLITE_DB_PATH", "data/jobs.db")
-        storage = SQLiteStorage(db_path)
-        storage.init_db()
-        return storage
+    from app.storage.sqlite import SQLiteStorage  # noqa: PLC0415
+
+    db_path = os.getenv("SQLITE_DB_PATH", "data/jobs.db")
+    storage = SQLiteStorage(db_path)
+    storage.init_db()
+    return storage

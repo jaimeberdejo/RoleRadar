@@ -40,7 +40,7 @@ heurística de scoring** (FASE 4) debe funcionar y ser confiable.
 - [ ] Deduplicación en dos niveles: hash exacto + semántico con embeddings BGE-M3 (FASE 3)
 - [ ] Heurística de scoring: lógica determinista + juicio LLM (ranking como peso, ubicación/remoto, seniority, deal-breakers, score ponderado) (FASE 4) ← **núcleo**
 - [ ] Endpoints FastAPI: `/cv/parse`, `/profile`, `/jobs/normalize`, `/jobs/process`, `/jobs/score`, `/jobs/history` (FASE 5)
-- [ ] Persistencia SQLite-first con upgrade a Supabase (pgvector) y control de "ya-vistas" (FASE 5)
+- [ ] Persistencia SQLite local (stdlib sqlite3, sin nube) y control de "ya-vistas" (FASE 5)
 - [ ] Logging estructurado, manejo de errores por capa, batch resiliente (una oferta mala no tumba el lote) (FASE 5)
 - [ ] Interfaz de observabilidad Langfuse preparada (stub) para trazar llamadas de scoring (FASE 5)
 - [ ] README con sección dedicada a integración con n8n + ofertas de ejemplo para probar `/jobs/process` (FASE 5)
@@ -70,7 +70,7 @@ heurística de scoring** (FASE 4) debe funcionar y ser confiable.
 - **Tech stack**: Scoring vía API de Anthropic (Claude), key desde `ANTHROPIC_API_KEY`
 - **Tech stack**: Embeddings BGE-M3 local (sentence-transformers o FlagEmbedding — elegir y justificar en FASE 3)
 - **Tech stack**: Parseo de PDF con pymupdf
-- **Tech stack**: Persistencia SQLite-first → Supabase (Postgres + pgvector), credenciales desde entorno
+- **Tech stack**: Persistencia SQLite local (stdlib sqlite3), ruta vía `SQLITE_DB_PATH`. Sin Supabase/nube (decisión 2026-05-23)
 - **Security**: NUNCA hardcodear credenciales — `.env` + python-dotenv + `.env.example`
 - **Dependencies**: no meter dependencias pesadas innecesarias (BGE-M3/torch es la excepción aceptada conscientemente)
 - **Compatibility**: el servicio debe ser consumible por n8n vía HTTP con JSON simple; una oferta mal formada no debe tumbar el batch entero
@@ -83,7 +83,7 @@ heurística de scoring** (FASE 4) debe funcionar y ser confiable.
 |----------|-----------|---------|
 | Servicio headless, sin frontend propio | n8n entrega (email/telegram); foco en la inteligencia | — Pending |
 | Embeddings BGE-M3 local (no API) | Gratis, privado, coincide con el spec; se asume el peso de torch | — Pending |
-| SQLite primero, Supabase como upgrade | Arrancar local sin deps externas, testeable ya | — Pending |
+| Solo SQLite local (Supabase eliminado, 2026-05-23) | Herramienta personal local; pgvector no se usa (dedup es en memoria por run); SQLite cubre persistencia, histórico y ya-vistas sin nube | ✓ Good |
 | Construir FASES 2-5 en este milestone | Sistema completo usable de verdad, no solo un trozo | — Pending |
 | Ranking de puestos como PESO, no filtro binario | Una oferta fuera de ranking no se descarta sola; decae graduado | — Pending |
 | Scoring = lógica determinista + juicio LLM | Núcleo del proyecto; no dejarlo todo al LLM a ciegas | — Pending |

@@ -1,7 +1,7 @@
 """Tests unitarios de SQLiteStorage — STORE-01, STORE-02, STORE-03.
 
 Cubre:
-    - STORE-01: selección de backend por env (SQLiteStorage vs SupabaseStorage).
+    - STORE-01: backend SQLite local; ruta configurable vía SQLITE_DB_PATH.
     - STORE-02: persistencia con fecha (first_seen/last_seen); upsert preserva first_seen.
     - STORE-03: control de ya-vistas (was_seen); historial paginable.
 
@@ -218,9 +218,7 @@ def test_get_history_omite_fila_corrupta(db: SQLiteStorage, tmp_path) -> None:
 
 
 def test_seleccion_sqlite_por_defecto(monkeypatch, tmp_path) -> None:
-    """Sin SUPABASE_URL/KEY, get_storage_backend devuelve SQLiteStorage. (STORE-01)"""
-    monkeypatch.delenv("SUPABASE_URL", raising=False)
-    monkeypatch.delenv("SUPABASE_KEY", raising=False)
+    """get_storage_backend devuelve SQLiteStorage local. (STORE-01)"""
     monkeypatch.setenv("SQLITE_DB_PATH", str(tmp_path / "backend_test.db"))
 
     backend = get_storage_backend()
@@ -228,13 +226,12 @@ def test_seleccion_sqlite_por_defecto(monkeypatch, tmp_path) -> None:
     assert isinstance(backend, SQLiteStorage)
 
 
-def test_seleccion_supabase_cuando_env_configurado(monkeypatch) -> None:
-    """Con SUPABASE_URL y SUPABASE_KEY, get_storage_backend devuelve SupabaseStorage. (STORE-01)"""
-    from app.storage.supabase import SupabaseStorage
-
-    monkeypatch.setenv("SUPABASE_URL", "https://fake.supabase.co")
-    monkeypatch.setenv("SUPABASE_KEY", "fake-key-12345")
+def test_seleccion_respeta_sqlite_db_path(monkeypatch, tmp_path) -> None:
+    """get_storage_backend usa SQLITE_DB_PATH para ubicar el fichero. (STORE-01)"""
+    db_file = tmp_path / "custom_path.db"
+    monkeypatch.setenv("SQLITE_DB_PATH", str(db_file))
 
     backend = get_storage_backend()
 
-    assert isinstance(backend, SupabaseStorage)
+    assert isinstance(backend, SQLiteStorage)
+    assert db_file.exists()  # init_db() creó el fichero en la ruta configurada

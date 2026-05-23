@@ -53,7 +53,7 @@ Requisitos del milestone (FASES 2-5). Cada uno mapea a una fase del roadmap.
 
 ### STORE — Persistencia (FASE 5)
 
-- [x] **STORE-01**: Persistencia SQLite-first, con upgrade a Supabase (Postgres + pgvector) y credenciales desde entorno
+- [x] **STORE-01**: Persistencia SQLite local (stdlib sqlite3), ruta configurable vía `SQLITE_DB_PATH` (default `data/jobs.db`). 100% local, sin dependencias de red. _(Decisión 2026-05-23: Supabase eliminado del alcance — ver PROJECT.md.)_
 - [x] **STORE-02**: Se guardan las ofertas con fecha (histórico para ver evolución)
 - [x] **STORE-03**: Control de "ya-vistas/ya-notificadas" entre runs para que n8n no repita ofertas entre días
 

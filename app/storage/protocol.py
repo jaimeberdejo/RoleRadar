@@ -1,7 +1,7 @@
 """Protocolo de persistencia para el servicio BuscadorDeEmpleo.
 
-Define la interfaz que deben satisfacer SQLiteStorage y SupabaseStorage,
-usando typing.Protocol (PEP 544) para subtipado estructural — sin herencia.
+Define la interfaz que debe satisfacer SQLiteStorage (y cualquier backend
+futuro), usando typing.Protocol (PEP 544) para subtipado estructural — sin herencia.
 
 Contratos:
     init_db: crea tablas si no existen; idempotente.
@@ -18,7 +18,7 @@ from app.models.schemas import ScoredJob
 
 @runtime_checkable
 class Storage(Protocol):
-    """Interfaz de persistencia. SQLiteStorage y SupabaseStorage deben satisfacerla.
+    """Interfaz de persistencia. SQLiteStorage (y futuros backends) debe satisfacerla.
 
     Contratos:
     - upsert_scored_jobs: idempotente por job.id; actualiza si ya existe.

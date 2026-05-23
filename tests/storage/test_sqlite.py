@@ -97,17 +97,27 @@ def test_was_seen_id_inexistente_devuelve_false(db: SQLiteStorage) -> None:
 
 
 def test_upsert_preserva_first_seen(db: SQLiteStorage) -> None:
-    """Segundo upsert del mismo id: first_seen NO cambia; last_seen puede cambiar. (STORE-02)"""
+    """Segundo upsert del mismo id: first_seen NO cambia; last_seen SÍ cambia. (STORE-02)
+
+    IN-03: se verifica AMBAS mitades del contrato STORE-02:
+    - first_seen no se sobreescribe (ON CONFLICT lo preserva).
+    - last_seen sí se actualiza (ON CONFLICT lo renueva).
+    El sleep de 20 ms garantiza que el reloj del sistema avance lo suficiente.
+    """
     db.upsert_scored_jobs([_make_scored_job("job-1")])
     first_seen_original = db.get_history()[0]["first_seen"]
+    last_seen_after_first = db.get_history()[0]["last_seen"]
 
-    # Esperar un instante para que last_seen sea distinto
-    time.sleep(0.01)
+    # Esperar para que last_seen sea estrictamente posterior al primer upsert
+    time.sleep(0.02)
     db.upsert_scored_jobs([_make_scored_job("job-1")])
 
     row = db.get_history()[0]
     assert row["first_seen"] == first_seen_original, (
         "ON CONFLICT no debe sobreescribir first_seen en el segundo upsert"
+    )
+    assert row["last_seen"] > last_seen_after_first, (
+        "ON CONFLICT debe actualizar last_seen en el segundo upsert"
     )
 
 

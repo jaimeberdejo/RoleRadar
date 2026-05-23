@@ -43,11 +43,11 @@ Requisitos del milestone (FASES 2-5). Cada uno mapea a una fase del roadmap.
 
 ### API — Endpoints FastAPI (FASE 5)
 
-- [ ] **API-01**: `POST /cv/parse` — sube CV (PDF), devuelve y cachea el `CVProfile`
+- [x] **API-01**: `POST /cv/parse` — sube CV (PDF), devuelve y cachea el `CVProfile`
 - [x] **API-02**: `GET /profile` — devuelve el `UserProfile` cargado
-- [ ] **API-03**: `POST /jobs/normalize` — recibe ofertas crudas + source, devuelve `Job`s
+- [x] **API-03**: `POST /jobs/normalize` — recibe ofertas crudas + source, devuelve `Job`s
 - [ ] **API-04**: `POST /jobs/process` — recibe ofertas crudas de varias fuentes, hace normalización + dedup + scoring y devuelve ofertas únicas puntuadas y ordenadas por `score_total`, marcando las ya-vistas
-- [ ] **API-05**: `POST /jobs/score` — (granular) puntúa una lista de `Job`s ya normalizados
+- [x] **API-05**: `POST /jobs/score` — (granular) puntúa una lista de `Job`s ya normalizados
 - [ ] **API-06**: `GET /jobs/history` — ofertas guardadas con su score y fecha
 - [x] **API-07**: Contrato pensado para n8n — JSON limpio de entrada/salida y errores con códigos HTTP claros
 
@@ -128,11 +128,11 @@ Reconocidos pero diferidos; no en el roadmap actual.
 | SCORE-07 | Phase 3 | Complete |
 | SCORE-08 | Phase 3 | Complete |
 | QA-04 | Phase 3 | Complete |
-| API-01 | Phase 4 | Pending |
+| API-01 | Phase 4 | Complete |
 | API-02 | Phase 4 | Complete |
-| API-03 | Phase 4 | Pending |
+| API-03 | Phase 4 | Complete |
 | API-04 | Phase 4 | Pending |
-| API-05 | Phase 4 | Pending |
+| API-05 | Phase 4 | Complete |
 | API-06 | Phase 4 | Pending |
 | API-07 | Phase 4 | Complete |
 | STORE-01 | Phase 4 | Complete |

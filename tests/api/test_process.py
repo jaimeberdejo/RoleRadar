@@ -1,7 +1,7 @@
 """Tests e2e de POST /jobs/process y GET /jobs/history.
 
 Cubre:
-- Orden por score_total DESC (API-04)
+- Orden por score_total DESC (API-04) — test FALSIFICABLE con scores distintos (WR-03)
 - ya_visto=False en primer run, ya_visto=True en segundo run (STORE-03)
 - Persistencia: history no vacío tras process (API-06)
 - Oferta mal formada → errors, no 500 (API-07/NORM-04)
@@ -12,10 +12,13 @@ Todos los tests: cero red, cero torch (FakeEmbedder + scoring mockeado).
 """
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
 import pytest
 
-from app.api.deps import get_storage
+from app.api.deps import get_scoring_llm_client, get_storage
 from app.api.main import app
+from app.models.schemas import LLMJobAssessment
 
 
 # ─── Payloads de ejemplo (arbeitnow-compatible) ──────────────────────────────
@@ -45,19 +48,92 @@ def _process_body(*offers: dict, source: str = "arbeitnow") -> dict:
     return {"sources": [{"source": source, "offers": list(offers)}]}
 
 
+# ─── Helpers ─────────────────────────────────────────────────────────────────
+
+
+def _make_scoring_mock_with_skills(skills_values: list[int]) -> MagicMock:
+    """Devuelve un mock de scoring que retorna LLMJobAssessment con encaje_skills distintos.
+
+    Usa side_effect para que cada llamada sucesiva devuelva el siguiente assessment
+    de la lista. Si la lista tiene dos valores distintos, los score_total resultantes
+    serán distintos (ya que encaje_skills pesa 30% en la heurística por defecto).
+
+    Args:
+        skills_values: lista de encaje_skills (0-100) a devolver en orden.
+    """
+    assessments = [
+        LLMJobAssessment(
+            razonamiento="test",
+            puesto_detectado="AI Engineer",
+            rango_puesto=1,
+            encaje_skills=s,
+            encaje_seniority=70,
+            matched_skills=[],
+            missing_requirements=[],
+            reasons_for=[],
+            reasons_against=[],
+            deal_breaker_hit_texto=False,
+        )
+        for s in skills_values
+    ]
+    mock = MagicMock()
+    mock.messages.create.side_effect = assessments
+    return mock
+
+
 # ─── Tests ───────────────────────────────────────────────────────────────────
 
 
 def test_process_ordena_por_score_total(api_client_with_cv):
-    """Los resultados de /jobs/process se devuelven ordenados por score_total DESC."""
-    body = _process_body(OFFER_AI, OFFER_ML)
-    response = api_client_with_cv.post("/jobs/process", json=body)
-    assert response.status_code == 200, response.text
-    data = response.json()
-    results = data["results"]
-    assert len(results) >= 1
-    scores = [r["score"]["score_total"] for r in results]
-    assert scores == sorted(scores, reverse=True), f"No ordenado desc: {scores}"
+    """Los resultados de /jobs/process se devuelven ordenados por score_total DESC.
+
+    WR-03: el mock de scoring devuelve encaje_skills DISTINTOS (20 vs 90) para
+    las dos ofertas, de forma que los score_total resultantes son distintos.
+    El assert `scores[0] > scores[-1]` es ESTRICTO — eliminar el sort() en
+    process_jobs fallaría este test al no garantizarse el orden.
+
+    Para que las dos ofertas no sean deduplicadas entre sí, se sobreescribe
+    get_embedder con un FakeEmbedder que usa el fallback por hash SHA-256 (sin
+    default_vector): textos distintos → vectores distintos → similitud coseno
+    baja → no se fusionan y ambas llegan al scoring.
+    """
+    import numpy as np  # noqa: PLC0415
+    from app.api.deps import get_embedder  # noqa: PLC0415
+    from app.dedup.embedder import FakeEmbedder  # noqa: PLC0415
+
+    # Embedder por hash: vectores distintos para textos distintos → no dedup
+    hash_embedder = FakeEmbedder()  # sin default_vector → fallback SHA-256
+
+    # Primera llamada al scoring → encaje_skills=20 (oferta con descripción más larga)
+    # Segunda llamada al scoring → encaje_skills=90
+    # Con pesos por defecto (skills=0.30), score_total diferirá en ~21 puntos.
+    scoring_mock = _make_scoring_mock_with_skills([20, 90])
+
+    app.dependency_overrides[get_scoring_llm_client] = lambda: scoring_mock
+    app.dependency_overrides[get_embedder] = lambda: hash_embedder
+
+    try:
+        body = _process_body(OFFER_AI, OFFER_ML)
+        response = api_client_with_cv.post("/jobs/process", json=body)
+        assert response.status_code == 200, response.text
+        data = response.json()
+        results = data["results"]
+        assert len(results) == 2, f"Deben procesarse 2 ofertas, got {len(results)}"
+        scores = [r["score"]["score_total"] for r in results]
+        assert scores == sorted(scores, reverse=True), f"No ordenado desc: {scores}"
+        assert scores[0] > scores[-1], (
+            f"El score más alto debe ser estrictamente mayor al más bajo: {scores}"
+        )
+    finally:
+        # Restaurar los overrides del fixture api_client_with_cv.
+        # El teardown del fixture hará el reset final de dependency_overrides.
+        from tests.conftest import EXPECTED_ASSESSMENT, make_scoring_client  # noqa: PLC0415
+        app.dependency_overrides[get_scoring_llm_client] = (
+            lambda: make_scoring_client(EXPECTED_ASSESSMENT)
+        )
+        app.dependency_overrides[get_embedder] = lambda: FakeEmbedder(
+            default_vector=np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
+        )
 
 
 def test_process_ya_visto_primer_run_false(api_client_with_cv):

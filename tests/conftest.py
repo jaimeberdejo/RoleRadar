@@ -2,11 +2,12 @@
 Fixtures compartidas para todos los tests de BuscadorDeEmpleo.
 
 Expone:
-- sample_pdf_bytes  (session scope): PDF mínimo con texto de CV conocido, generado
-  en memoria con pymupdf. Usado por los tests de extractor, caché y parser.
-- EXPECTED_PROFILE: constante CVProfile determinista que el mock del LLM devuelve.
-- mock_llm_client   (function scope): MagicMock del cliente instructor (Anthropic).
-  Su método .messages.create devuelve siempre EXPECTED_PROFILE.
+- sample_pdf_bytes        (session scope): PDF mínimo con texto de CV conocido.
+- EXPECTED_PROFILE:       constante CVProfile determinista devuelta por el mock LLM.
+- EXPECTED_USER_PROFILE:  constante UserProfile determinista para tests de API —
+                          permite sobreescribir get_user_profile_dep sin depender
+                          de data/profile.yaml en disco (WR-02).
+- mock_llm_client         (function scope): MagicMock del cliente instructor.
 """
 from __future__ import annotations
 
@@ -46,6 +47,53 @@ EXPECTED_PROFILE = CVProfile(
     skills_tecnicas=["Python", "LLMs"],
     anios_experiencia_total=2.0,
     dominios=["IA"],
+)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Constante global: UserProfile determinista para tests de API (WR-02)
+# Permite sobreescribir get_user_profile_dep sin depender de data/profile.yaml.
+# El fixture sample_user_profile (abajo) devuelve esta misma instancia.
+# ──────────────────────────────────────────────────────────────────────────────
+
+EXPECTED_USER_PROFILE = UserProfile(
+    datos_personales=DatosPersonales(
+        nombre="Jaime Berdejo",
+        email="jaimeberdejo1902@gmail.com",
+        ubicacion_actual="Barcelona, España",
+    ),
+    preferencias_ubicacion=PreferenciasUbicacion(
+        ciudades_preferidas=["Barcelona"],
+        pais="España",
+        dispuesto_a_reubicarse=False,
+    ),
+    preferencia_remoto=PreferenciaRemoto(
+        modalidad_ideal=ModalidadRemoto.remote,
+        acepta_onsite_solo_en=["Barcelona"],
+    ),
+    ranking_puestos=[
+        PuestoRanking(
+            titulo="Ingeniero de IA / AI Engineer",
+            sinonimos=["AI Engineer", "LLM Engineer", "GenAI Engineer"],
+        ),
+        PuestoRanking(
+            titulo="Ingeniero de ML / ML Engineer",
+            sinonimos=["ML Engineer", "Machine Learning Engineer"],
+        ),
+        PuestoRanking(
+            titulo="Ingeniero de datos / Data Engineer",
+            sinonimos=["Data Engineer"],
+        ),
+        PuestoRanking(
+            titulo="MLOps Engineer",
+            sinonimos=["MLOps", "ML Platform Engineer"],
+        ),
+    ],
+    deal_breakers=[
+        "exige 5+ años de experiencia",
+        "presencial fuera de Barcelona",
+    ],
+    pesos=PesosScoring(),
 )
 
 
@@ -286,54 +334,10 @@ def sample_cv_profile() -> CVProfile:
 def sample_user_profile() -> UserProfile:
     """UserProfile coherente con data/profile.yaml para tests de scoring.
 
-    Configuración real de Jaime:
-    - Ciudades preferidas: Barcelona; no dispuesto a reubicarse.
-    - Modalidad ideal: remote; acepta onsite solo en Barcelona.
-    - Ranking: 4 puestos reales con sinónimos.
-    - Deal-breakers: exige 5+ años, presencial fuera de Barcelona.
-    - Pesos por defecto (suman 1.0).
-
+    Devuelve EXPECTED_USER_PROFILE — la constante de módulo definida arriba.
     Consumido por tests/scoring/test_location.py, test_scorer.py y test_loader.py.
     """
-    return UserProfile(
-        datos_personales=DatosPersonales(
-            nombre="Jaime Berdejo",
-            email="jaimeberdejo1902@gmail.com",
-            ubicacion_actual="Barcelona, España",
-        ),
-        preferencias_ubicacion=PreferenciasUbicacion(
-            ciudades_preferidas=["Barcelona"],
-            pais="España",
-            dispuesto_a_reubicarse=False,
-        ),
-        preferencia_remoto=PreferenciaRemoto(
-            modalidad_ideal=ModalidadRemoto.remote,
-            acepta_onsite_solo_en=["Barcelona"],
-        ),
-        ranking_puestos=[
-            PuestoRanking(
-                titulo="Ingeniero de IA / AI Engineer",
-                sinonimos=["AI Engineer", "LLM Engineer", "GenAI Engineer"],
-            ),
-            PuestoRanking(
-                titulo="Ingeniero de ML / ML Engineer",
-                sinonimos=["ML Engineer", "Machine Learning Engineer"],
-            ),
-            PuestoRanking(
-                titulo="Ingeniero de datos / Data Engineer",
-                sinonimos=["Data Engineer"],
-            ),
-            PuestoRanking(
-                titulo="MLOps Engineer",
-                sinonimos=["MLOps", "ML Platform Engineer"],
-            ),
-        ],
-        deal_breakers=[
-            "exige 5+ años de experiencia",
-            "presencial fuera de Barcelona",
-        ],
-        pesos=PesosScoring(),
-    )
+    return EXPECTED_USER_PROFILE
 
 
 @pytest.fixture

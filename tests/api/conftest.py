@@ -20,9 +20,15 @@ from app.api.deps import (
     get_embedder,
     get_scoring_llm_client,
     get_storage,
+    get_user_profile_dep,
 )
 from app.api.main import app
-from tests.conftest import EXPECTED_ASSESSMENT, EXPECTED_PROFILE, make_scoring_client
+from tests.conftest import (
+    EXPECTED_ASSESSMENT,
+    EXPECTED_PROFILE,
+    EXPECTED_USER_PROFILE,
+    make_scoring_client,
+)
 
 
 class FakeStorage:
@@ -68,10 +74,12 @@ def api_client():
     """TestClient con todos los Depends sobreescritos — cero red, cero torch.
 
     Sobreescribe:
-    - get_storage       → FakeStorage (in-memory, funcional)
+    - get_storage            → FakeStorage (in-memory, funcional)
     - get_scoring_llm_client → MagicMock con EXPECTED_ASSESSMENT
-    - get_cv_llm_client → MagicMock con EXPECTED_PROFILE
-    - get_embedder      → FakeEmbedder (import deferido, anti-torch)
+    - get_cv_llm_client      → MagicMock con EXPECTED_PROFILE
+    - get_embedder           → FakeEmbedder (import deferido, anti-torch)
+    - get_user_profile_dep   → EXPECTED_USER_PROFILE (WR-02: elimina dependencia
+                               de data/profile.yaml en disco durante los tests)
 
     Teardown: app.dependency_overrides = {} (Pitfall 7 — evita polución entre tests).
     """
@@ -92,6 +100,7 @@ def api_client():
     app.dependency_overrides[get_scoring_llm_client] = lambda: mock_scoring
     app.dependency_overrides[get_cv_llm_client] = lambda: mock_cv
     app.dependency_overrides[get_embedder] = lambda: fake_embedder
+    app.dependency_overrides[get_user_profile_dep] = lambda: EXPECTED_USER_PROFILE
 
     with TestClient(app) as client:
         yield client

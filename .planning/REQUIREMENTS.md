@@ -65,9 +65,9 @@ Requisitos del milestone (FASES 2-5). Cada uno mapea a una fase del roadmap.
 
 ### DOC — Documentación y DX (FASE 5)
 
-- [ ] **DOC-01**: README con instalación, `.env`, cómo editar `profile.yaml`, cómo subir el CV y cómo arrancar el servicio
-- [ ] **DOC-02**: Sección dedicada "Integración con n8n" (qué nodos llaman a qué endpoints, flujo, formato exacto del JSON de `/jobs/process`, cómo exponer el servicio)
-- [ ] **DOC-03**: `profile.yaml` de ejemplo + un par de ofertas de ejemplo (JSON) para probar `/jobs/process` sin n8n
+- [x] **DOC-01**: README con instalación, `.env`, cómo editar `profile.yaml`, cómo subir el CV y cómo arrancar el servicio
+- [x] **DOC-02**: Sección dedicada "Integración con n8n" (qué nodos llaman a qué endpoints, flujo, formato exacto del JSON de `/jobs/process`, cómo exponer el servicio)
+- [x] **DOC-03**: `profile.yaml` de ejemplo + un par de ofertas de ejemplo (JSON) para probar `/jobs/process` sin n8n
 
 ### QA — Tests (mapeados a su fase)
 

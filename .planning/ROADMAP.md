@@ -24,7 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Normalización y Deduplicación** - Ofertas crudas heterogéneas → `Job`s únicos, sin duplicados exactos ni semánticos (completed 2026-05-22)
 - [x] **Phase 3: Heurística de Scoring (núcleo)** - Cada oferta única recibe un `JobScore` honesto: ranking como peso, ubicación, seniority, deal-breakers (completed 2026-05-22)
 - [x] **Phase 4: API y Persistencia** - Endpoints FastAPI que orquestan todo + almacenamiento SQLite-first con control de ya-vistas (completed 2026-05-23)
-- [ ] **Phase 5: Observabilidad, Robustez y Docs n8n** - Logging estructurado, stub Langfuse, batch resiliente y README con integración n8n
+- [x] **Phase 5: Observabilidad, Robustez y Docs n8n** - Logging estructurado, stub Langfuse, batch resiliente y README con integración n8n (completed 2026-05-23)
 
 ## Phase Details
 
@@ -107,7 +107,7 @@ Plans:
 Plans:
 - [x] 05-01-PLAN.md — Wave 1: app/obs/ (configure_logging idempotente OBS-01 + trace_llm stub no-op OBS-02) + tests/obs/ (idempotencia + no-op por defecto)
 - [x] 05-02-PLAN.md — Wave 2: app/errors.py (excepciones por capa OBS-03) + exception handlers en main.py + configure_logging en lifespan + contador llm_calls + envolver assess_job/extract_cv_profile con trace_llm + test de handlers
-- [ ] 05-03-PLAN.md — Wave 3: examples/ (ofertas Arbeitnow+genéricas + payload /jobs/process DOC-03) + test de aceptación + README de portfolio (DOC-01) con sección "Integración con n8n" (DOC-02) + .env.example alineado
+- [x] 05-03-PLAN.md — Wave 3: examples/ (ofertas Arbeitnow+genéricas + payload /jobs/process DOC-03) + test de aceptación + README de portfolio (DOC-01) con sección "Integración con n8n" (DOC-02) + .env.example alineado
 
 ## Progress
 
@@ -120,4 +120,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Normalización y Deduplicación | 4/4 | Complete   | 2026-05-22 |
 | 3. Heurística de Scoring (núcleo) | 4/4 | Complete   | 2026-05-23 |
 | 4. API y Persistencia | 4/4 | Complete   | 2026-05-23 |
-| 5. Observabilidad, Robustez y Docs n8n | 1/3 | In Progress|  |
+| 5. Observabilidad, Robustez y Docs n8n | 3/3 | Complete   | 2026-05-23 |

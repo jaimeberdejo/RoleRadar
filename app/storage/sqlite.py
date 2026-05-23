@@ -18,6 +18,7 @@ from __future__ import annotations
 import logging
 import sqlite3
 from datetime import datetime, timezone
+from pathlib import Path
 
 from app.models.schemas import JobScore, ScoredJob
 
@@ -52,6 +53,7 @@ class SQLiteStorage:
 
     def init_db(self) -> None:
         """Crea la tabla jobs si no existe. Idempotente."""
+        Path(self._db_path).parent.mkdir(parents=True, exist_ok=True)
         with self._connect() as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS jobs (

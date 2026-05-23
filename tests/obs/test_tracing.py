@@ -8,6 +8,7 @@ Cubre:
 - Import-safety: importar app.obs.tracing no importa langfuse (verifica que
   "langfuse" no aparece en sys.modules tras el import).
 - El cuerpo del with se ejecuta exactamente una vez (trace_llm no salta el bloque).
+- IN-01: langfuse instalado pero Langfuse() lanza RuntimeError → no-op, body ejecutado.
 
 Estrategia de reload:
   _LANGFUSE_CONFIGURED se evalúa UNA VEZ al importar el módulo. Para probar
@@ -20,6 +21,7 @@ from __future__ import annotations
 
 import importlib
 import sys
+import types
 
 import pytest
 
@@ -111,3 +113,34 @@ def test_no_lanza_aunque_cuerpo_lanza(monkeypatch):
     with pytest.raises(ValueError, match="test error"):
         with tracing.trace_llm("error_op"):
             raise ValueError("test error")
+
+
+def test_noop_cuando_langfuse_init_falla(monkeypatch):
+    """Langfuse instalado pero Langfuse() lanza RuntimeError → no-op, body ejecutado.
+
+    IN-01: cubre el escenario de CR-01 donde langfuse está instalado y configurado
+    pero la construcción de Langfuse() falla (auth error, config error, etc.).
+    El body de la llamada LLM SIEMPRE debe ejecutarse; la excepción de Langfuse
+    NO debe propagarse al llamador.
+    """
+    monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-test")
+    monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-test")
+
+    # Inyectar un módulo langfuse falso en sys.modules para que el 'from langfuse import Langfuse'
+    # dentro de trace_llm no lance ImportError, pero sí RuntimeError al instanciar Langfuse().
+    class BrokenLangfuse:
+        def __init__(self) -> None:
+            raise RuntimeError("config error simulado")
+
+    fake_langfuse_module = types.ModuleType("langfuse")
+    fake_langfuse_module.Langfuse = BrokenLangfuse  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "langfuse", fake_langfuse_module)
+
+    tracing = _reload_tracing()
+    assert tracing._LANGFUSE_CONFIGURED, "Flag debe ser True con ambas env vars presentes"
+
+    executed = []
+    with tracing.trace_llm("failing_op"):
+        executed.append(1)
+
+    assert executed == [1], "Body debe ejecutarse aunque Langfuse() falle (CR-01)"

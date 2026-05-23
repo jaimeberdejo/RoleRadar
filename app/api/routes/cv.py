@@ -75,8 +75,10 @@ async def parse_cv_endpoint(
         )
 
     # Delegar a parse_cv (cache-first: si ya existe en caché lo devuelve sin LLM)
+    # Pasar el cliente inyectado para que dependency_overrides sea efectivo en tests
+    # y para que la trazabilidad Langfuse funcione en Fase 5 (CR-01 Option B).
     try:
-        profile = parse_cv(pdf_bytes)
+        profile = parse_cv(pdf_bytes, client=client)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

@@ -143,14 +143,15 @@ def test_batch_resilience_not_broken_by_handlers(api_client_with_cv):
     """Regresión batch: /jobs/process con oferta mal formada → 200 + errors[] no vacío.
 
     Los exception handlers NO deben romper la resiliencia de batch existente.
-    Una oferta mal formada va a errors[], no produce 500.
+    Una oferta mal formada (company_name=int, title=None) provoca TypeError en el
+    mapper → va a errors[], no produce 500.
     """
     payload = {
         "sources": [
             {
                 "source": "generic",
                 "offers": [
-                    {"employer": "INVALID — missing required fields"}
+                    {"company_name": 12345, "title": None}  # int en lugar de str → TypeError
                 ]
             }
         ]

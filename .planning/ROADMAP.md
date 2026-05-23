@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Parseo de CV** - PDF → `CVProfile` estructurado y cacheado vía Pydantic + Instructor (completed 2026-05-22)
 - [x] **Phase 2: Normalización y Deduplicación** - Ofertas crudas heterogéneas → `Job`s únicos, sin duplicados exactos ni semánticos (completed 2026-05-22)
 - [x] **Phase 3: Heurística de Scoring (núcleo)** - Cada oferta única recibe un `JobScore` honesto: ranking como peso, ubicación, seniority, deal-breakers (completed 2026-05-22)
-- [ ] **Phase 4: API y Persistencia** - Endpoints FastAPI que orquestan todo + almacenamiento SQLite-first con control de ya-vistas
+- [x] **Phase 4: API y Persistencia** - Endpoints FastAPI que orquestan todo + almacenamiento SQLite-first con control de ya-vistas (completed 2026-05-23)
 - [ ] **Phase 5: Observabilidad, Robustez y Docs n8n** - Logging estructurado, stub Langfuse, batch resiliente y README con integración n8n
 
 ## Phase Details
@@ -92,7 +92,7 @@ Plans:
 - [x] 04-01-PLAN.md — Wave 0: deps (fastapi/uvicorn/python-multipart/httpx) + esqueleto app (main.py lifespan, deps.py, Storage Protocol) + GET /health + GET /profile + andamiaje de tests (TestClient + dependency_overrides) (API-02, API-07)
 - [x] 04-02-PLAN.md — Persistencia: SQLiteStorage local (stdlib sqlite3, ON CONFLICT upsert, was_seen, get_history) + tests unitarios (STORE-01/02/03). Supabase eliminado del alcance (decisión 2026-05-23).
 - [x] 04-03-PLAN.md — Endpoints simples: POST /cv/parse (UploadFile) + POST /jobs/normalize + POST /jobs/score + modelos request/response + wire routers + tests (API-01/03/05/07)
-- [ ] 04-04-PLAN.md — Orquestación: POST /jobs/process (normalize+dedup+score+ya_visto+persist+orden) + GET /jobs/history + tests e2e (orden, ya_visto 2º run, persistencia, resiliencia) (API-04/06/07, STORE-03)
+- [x] 04-04-PLAN.md — Orquestación: POST /jobs/process (normalize+dedup+score+ya_visto+persist+orden) + GET /jobs/history + tests e2e (orden, ya_visto 2º run, persistencia, resiliencia) (API-04/06/07, STORE-03)
 
 ### Phase 5: Observabilidad, Robustez y Docs n8n
 **Goal**: El servicio queda listo para portfolio y para uso real: visible (logging + stub Langfuse), resiliente por capas, y documentado de forma que cualquiera pueda instalarlo, configurarlo y conectarlo a n8n sin leer el código.
@@ -115,5 +115,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Parseo de CV | 4/4 | Complete   | 2026-05-22 |
 | 2. Normalización y Deduplicación | 4/4 | Complete   | 2026-05-22 |
 | 3. Heurística de Scoring (núcleo) | 4/4 | Complete   | 2026-05-22 |
-| 4. API y Persistencia | 3/4 | In Progress|  |
+| 4. API y Persistencia | 4/4 | Complete   | 2026-05-23 |
 | 5. Observabilidad, Robustez y Docs n8n | 0/TBD | Not started | - |

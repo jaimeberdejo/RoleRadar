@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-04-PLAN.md (Phase 3 complete)
-last_updated: "2026-05-23T15:55:08.654Z"
+stopped_at: Completed 04-04-PLAN.md (Phase 4 complete)
+last_updated: "2026-05-23T16:05:00.000Z"
 last_activity: 2026-05-23
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 16
-  completed_plans: 15
-  percent: 94
+  completed_plans: 16
+  percent: 100
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-05-22)
 
 ## Current Position
 
-Phase: 04 (API y Persistencia) — EXECUTING
+Phase: 04 (API y Persistencia) — COMPLETE
 Plan: 4 of 4
-Status: Ready to execute
+Status: All plans complete — Phase 4 done
 Last activity: 2026-05-23
 
-Progress: [█████████░] 94%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [█████████░] 94%
 | Phase 03-heuristica-de-scoring P03 | 12 | 1 task | 2 files |
 | Phase 03-heuristica-de-scoring P04 | 253 | 2 tasks | 5 files |
 | Phase 04-api-y-persistencia P03 | 4min | 3 tasks | 5 files |
+| Phase 04-api-y-persistencia P04 | 7min | 4 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,9 @@ Recent decisions affecting current work:
 - [Phase ?]: fixed system prompt (anti prompt-injection): offer in XML <oferta> section, system is string literal
 - [Phase ?]: scoring module never imports app.dedup: scorer receives deduplicated Jobs (keeps tests fast <1s)
 - [Phase ?]: Separación de responsabilidades
+- [Phase 4 P04]: was_seen computed BEFORE upsert — if after, every offer in own run would be ya_visto=True
+- [Phase 4 P04]: ScoredJobConVisto wraps ScoredJob+ya_visto without mutating core ScoredJob schema
+- [Phase 4 P04]: limit clamped silently in GET /jobs/history to avoid breaking n8n on out-of-range params
 
 ### Pending Todos
 
@@ -117,6 +121,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-05-23T15:55:08.650Z
-Stopped at: Completed 03-04-PLAN.md (Phase 3 complete)
+Last session: 2026-05-23T16:05:00.000Z
+Stopped at: Completed 04-04-PLAN.md (Phase 4 complete)
 Resume file: None

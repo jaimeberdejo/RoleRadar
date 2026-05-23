@@ -223,6 +223,86 @@ def test_registry_arbeitnow_is_arbeitnow_mapper():
 
 
 # ══════════════════════════════════════════════════════════
+# Bloque 5b: jsearch_mapper (NORM-03 — JSearch /search-v2)
+# Shape verificado contra la API real (2026-05-23): un elemento de data.jobs[].
+# ══════════════════════════════════════════════════════════
+
+# Sample mínimo y realista de un job de JSearch /search-v2 (sin clave de API).
+_JSEARCH_JOB = {
+    "job_id": "abc123",
+    "employer_name": "United Airlines",
+    "job_title": "Developer II",
+    "job_description": "Build internal developer tooling.",
+    "job_apply_link": "https://careers.united.com/job/123",
+    "job_is_remote": False,
+    "job_city": "Chicago",
+    "job_state": "Illinois",
+    "job_country": "US",
+    "job_location": "Chicago, IL",
+    "job_posted_at_datetime_utc": "2026-05-20T00:00:00.000Z",
+    "job_posted_at_timestamp": 1779235200,
+    "job_min_salary": 90000,
+    "job_max_salary": 120000,
+    "job_salary_currency": "USD",
+    "job_salary_period": "YEAR",
+}
+
+
+def test_registry_has_jsearch():
+    """MAPPER_REGISTRY debe tener entrada 'jsearch' apuntando a jsearch_mapper."""
+    from app.dedup.mappers import jsearch_mapper
+    assert MAPPER_REGISTRY.get("jsearch") is jsearch_mapper
+
+
+def test_jsearch_mapper_campos_clave():
+    """jsearch_mapper extrae title, company, location, url y id estable de 64 hex."""
+    from app.dedup.mappers import jsearch_mapper
+    job = jsearch_mapper(_JSEARCH_JOB, "jsearch")
+    assert job.title == "Developer II"
+    assert job.company == "United Airlines"
+    assert job.location == "Chicago, IL"
+    assert job.url == "https://careers.united.com/job/123"
+    assert len(job.id) == 64
+
+
+def test_jsearch_mapper_remote_y_posted_at():
+    """job_is_remote=False → unknown; posted_at usa el ISO ya formateado."""
+    from app.dedup.mappers import jsearch_mapper
+    from app.models.schemas import RemoteJob
+    job = jsearch_mapper(_JSEARCH_JOB, "jsearch")
+    assert job.remote == RemoteJob.unknown
+    assert job.posted_at == "2026-05-20T00:00:00.000Z"
+
+
+def test_jsearch_mapper_salary():
+    """jsearch_mapper construye Salary desde min/max/currency/period (YEAR→anual)."""
+    from app.dedup.mappers import jsearch_mapper
+    job = jsearch_mapper(_JSEARCH_JOB, "jsearch")
+    assert job.salary is not None
+    assert job.salary.min == 90000
+    assert job.salary.max == 120000
+    assert job.salary.moneda == "USD"
+    assert job.salary.periodo == "anual"
+
+
+def test_jsearch_mapper_location_compuesta_sin_job_location():
+    """Si falta job_location, compone desde city/state/country no vacíos."""
+    from app.dedup.mappers import jsearch_mapper
+    raw = {k: v for k, v in _JSEARCH_JOB.items() if k != "job_location"}
+    job = jsearch_mapper(raw, "jsearch")
+    assert job.location == "Chicago, Illinois, US"
+
+
+def test_jsearch_mapper_remote_true():
+    """job_is_remote=True → RemoteJob.remote."""
+    from app.dedup.mappers import jsearch_mapper
+    from app.models.schemas import RemoteJob
+    raw = {**_JSEARCH_JOB, "job_is_remote": True}
+    job = jsearch_mapper(raw, "jsearch")
+    assert job.remote == RemoteJob.remote
+
+
+# ══════════════════════════════════════════════════════════
 # Bloque 6: normalize_jobs facade — NORM-01, NORM-03, NORM-04
 # ══════════════════════════════════════════════════════════
 

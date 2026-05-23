@@ -224,3 +224,32 @@ def process_jobs(
         len(all_errors),
     )
     return ProcessResponse(results=scored, errors=all_errors)
+
+
+@router.get("/history")
+def history_endpoint(
+    limit: int = 50,
+    offset: int = 0,
+    storage=Depends(get_storage),
+) -> list[dict]:
+    """Devuelve el historial de ofertas guardadas, ordenado por last_seen DESC.
+
+    Paginable con los query params ``limit`` (1..200) y ``offset`` (>=0).
+    ``limit`` se clampea silenciosamente a [1, 200] para no romper a n8n.
+    Delega en storage.get_history (API-06).
+
+    Args:
+        limit:   Máximo de filas a devolver (clampeado a [1, 200]).
+        offset:  Desplazamiento de paginación (clampeado a >= 0).
+        storage: Storage backend inyectado.
+
+    Returns:
+        Lista de dicts con campos básicos de la oferta + score deserializado.
+    """
+    # Clamp en lugar de HTTPException 400 — no rompe a n8n si manda valores raros
+    limit = max(1, min(limit, 200))
+    offset = max(0, offset)
+
+    rows = storage.get_history(limit=limit, offset=offset)
+    logger.info("history_endpoint: devolviendo %d filas (limit=%d offset=%d)", len(rows), limit, offset)
+    return rows

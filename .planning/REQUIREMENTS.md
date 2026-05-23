@@ -141,9 +141,9 @@ Reconocidos pero diferidos; no en el roadmap actual.
 | OBS-01 | Phase 5 | Complete |
 | OBS-02 | Phase 5 | Complete |
 | OBS-03 | Phase 5 | Complete |
-| DOC-01 | Phase 5 | Pending |
-| DOC-02 | Phase 5 | Pending |
-| DOC-03 | Phase 5 | Pending |
+| DOC-01 | Phase 5 | Complete |
+| DOC-02 | Phase 5 | Complete |
+| DOC-03 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 38 total (el doc inicial decía "37"; el conteo real de IDs únicos es 38)

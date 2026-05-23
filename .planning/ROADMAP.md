@@ -90,7 +90,7 @@ Plans:
 **Plans**: 4 plans
 Plans:
 - [x] 04-01-PLAN.md — Wave 0: deps (fastapi/uvicorn/python-multipart/httpx) + esqueleto app (main.py lifespan, deps.py, Storage Protocol) + GET /health + GET /profile + andamiaje de tests (TestClient + dependency_overrides) (API-02, API-07)
-- [ ] 04-02-PLAN.md — Persistencia: SQLiteStorage (stdlib sqlite3, ON CONFLICT upsert, was_seen, get_history) + SupabaseStorage skeleton + selección por env + tests unitarios (STORE-01/02/03)
+- [x] 04-02-PLAN.md — Persistencia: SQLiteStorage (stdlib sqlite3, ON CONFLICT upsert, was_seen, get_history) + SupabaseStorage skeleton + selección por env + tests unitarios (STORE-01/02/03)
 - [ ] 04-03-PLAN.md — Endpoints simples: POST /cv/parse (UploadFile) + POST /jobs/normalize + POST /jobs/score + modelos request/response + wire routers + tests (API-01/03/05/07)
 - [ ] 04-04-PLAN.md — Orquestación: POST /jobs/process (normalize+dedup+score+ya_visto+persist+orden) + GET /jobs/history + tests e2e (orden, ya_visto 2º run, persistencia, resiliencia) (API-04/06/07, STORE-03)
 

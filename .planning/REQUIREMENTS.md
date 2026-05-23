@@ -53,9 +53,9 @@ Requisitos del milestone (FASES 2-5). Cada uno mapea a una fase del roadmap.
 
 ### STORE — Persistencia (FASE 5)
 
-- [ ] **STORE-01**: Persistencia SQLite-first, con upgrade a Supabase (Postgres + pgvector) y credenciales desde entorno
-- [ ] **STORE-02**: Se guardan las ofertas con fecha (histórico para ver evolución)
-- [ ] **STORE-03**: Control de "ya-vistas/ya-notificadas" entre runs para que n8n no repita ofertas entre días
+- [x] **STORE-01**: Persistencia SQLite-first, con upgrade a Supabase (Postgres + pgvector) y credenciales desde entorno
+- [x] **STORE-02**: Se guardan las ofertas con fecha (histórico para ver evolución)
+- [x] **STORE-03**: Control de "ya-vistas/ya-notificadas" entre runs para que n8n no repita ofertas entre días
 
 ### OBS — Observabilidad y robustez (FASE 5 / transversal)
 
@@ -135,9 +135,9 @@ Reconocidos pero diferidos; no en el roadmap actual.
 | API-05 | Phase 4 | Pending |
 | API-06 | Phase 4 | Pending |
 | API-07 | Phase 4 | Complete |
-| STORE-01 | Phase 4 | Pending |
-| STORE-02 | Phase 4 | Pending |
-| STORE-03 | Phase 4 | Pending |
+| STORE-01 | Phase 4 | Complete |
+| STORE-02 | Phase 4 | Complete |
+| STORE-03 | Phase 4 | Complete |
 | OBS-01 | Phase 5 | Pending |
 | OBS-02 | Phase 5 | Pending |
 | OBS-03 | Phase 5 | Pending |

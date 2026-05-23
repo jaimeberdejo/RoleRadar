@@ -25,26 +25,31 @@ heurística de scoring** (FASE 4) debe funcionar y ser confiable.
 
 ### Validated
 
-<!-- FASE 1 ya implementada (andamiaje existente en el repo). -->
+<!-- FASE 1 (andamiaje) + milestone v1.0 (FASES 2-5) — todo enviado y verificado. -->
 
-- ✓ Schemas Pydantic v2 completos (`UserProfile`, `CVProfile`, `Job`, `JobScore`, `Desglose`, `ScoredJob`) — existing (`app/models/schemas.py`)
-- ✓ `data/profile.yaml` configurable con perfil real de Jaime, editable sin tocar código — existing
-- ✓ Estructura modular de carpetas (`api/`, `models/`, `cv/`, `dedup/`, `scoring/`, `storage/`, `config/`) — existing
+**Andamiaje (pre-v1.0):**
+- ✓ Schemas Pydantic v2 completos (`UserProfile`, `CVProfile`, `Job`, `JobScore`, `Desglose`, `ScoredJob`) — `app/models/schemas.py`
+- ✓ `data/profile.yaml` configurable con perfil real de Jaime, editable sin tocar código
+- ✓ Estructura modular de carpetas (`api/`, `models/`, `cv/`, `dedup/`, `scoring/`, `storage/`, `config/`, `obs/`)
+
+**Milestone v1.0 (2026-05-23, 38 reqs, 179 tests):**
+- ✓ Parseo de CV en PDF → `CVProfile` con Pydantic + Instructor, cacheado por sha256 — v1.0 (CV-01..03)
+- ✓ Normalización de ofertas crudas → `Job` con id estable, mapeo aislado por fuente, batch resiliente — v1.0 (NORM-01..04)
+- ✓ Deduplicación dos niveles: hash exacto + semántico BGE-M3 (lazy, torch-free al importar) — v1.0 (DEDUP-01..03)
+- ✓ Heurística de scoring: determinista + juicio LLM (ranking-peso, ubicación, seniority, deal-breakers, ponderado) — v1.0 (SCORE-01..08) ← **núcleo**
+- ✓ Endpoints FastAPI: `/cv/parse`, `/profile`, `/jobs/normalize`, `/jobs/process`, `/jobs/score`, `/jobs/history`, `/health` — v1.0 (API-01..07)
+- ✓ Persistencia SQLite local (ON CONFLICT, histórico con fecha, control ya-vistas) — v1.0 (STORE-01..03)
+- ✓ Logging estructurado + stub Langfuse opcional + excepciones por capa con handlers — v1.0 (OBS-01..03)
+- ✓ README + sección integración n8n (JSON exacto) + ejemplos `examples/*.json` — v1.0 (DOC-01..03)
+- ✓ Tests pytest por capa (179), énfasis en la heurística; LLM y embeddings mockeados — v1.0 (QA-01..04)
 
 ### Active
 
-<!-- FASES 2-5. Hipótesis hasta que estén construidas y validadas. -->
+<!-- v2 — siguiente milestone. -->
 
-- [ ] Parseo de CV en PDF → `CVProfile` con Pydantic + Instructor (LLM), cacheado (FASE 2)
-- [ ] Normalización de ofertas crudas heterogéneas → `Job`, con mapeo aislado por fuente (FASE 3)
-- [ ] Deduplicación en dos niveles: hash exacto + semántico con embeddings BGE-M3 (FASE 3)
-- [ ] Heurística de scoring: lógica determinista + juicio LLM (ranking como peso, ubicación/remoto, seniority, deal-breakers, score ponderado) (FASE 4) ← **núcleo**
-- [ ] Endpoints FastAPI: `/cv/parse`, `/profile`, `/jobs/normalize`, `/jobs/process`, `/jobs/score`, `/jobs/history` (FASE 5)
-- [ ] Persistencia SQLite local (stdlib sqlite3, sin nube) y control de "ya-vistas" (FASE 5)
-- [ ] Logging estructurado, manejo de errores por capa, batch resiliente (una oferta mala no tumba el lote) (FASE 5)
-- [ ] Interfaz de observabilidad Langfuse preparada (stub) para trazar llamadas de scoring (FASE 5)
-- [ ] README con sección dedicada a integración con n8n + ofertas de ejemplo para probar `/jobs/process` (FASE 5)
-- [ ] Tests pytest por capa, con énfasis en la heurística de scoring; LLM y embeddings mockeados donde toque
+- [ ] OBS-04: cableado real completo de Langfuse (más allá del stub no-op)
+- [ ] STORE-04: métricas/analítica sobre el histórico (evolución de matches en el tiempo)
+- [ ] Verificación manual diferida: validar CVProfile/dedup/scoring contra datos REALES (CV + ofertas + claves)
 
 ### Out of Scope
 
@@ -81,13 +86,28 @@ heurística de scoring** (FASE 4) debe funcionar y ser confiable.
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Servicio headless, sin frontend propio | n8n entrega (email/telegram); foco en la inteligencia | — Pending |
-| Embeddings BGE-M3 local (no API) | Gratis, privado, coincide con el spec; se asume el peso de torch | — Pending |
+| Servicio headless, sin frontend propio | n8n entrega (email/telegram); foco en la inteligencia | ✓ Good — v1.0 entregado headless |
+| Embeddings BGE-M3 local (no API) | Gratis, privado, coincide con el spec; se asume el peso de torch | ✓ Good — lazy import mantiene tests torch-free |
 | Solo SQLite local (Supabase eliminado, 2026-05-23) | Herramienta personal local; pgvector no se usa (dedup es en memoria por run); SQLite cubre persistencia, histórico y ya-vistas sin nube | ✓ Good |
-| Construir FASES 2-5 en este milestone | Sistema completo usable de verdad, no solo un trozo | — Pending |
-| Ranking de puestos como PESO, no filtro binario | Una oferta fuera de ranking no se descarta sola; decae graduado | — Pending |
-| Scoring = lógica determinista + juicio LLM | Núcleo del proyecto; no dejarlo todo al LLM a ciegas | — Pending |
-| Deal-breakers = filtro duro (skip) | Único filtro binario explícito de la heurística | — Pending |
+| Construir FASES 2-5 en este milestone | Sistema completo usable de verdad, no solo un trozo | ✓ Good — 5 fases en v1.0 |
+| Ranking de puestos como PESO, no filtro binario | Una oferta fuera de ranking no se descarta sola; decae graduado | ✓ Good — decay con suelo>0 |
+| Scoring = lógica determinista + juicio LLM | Núcleo del proyecto; no dejarlo todo al LLM a ciegas | ✓ Good — LLM confinado a juicio; números deterministas |
+| Deal-breakers = filtro duro (skip) | Único filtro binario explícito de la heurística | ✓ Good — override al final, score honesto |
+| LLM no controla score_total/encaje_puesto/ubicación/recommendation | Schema `LLMJobAssessment` los omite → auditable y testeable sin LLM | ✓ Good |
+| Ejecución secuencial en árbol principal (no worktrees) | Cadena de dependencias entre fases; merge-back de worktrees arriesgado sin supervisión | ✓ Good |
+| Opus para planificar/verificar núcleo, Sonnet para ejecutar | Apalancamiento donde más importa | ✓ Good |
+
+## Current State
+
+**Shipped:** v1.0 MVP (2026-05-23) — servicio FastAPI headless completo y funcional.
+- **5 fases**, 19 planes, 38 requisitos, **179 tests en verde**.
+- App arranca con `uv run uvicorn app.api.main:app`; importa torch-free y langfuse-free.
+- Stack: Python 3.13 · FastAPI · Pydantic v2 + Instructor · Anthropic (scoring/CV) · BGE-M3 local (dedup) · SQLite · pytest.
+- Cada fase pasó por research → plan (Opus) → plan-check → ejecución TDD → verify → code-review → fix.
+
+**Pendiente para el usuario (verificación manual diferida):** validar el parseo del CV real, la calidad del dedup BGE-M3 y del juicio LLM de scoring contra datos reales (claves + modelo + ofertas). Y construir el workflow en n8n siguiendo el README.
+
+**Next milestone goals (v2):** Langfuse real (OBS-04), analítica de histórico (STORE-04).
 
 ## Evolution
 
@@ -107,4 +127,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-22 after initialization*
+*Last updated: 2026-05-23 after v1.0 milestone*

@@ -115,11 +115,11 @@ async def storage_error_handler(request: Request, exc: StorageError) -> JSONResp
 async def generic_error_handler(request: Request, exc: Exception) -> JSONResponse:
     """Fallback para cualquier excepción no controlada → 500.
 
-    INVARIANTE DE SEGURIDAD (T-05-03): el stack trace va SOLO al log (logger.exception),
-    NUNCA al body de la respuesta. El mensaje al cliente es siempre el genérico
-    "Internal server error" — sin filtrar str(exc), rutas de ficheros internos
-    ni el nombre real de la clase de excepción Python (anti information disclosure —
-    CR-02: devolver type(exc).__name__ revela el stack tecnológico al cliente).
+    INVARIANTE DE SEGURIDAD (T-05-03): el stack trace, str(exc), rutas de ficheros
+    internos y el nombre real de la clase de excepción Python van SOLO al log
+    (logger.exception), NUNCA al body de la respuesta. El tipo devuelto al cliente
+    es siempre el estático "InternalServerError" y el mensaje siempre "Internal
+    server error" (anti information disclosure — CR-02).
     """
     logger.exception("Unhandled exception: %s", exc)
     return JSONResponse(

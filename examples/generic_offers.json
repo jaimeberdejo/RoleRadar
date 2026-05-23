@@ -1,0 +1,18 @@
+[
+  {
+    "employer": "Barcelona Data Labs",
+    "job_title": "Data Engineer",
+    "city": "Barcelona",
+    "body": "Barcelona Data Labs is building the data backbone for the next wave of AI products. We are looking for a Data Engineer with strong Python skills, experience with Spark or dbt, and a good understanding of data modelling. Hybrid position in Barcelona (3 days office, 2 remote). Spanish and English required.",
+    "apply_url": "https://barcelonadatalabs.com/careers/data-engineer",
+    "is_remote": false
+  },
+  {
+    "employer": "RemoteStack S.L.",
+    "job_title": "MLOps Engineer",
+    "city": "Remote",
+    "body": "RemoteStack is a 100% distributed team building cloud-native ML platforms. We need an MLOps Engineer to own our model deployment stack: Kubernetes, Helm, GitHub Actions, and model serving with FastAPI or Triton. Full remote from Spain. 2+ years experience required.",
+    "apply_url": "https://remotestack.io/jobs/mlops-engineer",
+    "is_remote": true
+  }
+]

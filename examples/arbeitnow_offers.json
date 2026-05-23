@@ -1,0 +1,26 @@
+[
+  {
+    "slug": "ai-engineer-deepmind-berlin-98001",
+    "company_name": "DeepMind GmbH",
+    "title": "AI Engineer",
+    "description": "<h2>About the role</h2><p>We are looking for an experienced AI Engineer to join our research team in Berlin. You will design and deploy large-scale LLM-based systems, work with Python and PyTorch, and collaborate with world-class researchers.</p><h3>Requirements</h3><ul><li>2+ years of experience in ML/AI engineering</li><li>Strong Python skills</li><li>Experience with LLMs, transformers or generative models</li><li>Familiarity with MLOps practices</li></ul>",
+    "remote": false,
+    "url": "https://www.arbeitnow.com/jobs/ai-engineer-deepmind-berlin-98001",
+    "tags": ["Software Development", "Machine Learning", "AI", "Engineering"],
+    "job_types": ["berufserfahren"],
+    "location": "Berlin",
+    "created_at": 1748044800
+  },
+  {
+    "slug": "ml-engineer-remote-scalar-55023",
+    "company_name": "Scalar AI",
+    "title": "ML Engineer (Remote)",
+    "description": "<h2>Who we are</h2><p>Scalar AI is a remote-first startup building the next generation of ML infrastructure. We need a sharp ML Engineer to own model training pipelines, experiment tracking and production deployments.</p><h3>What you will do</h3><ul><li>Build and maintain scalable ML training pipelines</li><li>Deploy models to production with low latency requirements</li><li>Integrate LLM-based features into core product</li></ul><h3>Requirements</h3><ul><li>Python, PyTorch or JAX</li><li>Experience with experiment tracking (MLflow, W&amp;B)</li><li>Comfort with Docker and CI/CD</li></ul>",
+    "remote": true,
+    "url": "https://www.arbeitnow.com/jobs/ml-engineer-remote-scalar-55023",
+    "tags": ["Machine Learning", "Python", "Remote", "Engineering"],
+    "job_types": ["berufserfahren"],
+    "location": "Remote",
+    "created_at": 1748131200
+  }
+]

@@ -59,8 +59,8 @@ Requisitos del milestone (FASES 2-5). Cada uno mapea a una fase del roadmap.
 
 ### OBS — Observabilidad y robustez (FASE 5 / transversal)
 
-- [ ] **OBS-01**: Logging estructurado (ofertas que entran, duplicados detectados, ofertas puntuadas, coste / nº de llamadas LLM)
-- [ ] **OBS-02**: Interfaz de observabilidad Langfuse preparada (stub) para trazar las llamadas de scoring
+- [x] **OBS-01**: Logging estructurado (ofertas que entran, duplicados detectados, ofertas puntuadas, coste / nº de llamadas LLM)
+- [x] **OBS-02**: Interfaz de observabilidad Langfuse preparada (stub) para trazar las llamadas de scoring
 - [ ] **OBS-03**: Manejo de errores por capa
 
 ### DOC — Documentación y DX (FASE 5)
@@ -138,8 +138,8 @@ Reconocidos pero diferidos; no en el roadmap actual.
 | STORE-01 | Phase 4 | Complete |
 | STORE-02 | Phase 4 | Complete |
 | STORE-03 | Phase 4 | Complete |
-| OBS-01 | Phase 5 | Pending |
-| OBS-02 | Phase 5 | Pending |
+| OBS-01 | Phase 5 | Complete |
+| OBS-02 | Phase 5 | Complete |
 | OBS-03 | Phase 5 | Pending |
 | DOC-01 | Phase 5 | Pending |
 | DOC-02 | Phase 5 | Pending |

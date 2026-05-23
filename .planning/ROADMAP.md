@@ -105,7 +105,7 @@ Plans:
   4. Se incluye un `profile.yaml` de ejemplo y un par de ofertas de ejemplo (JSON) que permiten probar `/jobs/process` de inmediato sin n8n
 **Plans**: 3 plans
 Plans:
-- [ ] 05-01-PLAN.md — Wave 1: app/obs/ (configure_logging idempotente OBS-01 + trace_llm stub no-op OBS-02) + tests/obs/ (idempotencia + no-op por defecto)
+- [x] 05-01-PLAN.md — Wave 1: app/obs/ (configure_logging idempotente OBS-01 + trace_llm stub no-op OBS-02) + tests/obs/ (idempotencia + no-op por defecto)
 - [ ] 05-02-PLAN.md — Wave 2: app/errors.py (excepciones por capa OBS-03) + exception handlers en main.py + configure_logging en lifespan + contador llm_calls + envolver assess_job/extract_cv_profile con trace_llm + test de handlers
 - [ ] 05-03-PLAN.md — Wave 3: examples/ (ofertas Arbeitnow+genéricas + payload /jobs/process DOC-03) + test de aceptación + README de portfolio (DOC-01) con sección "Integración con n8n" (DOC-02) + .env.example alineado
 
@@ -120,4 +120,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Normalización y Deduplicación | 4/4 | Complete   | 2026-05-22 |
 | 3. Heurística de Scoring (núcleo) | 4/4 | Complete   | 2026-05-23 |
 | 4. API y Persistencia | 4/4 | Complete   | 2026-05-23 |
-| 5. Observabilidad, Robustez y Docs n8n | 0/3 | Not started | - |
+| 5. Observabilidad, Robustez y Docs n8n | 1/3 | In Progress|  |

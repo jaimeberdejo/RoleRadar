@@ -84,6 +84,24 @@ class ProcessResponse(BaseModel):
     errors: list[dict] = Field(default_factory=list)
 
 
+class HistoryItem(BaseModel):
+    """Un item del historial de GET /jobs/history.
+
+    Contrato explícito para n8n: campos básicos de la oferta + score
+    deserializado. Permite a FastAPI validar la respuesta y genera el schema
+    OpenAPI correspondiente (IN-01).
+    """
+
+    id: str
+    title: str
+    company: str
+    score_total: int
+    recommendation: str
+    first_seen: str
+    last_seen: str
+    score: dict  # JobScore serializado completo — dict para compatibilidad n8n
+
+
 # ─── Endpoints ───────────────────────────────────────────────────────────────
 
 
@@ -226,17 +244,20 @@ def process_jobs(
     return ProcessResponse(results=scored, errors=all_errors)
 
 
-@router.get("/history")
+@router.get("/history", response_model=list[HistoryItem])
 def history_endpoint(
     limit: int = 50,
     offset: int = 0,
     storage=Depends(get_storage),
-) -> list[dict]:
+) -> list[HistoryItem]:
     """Devuelve el historial de ofertas guardadas, ordenado por last_seen DESC.
 
     Paginable con los query params ``limit`` (1..200) y ``offset`` (>=0).
     ``limit`` se clampea silenciosamente a [1, 200] para no romper a n8n.
     Delega en storage.get_history (API-06).
+
+    El response_model=list[HistoryItem] garantiza un contrato OpenAPI explícito
+    para n8n y valida la respuesta antes de serializarla (IN-01).
 
     Args:
         limit:   Máximo de filas a devolver (clampeado a [1, 200]).
@@ -244,7 +265,7 @@ def history_endpoint(
         storage: Storage backend inyectado.
 
     Returns:
-        Lista de dicts con campos básicos de la oferta + score deserializado.
+        Lista de HistoryItem con campos básicos de la oferta + score.
     """
     # Clamp en lugar de HTTPException 400 — no rompe a n8n si manda valores raros
     limit = max(1, min(limit, 200))

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import sqlite3
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -54,25 +55,25 @@ class SQLiteStorage:
     def init_db(self) -> None:
         """Crea la tabla jobs si no existe. Idempotente."""
         Path(self._db_path).parent.mkdir(parents=True, exist_ok=True)
-        with self._connect() as conn:
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS jobs (
-                    id TEXT PRIMARY KEY,
-                    title TEXT NOT NULL,
-                    company TEXT NOT NULL,
-                    location TEXT,
-                    remote TEXT,
-                    url TEXT,
-                    source TEXT,
-                    score_total INTEGER,
-                    recommendation TEXT,
-                    score_json TEXT,
-                    first_seen TEXT,
-                    last_seen TEXT,
-                    seen INTEGER DEFAULT 0
-                )
-            """)
-            conn.commit()
+        with closing(self._connect()) as conn:
+            with conn:  # commit/rollback automático
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS jobs (
+                        id TEXT PRIMARY KEY,
+                        title TEXT NOT NULL,
+                        company TEXT NOT NULL,
+                        location TEXT,
+                        remote TEXT,
+                        url TEXT,
+                        source TEXT,
+                        score_total INTEGER,
+                        recommendation TEXT,
+                        score_json TEXT,
+                        first_seen TEXT,
+                        last_seen TEXT,
+                        seen INTEGER DEFAULT 0
+                    )
+                """)
         logger.debug("SQLiteStorage.init_db: tabla jobs lista en %s", self._db_path)
 
     def upsert_scored_jobs(self, scored: list[ScoredJob]) -> None:
@@ -83,43 +84,43 @@ class SQLiteStorage:
         first_seen y seen (ya notificado) se preservan en el conflicto.
         """
         now = _now_iso()
-        with self._connect() as conn:
-            for item in scored:
-                job, score = item.job, item.score
-                conn.execute(
-                    """
-                    INSERT INTO jobs
-                        (id, title, company, location, remote, url, source,
-                         score_total, recommendation, score_json,
-                         first_seen, last_seen, seen)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,0)
-                    ON CONFLICT(id) DO UPDATE SET
-                        last_seen = excluded.last_seen,
-                        score_total = excluded.score_total,
-                        recommendation = excluded.recommendation,
-                        score_json = excluded.score_json
-                    """,
-                    (
-                        job.id,
-                        job.title,
-                        job.company,
-                        job.location,
-                        job.remote.value if job.remote else None,
-                        job.url,
-                        job.source,
-                        score.score_total,
-                        score.recommendation.value,
-                        score.model_dump_json(),
-                        now,
-                        now,
-                    ),
-                )
-            conn.commit()
+        with closing(self._connect()) as conn:
+            with conn:  # commit/rollback automático (toda la lista en una transacción)
+                for item in scored:
+                    job, score = item.job, item.score
+                    conn.execute(
+                        """
+                        INSERT INTO jobs
+                            (id, title, company, location, remote, url, source,
+                             score_total, recommendation, score_json,
+                             first_seen, last_seen, seen)
+                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,0)
+                        ON CONFLICT(id) DO UPDATE SET
+                            last_seen = excluded.last_seen,
+                            score_total = excluded.score_total,
+                            recommendation = excluded.recommendation,
+                            score_json = excluded.score_json
+                        """,
+                        (
+                            job.id,
+                            job.title,
+                            job.company,
+                            job.location,
+                            job.remote.value if job.remote else None,
+                            job.url,
+                            job.source,
+                            score.score_total,
+                            score.recommendation.value,
+                            score.model_dump_json(),
+                            now,
+                            now,
+                        ),
+                    )
         logger.info("upsert_scored_jobs: %d ofertas persistidas en %s", len(scored), self._db_path)
 
     def was_seen(self, job_id: str) -> bool:
         """Devuelve True si job_id ya fue persistido en un run anterior."""
-        with self._connect() as conn:
+        with closing(self._connect()) as conn:
             row = conn.execute(
                 "SELECT 1 FROM jobs WHERE id = ?", (job_id,)
             ).fetchone()
@@ -131,7 +132,7 @@ class SQLiteStorage:
         Cada dict incluye campos básicos de la oferta + score deserializado.
         Filas con score_json corrupto se omiten con log de warning.
         """
-        with self._connect() as conn:
+        with closing(self._connect()) as conn:
             rows = conn.execute(
                 "SELECT * FROM jobs ORDER BY last_seen DESC LIMIT ? OFFSET ?",
                 (limit, offset),

@@ -39,11 +39,12 @@ created: 2026-05-23
 
 | Task ID | Wave | Requirement | Test Type | Automated Command | Status |
 |---------|------|-------------|-----------|-------------------|--------|
-| (planner fills) | 1 | OBS-02 (tracing stub no-op) | unit | `uv run pytest tests/obs/test_tracing.py -q` | ⬜ pending |
-| (planner fills) | 1 | OBS-01 (structured logging counters) | unit | `uv run pytest tests/obs/test_logging.py -q` | ⬜ pending |
-| (planner fills) | 2 | OBS-03 (per-layer exceptions + handlers) | integration | `uv run pytest tests/api/test_exception_handlers.py -q` | ⬜ pending |
-| (planner fills) | 2 | DOC-03 (example offers JSON valid + accepted) | integration | `uv run pytest tests/api/test_examples.py -q` | ⬜ pending |
-| (planner fills) | 3 | DOC-01, DOC-02 (README + n8n section) | doc | `uv run pytest -q` (no regressions) + grep README sections | ⬜ pending |
+| 05-01-T2 | 1 | OBS-01 (configure_logging idempotente, formato key=value) | unit | `uv run pytest tests/obs/test_logging.py -q` | ⬜ pending |
+| 05-01-T3 | 1 | OBS-02 (tracing stub no-op por defecto, langfuse-free import) | unit | `uv run pytest tests/obs/test_tracing.py -q` | ⬜ pending |
+| 05-02-T1 | 2 | OBS-01/OBS-02 (llm_calls counter + envolver call sites con trace_llm) | integration | `uv run pytest tests/scoring tests/cv tests/api/test_process.py -q` | ⬜ pending |
+| 05-02-T2 | 2 | OBS-03 (excepciones por capa + handlers, sin stack-trace leak) | integration | `uv run pytest tests/api/test_exception_handlers.py -q` | ⬜ pending |
+| 05-03-T1 | 3 | DOC-03 (examples/*.json válidos + aceptados por /jobs/process) | integration | `uv run pytest tests/api/test_examples.py -q` | ⬜ pending |
+| 05-03-T2 | 3 | DOC-01, DOC-02 (README portfolio + sección n8n con JSON exacto) | doc | `uv run pytest -q` (sin regresiones) + grep secciones README | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 

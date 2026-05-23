@@ -120,6 +120,8 @@ def test_generic_exception_returns_500_without_stack_trace():
 
     Verifica el invariante de seguridad T-05-03: el handler genérico NO filtra el
     mensaje real de la excepción ni rutas de ficheros al cliente (anti information disclosure).
+    También verifica CR-02: el nombre real de la clase Python NO se devuelve al cliente
+    (devolver 'RuntimeError' revela el stack tecnológico y puede asistir en fingerprinting).
     """
     app.dependency_overrides[get_storage] = _raise_generic_error
     try:
@@ -130,11 +132,18 @@ def test_generic_exception_returns_500_without_stack_trace():
         assert "error" in body
         # El mensaje debe ser el genérico — NO el str de la excepción
         assert body["error"]["message"] == "Internal server error"
+        # CR-02: el tipo devuelto es siempre el estático "InternalServerError", nunca el nombre
+        # real de la clase Python (anti information disclosure)
+        assert body["error"]["type"] == "InternalServerError", (
+            "El handler genérico NO debe devolver el nombre real de la clase Python"
+        )
         # Anti-leak: el str real con el path interno NO debe aparecer en el body
         body_str = resp.text
         assert "internal secret path" not in body_str
         assert "/usr/local/lib" not in body_str
         assert "line 42" not in body_str
+        # Anti-leak adicional: "RuntimeError" (nombre de clase) no debe aparecer en el body
+        assert "RuntimeError" not in body_str
     finally:
         app.dependency_overrides = {}
 

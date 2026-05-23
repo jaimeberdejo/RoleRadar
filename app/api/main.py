@@ -117,12 +117,14 @@ async def generic_error_handler(request: Request, exc: Exception) -> JSONRespons
 
     INVARIANTE DE SEGURIDAD (T-05-03): el stack trace va SOLO al log (logger.exception),
     NUNCA al body de la respuesta. El mensaje al cliente es siempre el genérico
-    "Internal server error" — sin filtrar str(exc) ni rutas de ficheros internos.
+    "Internal server error" — sin filtrar str(exc), rutas de ficheros internos
+    ni el nombre real de la clase de excepción Python (anti information disclosure —
+    CR-02: devolver type(exc).__name__ revela el stack tecnológico al cliente).
     """
     logger.exception("Unhandled exception: %s", exc)
     return JSONResponse(
         status_code=500,
-        content={"error": {"type": type(exc).__name__, "message": "Internal server error"}},
+        content={"error": {"type": "InternalServerError", "message": "Internal server error"}},
     )
 
 

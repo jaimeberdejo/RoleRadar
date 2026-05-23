@@ -20,6 +20,7 @@ import instructor
 from anthropic import Anthropic
 
 from app.models.schemas import CVProfile
+from app.obs.tracing import trace_llm
 
 
 def build_instructor_client() -> instructor.Instructor:
@@ -40,22 +41,23 @@ def extract_cv_profile(raw_text: str, client: instructor.Instructor) -> CVProfil
         CVProfile validado por Pydantic con los datos del CV.
     """
     model = os.getenv("ANTHROPIC_MODEL_CV", "claude-haiku-4-5-20251001")
-    return client.messages.create(
-        model=model,
-        max_tokens=4096,
-        system=(
-            "Eres un extractor de CVs preciso. "
-            "Extrae ÚNICAMENTE lo que aparece explícitamente en el texto. "
-            "No inventes datos. Si un campo no aparece, déjalo vacío o None. "
-            "Para anios_experiencia_total, estima sumando la duración de los empleos "
-            "a partir de las fechas indicadas."
-        ),
-        messages=[
-            {
-                "role": "user",
-                "content": f"Extrae el CVProfile del siguiente CV:\n\n{raw_text}",
-            }
-        ],
-        response_model=CVProfile,
-        max_retries=2,
-    )
+    with trace_llm("extract_cv_profile", model=model):
+        return client.messages.create(
+            model=model,
+            max_tokens=4096,
+            system=(
+                "Eres un extractor de CVs preciso. "
+                "Extrae ÚNICAMENTE lo que aparece explícitamente en el texto. "
+                "No inventes datos. Si un campo no aparece, déjalo vacío o None. "
+                "Para anios_experiencia_total, estima sumando la duración de los empleos "
+                "a partir de las fechas indicadas."
+            ),
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Extrae el CVProfile del siguiente CV:\n\n{raw_text}",
+                }
+            ],
+            response_model=CVProfile,
+            max_retries=2,
+        )

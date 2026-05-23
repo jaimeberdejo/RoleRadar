@@ -219,10 +219,12 @@ def process_jobs(
 
     # 3. Score batch-resiliente: ya_visto ANTES del upsert — orden crítico
     scored: list[ScoredJobConVisto] = []
+    llm_calls = 0
     for job in unique_jobs:
         ya_visto = storage.was_seen(job.id)  # ANTES del upsert — si no, siempre True
         try:
             score = score_job(job, cv_profile, user_profile, client=scoring_client)
+            llm_calls += 1
             scored.append(ScoredJobConVisto(job=job, score=score, ya_visto=ya_visto))
         except Exception as exc:  # noqa: BLE001
             all_errors.append({"job_id": job.id, "error": str(exc)})
@@ -235,10 +237,11 @@ def process_jobs(
     scored.sort(key=lambda s: s.score.score_total, reverse=True)
 
     logger.info(
-        "process_jobs: entradas=%d unicos=%d puntuados=%d errores=%d",
+        "process_jobs: entradas=%d unicos=%d puntuados=%d llm_calls=%d errores=%d",
         sum(len(b.offers) for b in body.sources),
         len(unique_jobs),
         len(scored),
+        llm_calls,
         len(all_errors),
     )
     return ProcessResponse(results=scored, errors=all_errors)

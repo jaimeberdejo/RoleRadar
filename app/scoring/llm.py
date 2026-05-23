@@ -22,6 +22,7 @@ import instructor
 from anthropic import Anthropic
 
 from app.models.schemas import CVProfile, Job, LLMJobAssessment, PuestoRanking, UserProfile
+from app.obs.tracing import trace_llm
 
 
 def _escape_for_prompt(text: str) -> str:
@@ -178,22 +179,23 @@ def assess_job(
     model = os.getenv("ANTHROPIC_MODEL_SCORING", "claude-sonnet-4-6")
 
     # system prompt FIJO — sin interpolación de contenido externo (T-03-08)
-    return client.messages.create(
-        model=model,
-        max_tokens=2048,
-        system=(
-            "Eres un evaluador HONESTO de ofertas de empleo. "
-            "Tu objetivo es dar una evaluación realista y calibrada de si la oferta encaja "
-            "con el candidato. NO infles los reasons_for ni ocultes los reasons_against. "
-            "Si hay requisitos que el candidato claramente no cumple, ponlos en missing_requirements. "
-            "El valor de este sistema está en filtrar bien, no en parecer optimista."
-        ),
-        messages=[
-            {
-                "role": "user",
-                "content": _build_prompt(job, cv_profile, user_profile),
-            }
-        ],
-        response_model=LLMJobAssessment,
-        max_retries=2,
-    )
+    with trace_llm("assess_job", job_id=job.id, model=model):
+        return client.messages.create(
+            model=model,
+            max_tokens=2048,
+            system=(
+                "Eres un evaluador HONESTO de ofertas de empleo. "
+                "Tu objetivo es dar una evaluación realista y calibrada de si la oferta encaja "
+                "con el candidato. NO infles los reasons_for ni ocultes los reasons_against. "
+                "Si hay requisitos que el candidato claramente no cumple, ponlos en missing_requirements. "
+                "El valor de este sistema está en filtrar bien, no en parecer optimista."
+            ),
+            messages=[
+                {
+                    "role": "user",
+                    "content": _build_prompt(job, cv_profile, user_profile),
+                }
+            ],
+            response_model=LLMJobAssessment,
+            max_retries=2,
+        )

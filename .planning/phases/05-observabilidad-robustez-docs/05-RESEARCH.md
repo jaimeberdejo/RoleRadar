@@ -586,7 +586,9 @@ def assess_job(job, cv_profile, user_profile, client):
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> Resoluciones: (1) `llm_calls += 1` por cada `score_job` exitoso (no depende de retries internos de assess_job). (2) SÍ envolver `extract_cv_profile` con `trace_llm` — trivial y consistente para OBS-04.
 
 1. **Nº de llamadas LLM en process_jobs: ¿uno por oferta exactamente?**
    - What we know: `score_job` llama a `assess_job` que hace exactamente un `client.messages.create`. El scorer también tiene lógica determinista (ranking, ubicación, seniority) pero esa no llama al LLM.

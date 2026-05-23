@@ -72,7 +72,7 @@ heurística de scoring** (FASE 4) debe funcionar y ser confiable.
 
 - **Tech stack**: Python 3.13 + uv (fallback venv+pip) — fijado por el repo
 - **Tech stack**: FastAPI + uvicorn (servicio), httpx async (llamadas salientes), Pydantic v2 + Instructor (structured outputs)
-- **Tech stack**: Scoring vía API de Anthropic (Claude), key desde `ANTHROPIC_API_KEY`
+- **Tech stack**: Scoring + parseo CV vía API de OpenAI, key desde `OPENAI_API_KEY` (Instructor; defaults gpt-4o-mini/gpt-4o). Cambiado de Anthropic a OpenAI el 2026-05-23
 - **Tech stack**: Embeddings BGE-M3 local (sentence-transformers o FlagEmbedding — elegir y justificar en FASE 3)
 - **Tech stack**: Parseo de PDF con pymupdf
 - **Tech stack**: Persistencia SQLite local (stdlib sqlite3), ruta vía `SQLITE_DB_PATH`. Sin Supabase/nube (decisión 2026-05-23)
@@ -102,7 +102,7 @@ heurística de scoring** (FASE 4) debe funcionar y ser confiable.
 **Shipped:** v1.0 MVP (2026-05-23) — servicio FastAPI headless completo y funcional.
 - **5 fases**, 19 planes, 38 requisitos, **179 tests en verde**.
 - App arranca con `uv run uvicorn app.api.main:app`; importa torch-free y langfuse-free.
-- Stack: Python 3.13 · FastAPI · Pydantic v2 + Instructor · Anthropic (scoring/CV) · BGE-M3 local (dedup) · SQLite · pytest.
+- Stack: Python 3.13 · FastAPI · Pydantic v2 + Instructor · OpenAI (scoring/CV) · BGE-M3 local (dedup) · SQLite · pytest.
 - Cada fase pasó por research → plan (Opus) → plan-check → ejecución TDD → verify → code-review → fix.
 
 **Pendiente para el usuario (verificación manual diferida):** validar el parseo del CV real, la calidad del dedup BGE-M3 y del juicio LLM de scoring contra datos reales (claves + modelo + ofertas). Y construir el workflow en n8n siguiendo el README.

@@ -3,7 +3,7 @@
 Centraliza todos los Depends factories: LLM clients, embedder, storage y
 CVProfile cacheado. Es el seam principal para dependency_overrides en tests.
 
-Todos los imports de librerías pesadas (torch, sentence-transformers, Anthropic)
+Todos los imports de librerías pesadas (torch, sentence-transformers, OpenAI)
 son DEFERIDOS dentro del cuerpo de cada función — el módulo es importable en
 <1 segundo sin disparar descargas ni imports pesados (anti-torch, T-04-03).
 """

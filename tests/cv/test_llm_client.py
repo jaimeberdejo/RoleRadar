@@ -6,7 +6,7 @@ Verifica:
 2. extract_cv_profile pasa response_model=CVProfile, el modelo por defecto y max_retries=2
    al cliente inyectado.
 
-NOTA: NO se llama a la fábrica de cliente real — eso construiría un cliente Anthropic real.
+NOTA: NO se llama a la fábrica de cliente real — eso construiría un cliente OpenAI real.
 Solo se prueba extract_cv_profile con un mock inyectado.
 """
 from __future__ import annotations
@@ -32,9 +32,9 @@ _MOCK_PROFILE = CVProfile(
 
 
 def _make_mock_client() -> MagicMock:
-    """Construye un MagicMock que imita la superficie instructor.from_anthropic()."""
+    """Construye un MagicMock que imita la superficie instructor.from_openai()."""
     mock_client = MagicMock()
-    mock_client.messages.create.return_value = _MOCK_PROFILE
+    mock_client.chat.completions.create.return_value = _MOCK_PROFILE
     return mock_client
 
 
@@ -50,19 +50,19 @@ def test_returns_typed_cvprofile() -> None:
 
 def test_passes_response_model_and_model(monkeypatch) -> None:
     """extract_cv_profile pasa response_model=CVProfile, modelo por defecto y max_retries=2."""
-    # Asegurar que ANTHROPIC_MODEL_CV no está definida para forzar el valor por defecto
-    monkeypatch.delenv("ANTHROPIC_MODEL_CV", raising=False)
+    # Asegurar que OPENAI_MODEL_CV no está definida para forzar el valor por defecto
+    monkeypatch.delenv("OPENAI_MODEL_CV", raising=False)
     mock_client = _make_mock_client()
 
     extract_cv_profile("texto de cv", mock_client)
 
-    mock_client.messages.create.assert_called_once()
-    kwargs = mock_client.messages.create.call_args.kwargs
+    mock_client.chat.completions.create.assert_called_once()
+    kwargs = mock_client.chat.completions.create.call_args.kwargs
 
     assert kwargs["response_model"] is CVProfile, (
         f"response_model debe ser CVProfile, se obtuvo {kwargs.get('response_model')}"
     )
-    assert kwargs["model"] == "claude-haiku-4-5-20251001", (
+    assert kwargs["model"] == "gpt-4o-mini", (
         f"modelo por defecto incorrecto: {kwargs.get('model')}"
     )
     assert kwargs["max_retries"] == 2, (

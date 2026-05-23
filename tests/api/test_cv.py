@@ -68,7 +68,7 @@ def test_parse_cv_usa_cliente_inyectado(sample_pdf_bytes, tmp_path, monkeypatch)
     monkeypatch.setenv("CV_CACHE_DIR", str(tmp_path))
 
     mock_cv_client = MagicMock()
-    mock_cv_client.messages.create.return_value = EXPECTED_PROFILE
+    mock_cv_client.chat.completions.create.return_value = EXPECTED_PROFILE
 
     fake_embedder = FakeEmbedder(default_vector=np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32))
 
@@ -91,7 +91,7 @@ def test_parse_cv_usa_cliente_inyectado(sample_pdf_bytes, tmp_path, monkeypatch)
             )
         assert response.status_code == 200, response.text
         # El mock debe haber sido llamado por parse_cv — prueba que CR-01 está activo
-        mock_cv_client.messages.create.assert_called()
+        mock_cv_client.chat.completions.create.assert_called()
     finally:
         app.dependency_overrides = {}
 

@@ -10,8 +10,8 @@ Mitigaciones de seguridad (T-03-08, T-03-09):
 - El texto de la oferta va SOLO en el mensaje de usuario en sección XML <oferta>;
   el system prompt es una cadena fija sin interpolación de contenido externo
   (anti prompt-injection — la oferta es DATO, no instrucción).
-- La clave de API la lee el SDK de Anthropic del entorno; nunca se referencia aquí.
-- El modelo se configura via ANTHROPIC_MODEL_SCORING con default claude-sonnet-4-6.
+- La clave de API la lee el SDK de OpenAI del entorno (OPENAI_API_KEY); nunca se referencia aquí.
+- El modelo se configura via OPENAI_MODEL_SCORING con default gpt-4o.
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ import html
 import os
 
 import instructor
-from anthropic import Anthropic
+from openai import OpenAI
 
 from app.models.schemas import CVProfile, Job, LLMJobAssessment, PuestoRanking, UserProfile
 from app.obs.tracing import trace_llm
@@ -37,8 +37,8 @@ def _escape_for_prompt(text: str) -> str:
 
 
 def build_instructor_client() -> instructor.Instructor:
-    """Construye el cliente instructor sobre Anthropic. Inyectable para tests."""
-    return instructor.from_anthropic(Anthropic())
+    """Construye el cliente instructor sobre OpenAI. Inyectable para tests."""
+    return instructor.from_openai(OpenAI())
 
 
 # ---------------------------------------------------------------------------
@@ -176,25 +176,29 @@ def assess_job(
     Returns:
         LLMJobAssessment validado por Pydantic.
     """
-    model = os.getenv("ANTHROPIC_MODEL_SCORING", "claude-sonnet-4-6")
+    model = os.getenv("OPENAI_MODEL_SCORING", "gpt-4o")
 
-    # system prompt FIJO — sin interpolación de contenido externo (T-03-08)
+    # system prompt FIJO — sin interpolación de contenido externo (T-03-08).
+    # Va como primer mensaje (convención OpenAI), no como parámetro `system=` (Anthropic).
     with trace_llm("assess_job", job_id=job.id, model=model):
-        return client.messages.create(
+        return client.chat.completions.create(
             model=model,
             max_tokens=2048,
-            system=(
-                "Eres un evaluador HONESTO de ofertas de empleo. "
-                "Tu objetivo es dar una evaluación realista y calibrada de si la oferta encaja "
-                "con el candidato. NO infles los reasons_for ni ocultes los reasons_against. "
-                "Si hay requisitos que el candidato claramente no cumple, ponlos en missing_requirements. "
-                "El valor de este sistema está en filtrar bien, no en parecer optimista."
-            ),
             messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Eres un evaluador HONESTO de ofertas de empleo. "
+                        "Tu objetivo es dar una evaluación realista y calibrada de si la oferta encaja "
+                        "con el candidato. NO infles los reasons_for ni ocultes los reasons_against. "
+                        "Si hay requisitos que el candidato claramente no cumple, ponlos en missing_requirements. "
+                        "El valor de este sistema está en filtrar bien, no en parecer optimista."
+                    ),
+                },
                 {
                     "role": "user",
                     "content": _build_prompt(job, cv_profile, user_profile),
-                }
+                },
             ],
             response_model=LLMJobAssessment,
             max_retries=2,

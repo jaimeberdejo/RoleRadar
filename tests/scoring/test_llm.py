@@ -4,11 +4,11 @@ Tests para app/scoring/llm.py.
 Verifica:
 1. assess_job devuelve un LLMJobAssessment tipado con los datos del mock.
 2. assess_job pasa response_model=LLMJobAssessment, modelo por defecto y max_retries=2.
-3. assess_job respeta ANTHROPIC_MODEL_SCORING si está definida en el entorno.
+3. assess_job respeta OPENAI_MODEL_SCORING si está definida en el entorno.
 4. El prompt de usuario incluye: puesto del ranking, skill del CVProfile,
    deal-breaker real y el título de la oferta (SCORE-08).
 
-NOTA: NO se llama a la fábrica de cliente real — eso construiría un cliente Anthropic real.
+NOTA: NO se llama a la fábrica de cliente real — eso construiría un cliente OpenAI real.
 Solo se prueba assess_job con un mock inyectado.
 """
 from __future__ import annotations
@@ -54,9 +54,9 @@ _MOCK_ASSESSMENT = LLMJobAssessment(
 
 
 def _make_mock_client() -> MagicMock:
-    """Construye un MagicMock que imita la superficie instructor.from_anthropic()."""
+    """Construye un MagicMock que imita la superficie instructor.from_openai()."""
     mock_client = MagicMock()
-    mock_client.messages.create.return_value = _MOCK_ASSESSMENT
+    mock_client.chat.completions.create.return_value = _MOCK_ASSESSMENT
     return mock_client
 
 
@@ -150,19 +150,19 @@ def test_assess_job_pasa_response_model_y_modelo(
     monkeypatch, sample_cv, sample_profile, sample_job
 ) -> None:
     """assess_job pasa response_model=LLMJobAssessment, modelo por defecto y max_retries=2."""
-    # Asegurar que ANTHROPIC_MODEL_SCORING no está definida para forzar el valor por defecto
-    monkeypatch.delenv("ANTHROPIC_MODEL_SCORING", raising=False)
+    # Asegurar que OPENAI_MODEL_SCORING no está definida para forzar el valor por defecto
+    monkeypatch.delenv("OPENAI_MODEL_SCORING", raising=False)
     mock_client = _make_mock_client()
 
     assess_job(sample_job, sample_cv, sample_profile, mock_client)
 
-    mock_client.messages.create.assert_called_once()
-    kwargs = mock_client.messages.create.call_args.kwargs
+    mock_client.chat.completions.create.assert_called_once()
+    kwargs = mock_client.chat.completions.create.call_args.kwargs
 
     assert kwargs["response_model"] is LLMJobAssessment, (
         f"response_model debe ser LLMJobAssessment, se obtuvo {kwargs.get('response_model')}"
     )
-    assert kwargs["model"] == "claude-sonnet-4-6", (
+    assert kwargs["model"] == "gpt-4o", (
         f"modelo por defecto incorrecto: {kwargs.get('model')}"
     )
     assert kwargs["max_retries"] == 2, (
@@ -173,13 +173,13 @@ def test_assess_job_pasa_response_model_y_modelo(
 def test_assess_job_respeta_env_modelo(
     monkeypatch, sample_cv, sample_profile, sample_job
 ) -> None:
-    """assess_job respeta ANTHROPIC_MODEL_SCORING si está definida en el entorno."""
-    monkeypatch.setenv("ANTHROPIC_MODEL_SCORING", "modelo-x")
+    """assess_job respeta OPENAI_MODEL_SCORING si está definida en el entorno."""
+    monkeypatch.setenv("OPENAI_MODEL_SCORING", "modelo-x")
     mock_client = _make_mock_client()
 
     assess_job(sample_job, sample_cv, sample_profile, mock_client)
 
-    kwargs = mock_client.messages.create.call_args.kwargs
+    kwargs = mock_client.chat.completions.create.call_args.kwargs
     assert kwargs["model"] == "modelo-x", (
         f"El modelo debería ser 'modelo-x', se obtuvo {kwargs.get('model')}"
     )
@@ -189,13 +189,13 @@ def test_assess_job_incluye_contexto_en_prompt(
     monkeypatch, sample_cv, sample_profile, sample_job
 ) -> None:
     """SCORE-08: el prompt de usuario incluye CVProfile, ranking, prefs, deal_breakers, oferta."""
-    monkeypatch.delenv("ANTHROPIC_MODEL_SCORING", raising=False)
+    monkeypatch.delenv("OPENAI_MODEL_SCORING", raising=False)
     mock_client = _make_mock_client()
 
     assess_job(sample_job, sample_cv, sample_profile, mock_client)
 
-    kwargs = mock_client.messages.create.call_args.kwargs
-    content = kwargs["messages"][0]["content"]
+    kwargs = mock_client.chat.completions.create.call_args.kwargs
+    content = kwargs["messages"][-1]["content"]
 
     assert "AI Engineer" in content, (
         "El prompt debe incluir al menos un puesto del ranking ('AI Engineer')"
@@ -221,7 +221,7 @@ def test_prompt_escapa_contenido_oferta(
     Verifica que el cierre del tag </oferta> de estructura sigue existiendo UNA VEZ,
     no que haya sido adelantado por la descripción maliciosa.
     """
-    monkeypatch.delenv("ANTHROPIC_MODEL_SCORING", raising=False)
+    monkeypatch.delenv("OPENAI_MODEL_SCORING", raising=False)
     mock_client = _make_mock_client()
 
     # Oferta con descripción que intenta cerrar el delimitador XML
@@ -237,8 +237,8 @@ def test_prompt_escapa_contenido_oferta(
 
     assess_job(job_malicioso, sample_cv, sample_profile, mock_client)
 
-    kwargs = mock_client.messages.create.call_args.kwargs
-    content = kwargs["messages"][0]["content"]
+    kwargs = mock_client.chat.completions.create.call_args.kwargs
+    content = kwargs["messages"][-1]["content"]
 
     # El tag literal '</oferta>' NO debe aparecer en la sección de datos —
     # debe haberse convertido en '&lt;/oferta&gt;'

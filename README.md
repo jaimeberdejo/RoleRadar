@@ -55,9 +55,9 @@ Edita `.env` y establece como mínimo:
 
 | Variable | Requerida | Descripción |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | **Sí** | Clave de Anthropic para parseo de CV y scoring |
-| `ANTHROPIC_MODEL_CV` | No | Modelo para parseo de CV (default: `claude-haiku-4-5-20251001`) |
-| `ANTHROPIC_MODEL_SCORING` | No | Modelo para scoring (default: `claude-sonnet-4-6`) |
+| `OPENAI_API_KEY` | **Sí** | Clave de OpenAI para parseo de CV y scoring |
+| `OPENAI_MODEL_CV` | No | Modelo para parseo de CV (default: `gpt-4o-mini`) |
+| `OPENAI_MODEL_SCORING` | No | Modelo para scoring (default: `gpt-4o`) |
 | `SQLITE_DB_PATH` | No | Ruta del fichero SQLite (default: `data/jobs.db`) |
 | `LANGFUSE_PUBLIC_KEY` | No | Activa el tracing LLM con Langfuse (OBS-02) |
 | `LANGFUSE_SECRET_KEY` | No | Requerida junto con `LANGFUSE_PUBLIC_KEY` |
@@ -208,7 +208,7 @@ overhead.
 | Gestión de dependencias | uv |
 | Framework web | FastAPI + uvicorn |
 | Modelos de datos | Pydantic v2 + Instructor (structured outputs) |
-| LLM (scoring + parseo CV) | Anthropic Claude (API key requerida) |
+| LLM (scoring + parseo CV) | OpenAI (API key requerida) |
 | Embeddings (deduplicación) | BGE-M3 local (FlagEmbedding / sentence-transformers) |
 | Persistencia | SQLite local (stdlib `sqlite3`) |
 | Tests | pytest |

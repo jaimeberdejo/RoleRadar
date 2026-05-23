@@ -44,7 +44,9 @@ mi portfolio, así que la calidad de ingeniería importa.
 - FastAPI + uvicorn para el servicio
 - httpx async para cualquier llamada saliente
 - Pydantic v2 + Instructor para structured outputs
-- LLM scoring: API de Anthropic (claude), key desde ANTHROPIC_API_KEY
+- LLM scoring: API de OpenAI, key desde OPENAI_API_KEY (vía Instructor;
+  defaults gpt-4o-mini para CV, gpt-4o para scoring). [Actualizado 2026-05-23:
+  antes Anthropic/Claude; cambiado a OpenAI por decisión del usuario.]
 - Embeddings (dedup + matching CV): BGE-M3 (sentence-transformers o
   FlagEmbedding; elige y justifica)
 - Parseo de CV: soporta PDF (mi CV está en PDF). Usa pymupdf para extraer texto.

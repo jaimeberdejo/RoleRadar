@@ -12,8 +12,8 @@ Mitigaciones de seguridad (T-01-06, T-01-07, T-01-08, WR-03):
 - El texto del CV se escapa con html.escape y se delimita con etiquetas <cv>...</cv>
   para evitar que secuencias tipo '</cv><system>...' alteren la estructura del prompt
   (WR-03: consistente con la estrategia de _escape_for_prompt en scoring/llm.py).
-- La clave de API la lee el SDK de Anthropic del entorno; nunca se referencia en este fichero.
-- El modelo se configura via ANTHROPIC_MODEL_CV con default verificado claude-haiku-4-5-20251001.
+- La clave de API la lee el SDK de OpenAI del entorno (OPENAI_API_KEY); nunca se referencia aquí.
+- El modelo se configura via OPENAI_MODEL_CV con default gpt-4o-mini.
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ import html
 import os
 
 import instructor
-from anthropic import Anthropic
+from openai import OpenAI
 
 from app.models.schemas import CVProfile
 from app.obs.tracing import trace_llm
@@ -39,8 +39,8 @@ def _escape_cv_text(text: str) -> str:
 
 
 def build_instructor_client() -> instructor.Instructor:
-    """Construye el cliente instructor sobre Anthropic. Inyectable para tests."""
-    return instructor.from_anthropic(Anthropic())
+    """Construye el cliente instructor sobre OpenAI. Inyectable para tests."""
+    return instructor.from_openai(OpenAI())
 
 
 def extract_cv_profile(raw_text: str, client: instructor.Instructor) -> CVProfile:
@@ -49,32 +49,37 @@ def extract_cv_profile(raw_text: str, client: instructor.Instructor) -> CVProfil
     Args:
         raw_text: Texto plano extraído del PDF del CV.
         client:   Cliente instructor inyectado (real o mock). Debe exponer
-                  .messages.create(model, max_tokens, system, messages,
-                  response_model, max_retries).
+                  .chat.completions.create(model, max_tokens, messages,
+                  response_model, max_retries) — superficie OpenAI.
 
     Returns:
         CVProfile validado por Pydantic con los datos del CV.
     """
-    model = os.getenv("ANTHROPIC_MODEL_CV", "claude-haiku-4-5-20251001")
+    model = os.getenv("OPENAI_MODEL_CV", "gpt-4o-mini")
+    # El system prompt va como primer mensaje (convención OpenAI), no como
+    # parámetro `system=` separado (eso es la convención Anthropic).
     with trace_llm("extract_cv_profile", model=model):
-        return client.messages.create(
+        return client.chat.completions.create(
             model=model,
             max_tokens=4096,
-            system=(
-                "Eres un extractor de CVs preciso. "
-                "Extrae ÚNICAMENTE lo que aparece explícitamente en el texto. "
-                "No inventes datos. Si un campo no aparece, déjalo vacío o None. "
-                "Para anios_experiencia_total, estima sumando la duración de los empleos "
-                "a partir de las fechas indicadas."
-            ),
             messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Eres un extractor de CVs preciso. "
+                        "Extrae ÚNICAMENTE lo que aparece explícitamente en el texto. "
+                        "No inventes datos. Si un campo no aparece, déjalo vacío o None. "
+                        "Para anios_experiencia_total, estima sumando la duración de los empleos "
+                        "a partir de las fechas indicadas."
+                    ),
+                },
                 {
                     "role": "user",
                     "content": (
                         "Extrae el CVProfile del siguiente CV:\n\n"
                         f"<cv>\n{_escape_cv_text(raw_text)}\n</cv>"
                     ),
-                }
+                },
             ],
             response_model=CVProfile,
             max_retries=2,

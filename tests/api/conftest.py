@@ -86,7 +86,7 @@ def api_client():
     fake_store = FakeStorage()
     mock_scoring = make_scoring_client(EXPECTED_ASSESSMENT)
     mock_cv = MagicMock()
-    mock_cv.messages.create.return_value = EXPECTED_PROFILE
+    mock_cv.chat.completions.create.return_value = EXPECTED_PROFILE
 
     # Import deferido — evita arrastrar torch/sentence-transformers en collection time
     import numpy as np  # noqa: PLC0415

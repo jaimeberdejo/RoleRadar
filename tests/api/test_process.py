@@ -77,7 +77,7 @@ def _make_scoring_mock_with_skills(skills_values: list[int]) -> MagicMock:
         for s in skills_values
     ]
     mock = MagicMock()
-    mock.messages.create.side_effect = assessments
+    mock.chat.completions.create.side_effect = assessments
     return mock
 
 

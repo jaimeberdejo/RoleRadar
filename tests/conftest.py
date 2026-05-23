@@ -122,19 +122,19 @@ def sample_pdf_bytes() -> bytes:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Fixture: cliente instructor mockeado (Anthropic surface)
+# Fixture: cliente instructor mockeado (OpenAI surface)
 # ──────────────────────────────────────────────────────────────────────────────
 
 @pytest.fixture
 def mock_llm_client() -> MagicMock:
-    """Devuelve un MagicMock que imita la superficie de instructor.from_anthropic().
+    """Devuelve un MagicMock que imita la superficie de instructor.from_openai().
 
-    El método .messages.create() devuelve EXPECTED_PROFILE de forma determinista,
-    permitiendo que los tests de parser.py parcheen build_instructor_client sin
-    realizar llamadas reales a la API de Anthropic.
+    El método .chat.completions.create() devuelve EXPECTED_PROFILE de forma
+    determinista, permitiendo que los tests de parser.py parcheen
+    build_instructor_client sin realizar llamadas reales a la API de OpenAI.
     """
     mock_client = MagicMock()
-    mock_client.messages.create.return_value = EXPECTED_PROFILE
+    mock_client.chat.completions.create.return_value = EXPECTED_PROFILE
     return mock_client
 
 
@@ -281,19 +281,19 @@ EXPECTED_ASSESSMENT = LLMJobAssessment(
 
 
 def make_scoring_client(assessment: LLMJobAssessment) -> MagicMock:
-    """Devuelve un MagicMock que imita la superficie instructor para scoring.
+    """Devuelve un MagicMock que imita la superficie instructor (OpenAI) para scoring.
 
-    Mismo patrón que mock_llm_client (líneas 67-77): .messages.create() devuelve
+    Mismo patrón que mock_llm_client: .chat.completions.create() devuelve
     el assessment controlado de forma determinista.
 
     Args:
         assessment: LLMJobAssessment que el mock debe devolver.
 
     Returns:
-        MagicMock con .messages.create.return_value = assessment.
+        MagicMock con .chat.completions.create.return_value = assessment.
     """
     mock_client = MagicMock()
-    mock_client.messages.create.return_value = assessment
+    mock_client.chat.completions.create.return_value = assessment
     return mock_client
 
 

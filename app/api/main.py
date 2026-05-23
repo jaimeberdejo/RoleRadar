@@ -25,11 +25,17 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.api.routes import cv, jobs, profile
 from app.errors import CVParseError, NormalizationError, ScoringError, StorageError
+
+# Carga .env al importar la app para que el SDK de OpenAI (y demás) vean
+# OPENAI_API_KEY / OPENAI_MODEL_* / SQLITE_DB_PATH sin exportarlas a mano.
+# Las variables ya presentes en el entorno tienen prioridad (no se sobreescriben).
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 

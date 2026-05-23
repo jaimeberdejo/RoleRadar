@@ -106,7 +106,7 @@ Plans:
 **Plans**: 3 plans
 Plans:
 - [x] 05-01-PLAN.md — Wave 1: app/obs/ (configure_logging idempotente OBS-01 + trace_llm stub no-op OBS-02) + tests/obs/ (idempotencia + no-op por defecto)
-- [ ] 05-02-PLAN.md — Wave 2: app/errors.py (excepciones por capa OBS-03) + exception handlers en main.py + configure_logging en lifespan + contador llm_calls + envolver assess_job/extract_cv_profile con trace_llm + test de handlers
+- [x] 05-02-PLAN.md — Wave 2: app/errors.py (excepciones por capa OBS-03) + exception handlers en main.py + configure_logging en lifespan + contador llm_calls + envolver assess_job/extract_cv_profile con trace_llm + test de handlers
 - [ ] 05-03-PLAN.md — Wave 3: examples/ (ofertas Arbeitnow+genéricas + payload /jobs/process DOC-03) + test de aceptación + README de portfolio (DOC-01) con sección "Integración con n8n" (DOC-02) + .env.example alineado
 
 ## Progress

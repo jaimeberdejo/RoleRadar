@@ -18,7 +18,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api.routes import profile
+from app.api.routes import cv, jobs, profile
 
 logger = logging.getLogger(__name__)
 
@@ -53,5 +53,5 @@ app = FastAPI(
 )
 
 app.include_router(profile.router)
-# app.include_router(cv.router)    # Plan 03
-# app.include_router(jobs.router)  # Plan 03/04
+app.include_router(cv.router)
+app.include_router(jobs.router)

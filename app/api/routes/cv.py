@@ -23,6 +23,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from app.api.deps import get_cv_llm_client
 from app.cv.cache import pdf_hash
 from app.cv.parser import parse_cv
+from app.errors import CVParseError
 from app.models.schemas import CVProfile
 
 logger = logging.getLogger(__name__)
@@ -80,7 +81,10 @@ async def parse_cv_endpoint(
     try:
         profile = parse_cv(pdf_bytes, client=client)
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        # Mapear ValueError (PDF sin texto extraíble) a CVParseError para que el
+        # handler tipado de main.py devuelva un envelope {"error": {"type": "CVParseError"}}
+        # consistente con el resto de errores de dominio (WR-02).
+        raise CVParseError(str(exc)) from exc
 
     # Escribir _current con el hash activo para que get_cached_cv_profile lo encuentre
     cache_dir = Path(os.getenv("CV_CACHE_DIR", "data/.cache"))

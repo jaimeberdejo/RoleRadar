@@ -107,8 +107,13 @@ def test_parse_cv_rechaza_no_pdf(api_client):
     assert detail, "El mensaje de error no debe estar vacío"
 
 
-def test_parse_cv_value_error_devuelve_400(api_client, tmp_path, monkeypatch):
-    """POST /cv/parse cuando parse_cv lanza ValueError → 400 con el mensaje de la excepción."""
+def test_parse_cv_value_error_devuelve_422(api_client, tmp_path, monkeypatch):
+    """POST /cv/parse cuando parse_cv lanza ValueError → CVParseError → 422 con envelope tipado.
+
+    WR-02: la ruta mapea ValueError de parse_cv a CVParseError para que el handler tipado
+    de main.py devuelva un envelope {"error": {"type": "CVParseError", ...}} consistente
+    con el resto de errores de dominio, en lugar de un HTTPException 400 ad-hoc.
+    """
     monkeypatch.setenv("CV_CACHE_DIR", str(tmp_path))
 
     # PDF mínimo que el extractor puede leer pero parse_cv lanza ValueError
@@ -118,6 +123,8 @@ def test_parse_cv_value_error_devuelve_400(api_client, tmp_path, monkeypatch):
             files={"file": ("cv.pdf", b"%PDF-1.4 empty", "application/pdf")},
         )
 
-    assert response.status_code == 400, f"Esperado 400 para ValueError, obtenido {response.status_code}"
-    detail = response.json().get("detail", "")
-    assert "PDF" in detail or "sin texto" in detail.lower() or "extraíble" in detail
+    assert response.status_code == 422, f"Esperado 422 (CVParseError) para ValueError, obtenido {response.status_code}"
+    body = response.json()
+    assert "error" in body, "Respuesta debe contener envelope 'error'"
+    assert body["error"]["type"] == "CVParseError"
+    assert "PDF" in body["error"]["message"] or "sin texto" in body["error"]["message"].lower() or "extraíble" in body["error"]["message"]

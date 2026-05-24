@@ -118,6 +118,7 @@ None yet.
 | 260523-u5d | Dockerfile + docker-compose + nota de despliegue Docker (con aviso de que la key de JSearch/RapidAPI va en n8n, no aquí) | 2026-05-24 | aa08eb1 | [260523-u5d-crear-dockerfile-docker-compose-nota-de-](./quick/260523-u5d-crear-dockerfile-docker-compose-nota-de-/) |
 | 260524-sg6 | Autenticación opcional X-API-Key via Starlette middleware; /health pública; /docs protegida; secrets.compare_digest; 185→195 tests | 2026-05-24 | 9753539 | [260524-sg6-anadir-autenticacion-por-api-key-cabecer](./quick/260524-sg6-anadir-autenticacion-por-api-key-cabecer/) |
 | 260524-sv8 | Guía paso a paso docs/N8N-WORKFLOW.md (montar el workflow en n8n nodo a nodo: Schedule→HTTP→Code→/jobs/process→Filter→Telegram), enlazada desde el README | 2026-05-24 | b17770c | [260524-sv8-crear-docs-n8n-workflow-md-guia-paso-a-p](./quick/260524-sv8-crear-docs-n8n-workflow-md-guia-paso-a-p/) |
+| fast | docs/N8N-WORKFLOW.md: patrón multi-query JSearch (lista de queries + `={{ $json.query }}`) y Code node con `.all()`/flatMap en vez de `.first()` | 2026-05-24 | 2f99fd5 | — (gsd-fast, follow-up de 260524-sv8) |
 
 ## Deferred Items
 

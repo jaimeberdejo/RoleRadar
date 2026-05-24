@@ -5,9 +5,10 @@ servicio. Configurable vía SQLITE_DB_PATH (default data/jobs.db).
 
 Decisiones de diseño:
     - Conexión por llamada (_connect()): thread-safe con check_same_thread=False.
-      FastAPI corre endpoints sync en un threadpool — una conexión compartida
-      entre hilos requeriría locking explícito; conexión-por-llamada es más simple
-      y suficiente para una herramienta personal de usuario único.
+      En v2.0 dos procesos (UI Streamlit + worker APScheduler) acceden a la misma
+      DB. WAL mode permite lecturas concurrentes mientras hay un escritor.
+      busy_timeout=5000 aplica en cada conexión (es un parámetro de conexión,
+      no de la base de datos) — evita OperationalError inmediato en contención.
     - ON CONFLICT(id) DO UPDATE: upsert atómico que preserva first_seen.
       INSERT OR REPLACE borraría y reinserstaría (perdiría first_seen y seen).
     - score.model_dump_json() / JobScore.model_validate_json(): Pydantic v2 API
@@ -42,18 +43,23 @@ class SQLiteStorage:
         self._db_path = db_path
 
     def _connect(self) -> sqlite3.Connection:
-        """Crea y devuelve una nueva conexión SQLite.
+        """Crea y devuelve una nueva conexión SQLite con WAL + busy_timeout.
 
-        check_same_thread=False: necesario porque FastAPI corre endpoints sync
-        en un threadpool (cada request puede llegar desde un hilo distinto).
-        Conexión-por-llamada es thread-safe a esta escala.
+        journal_mode=WAL: database-level setting; persiste en el fichero tras la
+            primera vez. Permite lecturas concurrentes mientras hay un escritor.
+            En v2.0: UI Streamlit lee, worker APScheduler escribe — sin bloqueos.
+        busy_timeout=5000: connection-level setting — se resetea a 0 en cada nueva
+            conexión. DEBE aplicarse aquí, no solo en init_db().
+            Espera hasta 5 segundos antes de lanzar OperationalError en lock contention.
         """
         conn = sqlite3.connect(self._db_path, check_same_thread=False)
         conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA busy_timeout=5000;")
         return conn
 
     def init_db(self) -> None:
-        """Crea la tabla jobs si no existe. Idempotente."""
+        """Crea las tablas jobs y settings si no existen. Idempotente."""
         Path(self._db_path).parent.mkdir(parents=True, exist_ok=True)
         with closing(self._connect()) as conn:
             with conn:  # commit/rollback automático
@@ -74,7 +80,31 @@ class SQLiteStorage:
                         seen INTEGER DEFAULT 0
                     )
                 """)
-        logger.debug("SQLiteStorage.init_db: tabla jobs lista en %s", self._db_path)
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS settings (
+                        key   TEXT PRIMARY KEY,
+                        value TEXT NOT NULL
+                    )
+                """)
+                _SETTING_DEFAULTS = {
+                    "search_query": '"AI Engineer" OR "ML Engineer"',
+                    "search_country": "ES",
+                    "schedule_interval_hours": "6",
+                    "dedup_threshold": "0.85",
+                    "score_weight_puesto": "0.35",
+                    "score_weight_skills": "0.30",
+                    "score_weight_ubicacion": "0.20",
+                    "score_weight_seniority": "0.15",
+                    "notification_min_score": "70",
+                    "notification_channel": "none",
+                }
+                conn.executemany(
+                    "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+                    list(_SETTING_DEFAULTS.items()),
+                )
+        logger.debug(
+            "SQLiteStorage.init_db: tablas jobs + settings listas en %s", self._db_path
+        )
 
     def upsert_scored_jobs(self, scored: list[ScoredJob]) -> None:
         """Persiste (inserta o actualiza) una lista de ofertas puntuadas.
@@ -158,3 +188,28 @@ class SQLiteStorage:
                     exc,
                 )
         return result
+
+    def get_settings(self) -> dict[str, str]:
+        """Devuelve todas las settings como {key: value_str}. Valores son strings.
+
+        Llamado por el worker al inicio de cada run y por la UI para mostrar config.
+        Los valores numéricos se devuelven como strings — el caller hace la conversión.
+        """
+        with closing(self._connect()) as conn:
+            rows = conn.execute("SELECT key, value FROM settings").fetchall()
+        return {row["key"]: row["value"] for row in rows}
+
+    def set_setting(self, key: str, value: str) -> None:
+        """Upsert de una setting. value debe ser un string (JSON-encoded si complejo).
+
+        INSERT OR IGNORE semántica: INSERT OR IGNORE solo para defaults (init_db).
+        Aquí se usa ON CONFLICT DO UPDATE para que el caller pueda sobreescribir.
+        Nunca borra otras claves — upsert atómico solo del par (key, value).
+        """
+        with closing(self._connect()) as conn:
+            with conn:
+                conn.execute(
+                    "INSERT INTO settings (key, value) VALUES (?, ?) "
+                    "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                    (key, value),
+                )

@@ -24,6 +24,8 @@ class Storage(Protocol):
     - upsert_scored_jobs: idempotente por job.id; actualiza si ya existe.
     - was_seen: True si el job_id fue persistido en un run anterior.
     - get_history: paginable con limit/offset; devuelve dicts serializables a JSON.
+    - get_settings: devuelve todas las settings como {key: value_str}.
+    - set_setting: upsert de una setting; value es string (JSON si complejo).
     """
 
     def init_db(self) -> None: ...
@@ -33,3 +35,7 @@ class Storage(Protocol):
     def was_seen(self, job_id: str) -> bool: ...
 
     def get_history(self, limit: int = 50, offset: int = 0) -> list[dict]: ...
+
+    def get_settings(self) -> dict[str, str]: ...
+
+    def set_setting(self, key: str, value: str) -> None: ...

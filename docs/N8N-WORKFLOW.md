@@ -10,10 +10,16 @@ parámetros exactos y snippets copy-paste listos para usar.
 
 ```
 Schedule Trigger (08:00)
+  │
+  ├─ HTTP GET /jobs/history?limit=1    (¿BD vacía = primer run?)
+  │
+  └─ Code "Modo de búsqueda"           (primer run → ventana 2 meses; si no → 3days;
+  │                                     emite 1 item por query)
+  │
   ├─ HTTP Request → Arbeitnow API          → array offers (arbeitnow)
-  └─ HTTP Request → JSearch (RapidAPI)     → array offers (jsearch)
+  └─ HTTP Request → JSearch (RapidAPI)     → array offers (jsearch, itera por query)
           ↓
-  Code (construir ProcessRequest)
+  Code (construir ProcessRequest + filtro 60 días en backfill)
           ↓
   HTTP Request → POST /jobs/process        → ProcessResponse (results + errors)
           ↓
@@ -75,6 +81,83 @@ mensual de peticiones.
 
 ---
 
+### Nodo 1.5: Detección de primer run (backfill de 2 meses)
+
+#### Por qué
+
+El servicio puntúa cada oferta con OpenAI, así que lanzar una ventana ancha CADA
+día desperdiciaría coste. La solución: usar una ventana ancha **solo la primera
+vez** (backfill de ~2 meses) y una ventana estrecha el resto. La deduplicación
+del servicio absorbe el solape entre días, y el flag `ya_visto` evita que lleguen
+las mismas ofertas por Telegram dos veces.
+
+Limitación de JSearch: el parámetro `date_posted` solo acepta `all | today | 3days | week | month`
+(no hay "2 meses" nativo). En modo backfill se usa `all` y el Code node del
+Nodo 3 aplica un filtro de 60 días sobre el campo `job_posted_at_timestamp` de
+cada oferta.
+
+#### Nodo: HTTP Request "Historial"
+
+| Parámetro | Valor |
+|-----------|-------|
+| Nombre del nodo | `Historial` |
+| Método | GET |
+| URL | `http://host.docker.internal:8000/jobs/history` (misma base que `/jobs/process`; ver tabla de URLs del Nodo 4) |
+| Query params | `limit` = `1` |
+| Cabecera | `X-API-Key` con la credencial Header Auth del servicio (si la autenticación está activa; igual que en el Nodo 4) |
+| Options → Always Output Data | **ON** — imprescindible |
+
+> **Por qué Always Output Data.** `GET /jobs/history` devuelve un array
+> `list[HistoryItem]` (vacío `[]` cuando la BD está vacía, es decir, en el primer
+> run). Sin esta opción, n8n no emite ningún item cuando recibe `[]` y el flujo se
+> corta antes de llegar al Code siguiente. Con la opción activada, n8n siempre
+> emite al menos un item (con json vacío), y el Code "Modo de búsqueda" puede
+> evaluar si hay filas reales.
+
+Cada `HistoryItem` tiene los campos: `id`, `title`, `company`, `score_total`,
+`recommendation`, `first_seen`, `last_seen`, `score`.
+
+#### Nodo: Code "Modo de búsqueda"
+
+| Parámetro | Valor |
+|-----------|-------|
+| Tipo | Code (JavaScript) |
+| Mode | Run Once for All Items |
+
+Este nodo reemplaza el Code de lista de queries que antes se describía en la
+subsección multi-query del Nodo 2b. Ahora hace dos cosas a la vez: **decide la
+ventana de búsqueda** (primer run vs. diario) y **emite un item por query**, que
+el nodo JSearch itera.
+
+```javascript
+// ¿Hay ofertas ya guardadas? BD vacía = primer run = backfill de 2 meses.
+const filas = $('Historial').all().filter(i => i.json && i.json.id);
+const primerRun = filas.length === 0;
+
+const datePosted = primerRun ? 'all'  : '3days';
+const numPages   = primerRun ? '10'   : '1';
+
+// Un puesto de tu ranking por línea (ajusta a tu profile.yaml):
+const puestos = [
+  'AI Engineer in Barcelona',
+  'ML Engineer in Barcelona',
+  'Data Engineer remote',
+  'MLOps Engineer remote',
+];
+
+return puestos.map(query => ({
+  json: { query, date_posted: datePosted, num_pages: numPages },
+}));
+```
+
+> **Por qué filtrar por `i.json.id`.** Cuando la BD está vacía, `Always Output
+> Data` mete un item con json vacío (sin `id`). Filtrando por `i.json.id` solo
+> cuentan las filas reales. En el primer run `filas.length === 0` → `primerRun =
+> true` → se usa `all` con 10 páginas (histórico ancho). A partir del segundo run,
+> `3days` con 1 página (incremental; el solape lo absorbe el dedup del servicio).
+
+---
+
 ### Nodo 2a: HTTP Request — Arbeitnow
 
 | Parámetro | Valor |
@@ -117,12 +200,12 @@ nodo 3; si lo cambias, actualiza el Code node en consecuencia.
 
 Query parameters a configurar:
 
-| Parámetro | Ejemplo | Descripción |
-|-----------|---------|-------------|
-| `query` | `AI Engineer Barcelona` | Búsqueda principal; ajusta según tus puestos objetivo |
+| Parámetro | Valor (expresión n8n) | Descripción |
+|-----------|------------------------|-------------|
+| `query` | `={{ $json.query }}` | Viene del Code "Modo de búsqueda" (Nodo 1.5) |
 | `page` | `1` | Página de resultados |
-| `num_pages` | `1` | Nº de páginas a traer (1 = ~10 resultados) |
-| `date_posted` | `today` | Solo ofertas del día; evita procesar las mismas del día anterior |
+| `num_pages` | `={{ $json.num_pages }}` | 10 en primer run, 1 en diario |
+| `date_posted` | `={{ $json.date_posted }}` | `all` en primer run, `3days` en diario |
 
 **Cabeceras obligatorias** (configurar como credencial "Header Auth" en n8n,
 **no como texto plano**):
@@ -150,33 +233,10 @@ Las ofertas están en el campo `data`. El Code node del paso 3 las recoge con
 
 #### Buscar varios puestos a la vez (multi-query)
 
-Tu ranking tiene varios puestos (AI Engineer, ML Engineer, Data Engineer,
-MLOps). **No** los metas todos en el mismo `query` — eso es una sola búsqueda en
-texto libre (Google for Jobs por detrás) y mezclar títulos diluye resultados. En
-su lugar, haz que el nodo JSearch **itere sobre una lista de queries**:
-
-**1.** Añade un **Code node ANTES** del JSearch que emita un item por puesto:
-
-```javascript
-return [
-  { json: { query: 'AI Engineer in Barcelona' } },
-  { json: { query: 'ML Engineer in Barcelona' } },
-  { json: { query: 'Data Engineer remote' } },
-  { json: { query: 'MLOps Engineer remote' } },
-];
-```
-
-**2.** En el nodo JSearch, pon el `Value` del query-param `query` como
-**expresión** (icono `=`):
-
-```
-={{ $json.query }}
-```
-
-n8n ejecuta el HTTP Request **una vez por item** → una llamada por puesto. El
-resto de params (`page`, `num_pages`, `date_posted`) quedan fijos. La salida son
-N items, cada uno con su propio `data`; por eso el Code node del paso 3 usa
-`.all()` + `flatMap` y no `.first()`.
+El nodo JSearch itera una vez por item de entrada: el **Code "Modo de búsqueda"
+(Nodo 1.5)** emite un item por puesto (con `query`, `date_posted` y `num_pages`)
+y JSearch ejecuta una llamada HTTP por cada uno. No necesitas un Code node
+adicional aquí; la lista de puestos y la ventana de búsqueda viven en el Nodo 1.5.
 
 > **Duplicados:** si dos queries devuelven la misma oferta, **el servicio la
 > deduplica** (hash exacto + semántico con BGE-M3). Manda todo crudo sin
@@ -214,9 +274,13 @@ coincidir exactamente con los valores reconocidos por el servicio
 ```javascript
 const arbeitnow = $('Arbeitnow').first().json.data || [];
 
-// JSearch puede emitir VARIOS items (uno por query si usas multi-query, ver Nodo 2b).
-// .all() + flatMap recoge las ofertas de todos; funciona también con una sola query.
-const jsearch = $('JSearch').all().flatMap(i => i.json.data || []);
+// JSearch emite un item por query (ver Nodo 1.5). .all() + flatMap junta todas las ofertas.
+let jsearch = $('JSearch').all().flatMap(i => i.json.data || []);
+
+// Backfill: recorta a los últimos 60 días por job_posted_at_timestamp (Unix s).
+// No-op en modo diario (date_posted=3days ya las acota); conserva las que no traen timestamp.
+const corte = Math.floor(Date.now() / 1000) - 60 * 24 * 60 * 60;
+jsearch = jsearch.filter(o => !o.job_posted_at_timestamp || o.job_posted_at_timestamp >= corte);
 
 return [{
   json: {
@@ -227,6 +291,13 @@ return [{
   },
 }];
 ```
+
+> **Filtro de 60 días:** en modo backfill (`date_posted=all`), JSearch puede
+> devolver ofertas muy antiguas. El filtro por `job_posted_at_timestamp` (campo
+> Unix en segundos presente en las respuestas de JSearch) recorta a los últimos
+> 60 días. En modo diario (`date_posted=3days`) el filtro es prácticamente un
+> no-op porque las ofertas ya están acotadas por la API; y si falta el campo
+> timestamp, la oferta pasa igualmente (no se descarta por falta de dato).
 
 Si los nodos 2a/2b tienen nombres distintos a `Arbeitnow` y `JSearch`,
 actualiza las referencias `$('Arbeitnow')` y `$('JSearch')` en consecuencia.
@@ -530,6 +601,7 @@ duplica notificaciones.
 | Ofertas relevantes no llegan por Telegram | El Filter es demasiado estricto o `ya_visto` siempre true | Bajar el umbral de score o revisar que /cv/parse se ejecutó con el CV correcto |
 | JSearch devuelve 403 / 429 | Key de RapidAPI inválida, caducada o límite mensual alcanzado | Verificar la key en el dashboard de RapidAPI; rotar si es necesario |
 | Telegram "Bad Request: can't parse entities" | El texto del digest tiene Markdown malformado (asteriscos sin cerrar) | Revisar el snippet del nodo 7; escapar caracteres especiales en `j.title` o `j.company` |
+| El flujo no hace nada el primer día / no llegan ofertas | El nodo `Historial` no tiene `Always Output Data` activado: devolvió `[]` → 0 items → el flujo se corta antes del Code "Modo de búsqueda" | Activar `Options → Always Output Data` en el nodo `Historial` |
 
 ---
 

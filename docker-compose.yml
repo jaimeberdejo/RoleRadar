@@ -58,8 +58,8 @@ services:
   worker:
     image: buscadordeempleo:latest
     command: ["uv", "run", "python", "worker.py"]
-    depends_on:
-      - ui
+    # Nota: worker y ui son independientes — ambos consumen el volumen `data`
+    # directamente (SQLite). No hay depends_on: worker arranca sin esperar ui.
 
     env_file:
       - .env

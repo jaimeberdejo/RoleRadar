@@ -1,0 +1,42 @@
+# ── CRÍTICO: excluir .env ─────────────────────────────────────────────────────
+# .env contiene OPENAI_API_KEY y otras credenciales. NUNCA debe entrar en el
+# contexto de build ni en la imagen Docker.
+.env
+
+# ── Entorno virtual local ─────────────────────────────────────────────────────
+# Evita copiar el venv local (puede ser para una arquitectura diferente).
+# uv sync --frozen recrea el venv dentro del contenedor durante el build.
+.venv/
+
+# ── Artefactos de Python ──────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+
+# ── Base de datos local ───────────────────────────────────────────────────────
+# La DB viene del volumen montado en runtime, no de la imagen.
+*.db
+*.sqlite
+
+# ── Artefactos del SO ─────────────────────────────────────────────────────────
+.DS_Store
+
+# ── Control de versiones ──────────────────────────────────────────────────────
+.git/
+.gitignore
+
+# ── Artefactos de planificación y CI ─────────────────────────────────────────
+.planning/
+
+# ── Tests ─────────────────────────────────────────────────────────────────────
+# Los tests no son necesarios en la imagen de producción.
+tests/
+
+# ── Cache local ───────────────────────────────────────────────────────────────
+.cache/
+
+# ── Documentación ─────────────────────────────────────────────────────────────
+# Excluir todos los .md EXCEPTO README.md (por si se añade LABEL MAINTAINER en
+# el futuro o herramientas que lo lean desde el contexto).
+*.md
+!README.md

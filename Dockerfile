@@ -26,21 +26,23 @@ COPY app/ ./app/
 COPY data/ ./data/
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
-EXPOSE 8000
-
 # Ruta explícita del cache de HuggingFace dentro del contenedor.
 # Permite montar el volumen en una ruta conocida sin depender de $HOME del
 # usuario del contenedor (que varía según cómo se construya la imagen).
 ENV HF_HOME=/app/.cache/huggingface
 
-# NOTE: BGE-M3 (~2.3 GB) se descarga en la primera llamada a /jobs/process.
-# Montar volumen hf_cache en /app/.cache/huggingface para persistir el modelo
-# entre reinicios del contenedor y evitar re-descargas (ver docker-compose.yml).
+# Copiar el entrypoint del worker y crear el directorio de la UI.
+# El worker.py es el entrypoint del contenedor `worker` en docker-compose.yml.
+# ui/ contiene la app Streamlit (Phase 10); el placeholder asegura que el
+# directorio exista en la imagen antes de que compose inyecte el command.
+COPY worker.py ./
+RUN mkdir -p ui
 
-# SECRETS: OPENAI_API_KEY se inyecta NUNCA en esta imagen.
+# SECRETS: OPENAI_API_KEY nunca se inyecta en esta imagen.
 # Se inyecta en runtime vía env_file en docker-compose.yml.
 # No hay ARG ni ENV con credenciales en este Dockerfile.
 
-CMD ["uv", "run", "uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
-# --host 0.0.0.0: crítico para que el servicio sea accesible desde fuera del contenedor.
-# Sin --reload: modo producción; reload requiere watchfiles y es para desarrollo local.
+# Neutral CMD — cada servicio define su propio `command:` en docker-compose.yml.
+# ui:     uv run streamlit run ui/app.py --server.port 8501
+# worker: uv run python worker.py
+CMD ["uv", "run", "python", "-c", "print('Use: docker compose up')"]

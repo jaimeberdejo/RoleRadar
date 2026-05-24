@@ -19,7 +19,7 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 ### Migración y limpieza (MIG)
 
 - [x] **MIG-01**: FastAPI retirado — `app/api/` eliminado; el núcleo (cv/dedup/scoring/storage) se consume **en proceso** desde la UI y el worker; deps `fastapi`/`uvicorn`/`python-multipart` removidas
-- [ ] **MIG-02**: n8n retirado — servicio `n8n` fuera del `docker-compose`; artefactos n8n (`docs/N8N-WORKFLOW.md`, `n8n/workflow.json`) archivados fuera de la ruta activa
+- [x] **MIG-02**: n8n retirado — servicio `n8n` fuera del `docker-compose`; artefactos n8n (`docs/N8N-WORKFLOW.md`, `n8n/workflow.json`) archivados fuera de la ruta activa
 - [x] **MIG-03**: RapidAPI key nunca inline — `docker-compose` usa `${RAPIDAPI_KEY:-}`, `.env.example` actualizado, key antigua **rotada** (se filtró en chat)
 - [ ] **MIG-04**: `docker-compose` levanta **dos servicios** (UI Streamlit + worker) desde una sola imagen, compartiendo los volúmenes `data` + `hf_cache`
 
@@ -129,7 +129,7 @@ Mapeo de requisitos a fases.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | MIG-01 | Phase 6 | Complete |
-| MIG-02 | Phase 6 | Pending |
+| MIG-02 | Phase 6 | Complete |
 | MIG-03 | Phase 6 | Complete |
 | MIG-04 | Phase 6 | Pending |
 | STORE-04 | Phase 6 | Complete |

@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-05-22)
 Phase: 05 (Observabilidad, Robustez y Docs n8n) — COMPLETE
 Plan: 3 of 3
 Status: Complete
-Last activity: 2026-05-24 - Completed quick task 260523-u5d: Dockerfile + docker-compose + nota de despliegue Docker
+Last activity: 2026-05-24 - Completed quick task 260524-sg6: Autenticación X-API-Key via ApiKeyMiddleware (opcional, no-op cuando API_KEY unset)
 
 Progress: [██████████] 100%
 
@@ -116,6 +116,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260523-u5d | Dockerfile + docker-compose + nota de despliegue Docker (con aviso de que la key de JSearch/RapidAPI va en n8n, no aquí) | 2026-05-24 | aa08eb1 | [260523-u5d-crear-dockerfile-docker-compose-nota-de-](./quick/260523-u5d-crear-dockerfile-docker-compose-nota-de-/) |
+| 260524-sg6 | Autenticación opcional X-API-Key via Starlette middleware; /health pública; /docs protegida; secrets.compare_digest; 185→195 tests | 2026-05-24 | 9753539 | [260524-sg6-anadir-autenticacion-por-api-key-cabecer](./quick/260524-sg6-anadir-autenticacion-por-api-key-cabecer/) |
 
 ## Deferred Items
 

@@ -62,6 +62,7 @@ Edita `.env` y establece como mínimo:
 | `SQLITE_DB_PATH` | No | Ruta del fichero SQLite (default: `data/jobs.db`) |
 | `LANGFUSE_PUBLIC_KEY` | No | Activa el tracing LLM con Langfuse (OBS-02) |
 | `LANGFUSE_SECRET_KEY` | No | Requerida junto con `LANGFUSE_PUBLIC_KEY` |
+| `API_KEY` | No | Habilita autenticación X-API-Key. Si ausente → auth desactivada (WARNING al arrancar). Generar con `openssl rand -hex 32`. |
 
 El servicio funciona sin Langfuse. Ver la sección [Observabilidad](#observabilidad)
 para activarlo.
@@ -253,6 +254,7 @@ docker compose up --build -d
 | `OPENAI_MODEL_CV` | `.env` (opcional) | No |
 | `OPENAI_MODEL_SCORING` | `.env` (opcional) | No |
 | `SQLITE_DB_PATH` | ya configurado en `docker-compose.yml` | — |
+| `API_KEY` | `.env` (opcional pero recomendada en producción) | No |
 
 > **AVISO DE SEGURIDAD:** La clave de RapidAPI / JSearch (`RAPIDAPI_KEY`) y cualquier
 > credencial de n8n **NO van en este repositorio ni en la imagen Docker**. Esas claves
@@ -300,8 +302,10 @@ Si n8n corre en Docker en la misma máquina:
 
 Desplegar el servicio en un host accesible (VPS, Railway, Fly.io, etc.) y configurar
 las URLs de los HTTP Request nodes de n8n con el dominio público, por ejemplo
-`https://buscador.tudominio.com`. Para autenticación, añadir un reverse proxy
-(Nginx/Caddy) con API Key o Basic Auth (fuera del scope de este proyecto).
+`https://buscador.tudominio.com`. El servicio incluye autenticación nativa por
+cabecera `X-API-Key`. Configura `API_KEY` en `.env` para activarla. Sin `API_KEY`,
+el servicio arranca sin autenticación (útil en dev local) y emite un WARNING al
+arrancar. Ver [Configuración .env](#configuración-env).
 
 Ver la sección [Integración con n8n](#integración-con-n8n) para el contrato JSON
 completo de los endpoints.
@@ -455,6 +459,16 @@ curl -X POST http://localhost:8000/jobs/process \
   -d @examples/process_request.json
 ```
 
+> **Con autenticación activada** (`API_KEY` configurada), añadir la cabecera
+> `X-API-Key` en todas las llamadas:
+>
+> ```bash
+> curl -X POST http://localhost:8000/jobs/process \
+>   -H "Content-Type: application/json" \
+>   -H "X-API-Key: <tu-api-key>" \
+>   -d @examples/process_request.json
+> ```
+
 Los ficheros `examples/arbeitnow_offers.json` y `examples/generic_offers.json`
 contienen las mismas ofertas por separado, útiles para probar `/jobs/normalize`.
 
@@ -464,9 +478,9 @@ contienen las mismas ofertas por separado, útiles para probar `/jobs/normalize`
 `http://host.docker.internal:8000` (Mac/Windows) o en la IP del host (Linux).
 
 **Producción:** desplegar el servicio accesible (VPS, Railway, Fly.io, etc.) y
-configurar las URLs de los HTTP Request de n8n con el dominio público. La
-autenticación de la API (fuera del scope de este proyecto) se puede añadir con
-un API Key header o con un reverse proxy (Nginx/Caddy con Basic Auth).
+configurar las URLs de los HTTP Request de n8n con el dominio público. El servicio
+incluye autenticación nativa vía cabecera `X-API-Key` — configura `API_KEY` en
+`.env` para activarla antes de exponerlo en producción.
 
 ### Nodos n8n por endpoint
 
@@ -477,3 +491,8 @@ un API Key header o con un reverse proxy (Nginx/Caddy con Basic Auth).
 | HTTP Request (POST) | `/jobs/normalize` | Si quieres normalizar por fuente antes del merge |
 | HTTP Request (POST) | `/jobs/process` | **Nodo principal**: normalize + dedup + score en un solo paso |
 | HTTP Request (GET) | `/jobs/history` | Para mostrar histórico en un dashboard o auditoría |
+
+> **Autenticación:** Si `API_KEY` está configurada, cada nodo HTTP Request de n8n
+> debe incluir una cabecera `X-API-Key` con el valor de tu `API_KEY`. En n8n:
+> edita el nodo → pestaña "Headers" → añade `X-API-Key: {{ $env.API_KEY }}` (o
+> el valor literal). `GET /health` es la única ruta pública y no requiere la cabecera.

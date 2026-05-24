@@ -31,6 +31,11 @@ services:
       #   HF_HOME=/otro/path docker compose up
       HF_HOME: /app/.cache/huggingface
 
+      # Autenticación X-API-Key. Definir en .env junto a OPENAI_API_KEY.
+      # Si ausente → auth desactivada (WARNING al arrancar).
+      # API_KEY se inyecta desde .env via env_file — no hardcodear aquí.
+      # Para generar: openssl rand -hex 32
+
       # Ruta de la DB dentro del contenedor, apuntando al volumen montado.
       # Sin esto, el código usaría el default relativo "data/jobs.db" dentro
       # del contenedor y la DB se perdería al recrear el contenedor.

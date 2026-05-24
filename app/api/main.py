@@ -29,6 +29,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from app.api.auth import ApiKeyMiddleware, log_auth_startup_warning
 from app.api.routes import cv, jobs, profile
 from app.errors import CVParseError, NormalizationError, ScoringError, StorageError
 
@@ -56,6 +57,7 @@ async def lifespan(app: FastAPI):
     from app.obs.logging_config import configure_logging  # noqa: PLC0415
 
     configure_logging()
+    log_auth_startup_warning()
 
     from app.storage.sqlite import SQLiteStorage  # noqa: PLC0415
 
@@ -75,6 +77,7 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+app.add_middleware(ApiKeyMiddleware)
 
 
 # ─── Exception handlers (OBS-03) ─────────────────────────────────────────────

@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-05-22)
 Phase: 05 (Observabilidad, Robustez y Docs n8n) — COMPLETE
 Plan: 3 of 3
 Status: Complete
-Last activity: 2026-05-24 - Completed quick task 260524-sg6: Autenticación X-API-Key via ApiKeyMiddleware (opcional, no-op cuando API_KEY unset)
+Last activity: 2026-05-24 - Completed quick task 260524-sv8: Guía paso a paso n8n (docs/N8N-WORKFLOW.md)
 
 Progress: [██████████] 100%
 
@@ -117,6 +117,7 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260523-u5d | Dockerfile + docker-compose + nota de despliegue Docker (con aviso de que la key de JSearch/RapidAPI va en n8n, no aquí) | 2026-05-24 | aa08eb1 | [260523-u5d-crear-dockerfile-docker-compose-nota-de-](./quick/260523-u5d-crear-dockerfile-docker-compose-nota-de-/) |
 | 260524-sg6 | Autenticación opcional X-API-Key via Starlette middleware; /health pública; /docs protegida; secrets.compare_digest; 185→195 tests | 2026-05-24 | 9753539 | [260524-sg6-anadir-autenticacion-por-api-key-cabecer](./quick/260524-sg6-anadir-autenticacion-por-api-key-cabecer/) |
+| 260524-sv8 | Guía paso a paso docs/N8N-WORKFLOW.md (montar el workflow en n8n nodo a nodo: Schedule→HTTP→Code→/jobs/process→Filter→Telegram), enlazada desde el README | 2026-05-24 | b17770c | [260524-sv8-crear-docs-n8n-workflow-md-guia-paso-a-p](./quick/260524-sv8-crear-docs-n8n-workflow-md-guia-paso-a-p/) |
 
 ## Deferred Items
 

@@ -123,6 +123,7 @@ None yet.
 | fast | n8n/workflow.json importable (11 nodos, flujo completo, keys por $env sin hardcodear) + sección "Importar el workflow" en la guía | 2026-05-24 | 323dafd | — (gsd-fast) |
 | fast | servicio n8n añadido al docker-compose.yml (puerto 5678, volumen n8n_data, $env, keys interpoladas desde .env) + URLs del workflow.json a buscadordeempleo:8000 | 2026-05-24 | fc2877e | — (gsd-fast) |
 | fast | sub-flujo "Subir CV (una vez)" en workflow.json (Form Trigger → POST /cv/parse multipart) + sección en la guía | 2026-05-24 | d34fae9 | — (gsd-fast) |
+| fast | fix .dockerignore: excluir data/jobs.db y data/.cache/ (los patrones raíz *.db/.cache no matchean rutas anidadas → la BD de test se horneaba en la imagen y sembraba el volumen, rompiendo el primer-run del backfill) | 2026-05-24 | 7a04c37 | — (gsd-fast) |
 
 ## Deferred Items
 

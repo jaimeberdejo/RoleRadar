@@ -13,7 +13,7 @@ Schedule Trigger (08:00)
   │
   ├─ HTTP GET /jobs/history?limit=1    (¿BD vacía = primer run?)
   │
-  └─ Code "Modo de búsqueda"           (primer run → ventana 2 meses; si no → 3days;
+  └─ Code "Modo de búsqueda"           (primer run → ventana 1 mes; si no → 3days;
   │                                     emite 1 item por query)
   │
   ├─ HTTP Request → Arbeitnow API          → array offers (arbeitnow)
@@ -150,20 +150,25 @@ mensual de peticiones.
 
 ---
 
-### Nodo 1.5: Detección de primer run (backfill de 2 meses)
+### Nodo 1.5: Detección de primer run (backfill)
 
 #### Por qué
 
 El servicio puntúa cada oferta con OpenAI, así que lanzar una ventana ancha CADA
-día desperdiciaría coste. La solución: usar una ventana ancha **solo la primera
-vez** (backfill de ~2 meses) y una ventana estrecha el resto. La deduplicación
-del servicio absorbe el solape entre días, y el flag `ya_visto` evita que lleguen
-las mismas ofertas por Telegram dos veces.
+día desperdiciaría coste (tiempo + dinero). La solución: usar una ventana algo más
+amplia **solo la primera vez** (backfill) y una ventana estrecha el resto. La
+deduplicación del servicio absorbe el solape entre días, y el flag `ya_visto` evita
+que lleguen las mismas ofertas por Telegram dos veces.
 
-Limitación de JSearch: el parámetro `date_posted` solo acepta `all | today | 3days | week | month`
-(no hay "2 meses" nativo). En modo backfill se usa `all` y el Code node del
-Nodo 3 aplica un filtro de 60 días sobre el campo `job_posted_at_timestamp` de
-cada oferta.
+El parámetro `date_posted` de JSearch acepta `all | today | 3days | week | month`.
+**Por defecto el backfill usa `month` (1 mes, nativo) + `num_pages='1'`** — barato y
+rápido para el primer run, y aun así escanea suficientes ofertas para arrancar con
+datos.
+
+**Para un histórico más amplio (p. ej. ~2 meses):** cambia a `datePosted='all'` y
+sube `numPages` (3-10) en el Code de abajo; el filtro de 60 días del Nodo 3 recorta
+el resto. Ojo: más ventana = más ofertas = más tiempo y más coste de OpenAI en el
+primer run (cientos de ofertas × gpt-4o pueden ser varios minutos y varios euros).
 
 #### Nodo: HTTP Request "Historial"
 
@@ -199,12 +204,12 @@ ventana de búsqueda** (primer run vs. diario) y **emite un item por query**, qu
 el nodo JSearch itera.
 
 ```javascript
-// ¿Hay ofertas ya guardadas? BD vacía = primer run = backfill de 2 meses.
+// ¿Hay ofertas ya guardadas? BD vacía = primer run = backfill de 1 mes.
 const filas = $('Historial').all().filter(i => i.json && i.json.id);
 const primerRun = filas.length === 0;
 
-const datePosted = primerRun ? 'all'  : '3days';
-const numPages   = primerRun ? '10'   : '1';
+const datePosted = primerRun ? 'month' : '3days';  // ~2 meses: 'all' + sube numPages
+const numPages   = primerRun ? '1'     : '1';
 
 // Un puesto de tu ranking por línea (ajusta a tu profile.yaml):
 const puestos = [
@@ -361,7 +366,9 @@ return [{
 }];
 ```
 
-> **Filtro de 60 días:** en modo backfill (`date_posted=all`), JSearch puede
+> **Filtro de 60 días (tope de seguridad):** con el backfill por defecto
+> (`date_posted=month`) es un **no-op** — JSearch ya devuelve solo 30 días. Solo
+> actúa si subes el backfill a `date_posted=all`, donde JSearch puede
 > devolver ofertas muy antiguas. El filtro por `job_posted_at_timestamp` (campo
 > Unix en segundos presente en las respuestas de JSearch) recorta a los últimos
 > 60 días. En modo diario (`date_posted=3days`) el filtro es prácticamente un

@@ -55,7 +55,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// ¿Hay ofertas ya guardadas? BD vacía = primer run = backfill de 2 meses.\nconst filas = $('Historial').all().filter(i => i.json && i.json.id);\nconst primerRun = filas.length === 0;\n\nconst datePosted = primerRun ? 'all' : '3days';\nconst numPages = primerRun ? '10' : '1';\n\n// Un puesto de tu ranking por línea (ajusta a tu profile.yaml):\nconst puestos = [\n  'AI Engineer in Barcelona',\n  'ML Engineer in Barcelona',\n  'Data Engineer remote',\n  'MLOps Engineer remote',\n];\n\nreturn puestos.map(query => ({ json: { query, date_posted: datePosted, num_pages: numPages } }));"
+        "jsCode": "// ¿Hay ofertas ya guardadas? BD vacía = primer run = backfill de 1 mes.\nconst filas = $('Historial').all().filter(i => i.json && i.json.id);\nconst primerRun = filas.length === 0;\n\nconst datePosted = primerRun ? 'month' : '3days';\nconst numPages = primerRun ? '1' : '1';\n\n// Un puesto de tu ranking por línea (ajusta a tu profile.yaml):\nconst puestos = [\n  'AI Engineer in Barcelona',\n  'ML Engineer in Barcelona',\n  'Data Engineer remote',\n  'MLOps Engineer remote',\n];\n\nreturn puestos.map(query => ({ json: { query, date_posted: datePosted, num_pages: numPages } }));"
       },
       "id": "node-modo",
       "name": "Modo de búsqueda",

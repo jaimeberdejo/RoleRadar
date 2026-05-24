@@ -202,8 +202,9 @@ class SQLiteStorage:
     def set_setting(self, key: str, value: str) -> None:
         """Upsert de una setting. value debe ser un string (JSON-encoded si complejo).
 
-        INSERT OR IGNORE semántica: INSERT OR IGNORE solo para defaults (init_db).
-        Aquí se usa ON CONFLICT DO UPDATE para que el caller pueda sobreescribir.
+        Usa ON CONFLICT(key) DO UPDATE para sobreescribir el valor existente.
+        A diferencia de init_db() que usa INSERT OR IGNORE (no destruye valores ya
+        configurados por el usuario), set_setting() siempre actualiza.
         Nunca borra otras claves — upsert atómico solo del par (key, value).
         """
         with closing(self._connect()) as conn:

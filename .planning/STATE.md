@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
+milestone: v1.1
+milestone_name: Deployment & n8n Integration
 status: completed
-stopped_at: Completed 05-03-PLAN.md — Phase 5 complete; all 5 phases done; milestone v1.0 complete
-last_updated: "2026-05-23T19:04:07.843Z"
-last_activity: 2026-05-23
+stopped_at: v1.1 shipped (tag v1.1) — incremento post-MVP vía quick tasks (Docker + auth + integración n8n end-to-end + gpt-4o-mini). Sin roadmap/fases; detalle en Quick Tasks Completed.
+last_updated: "2026-05-25T00:00:00.000Z"
+last_activity: 2026-05-25
 progress:
   total_phases: 5
   completed_phases: 5
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-22)
 
 **Core value:** Puntuar y filtrar ofertas con honestidad contra el perfil REAL de Jaime (CV verdadero + ranking de puestos + preferencias); el ranking pesa graduado, los deal-breakers filtran en duro.
-**Current focus:** MILESTONE COMPLETE — All 5 phases done
+**Current focus:** v1.1 shipped (deploy + integración n8n funcionando). Próximo: v2 (Langfuse real, analítica histórico, pre-filtrado server-side) o más tuning.
 
 ## Current Position
 

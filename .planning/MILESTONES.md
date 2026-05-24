@@ -24,3 +24,19 @@
 - One-liner:
 
 ---
+
+## v1.1 — Deployment & n8n Integration (Shipped: 2026-05-25)
+
+**Tipo:** incremento post-MVP vía quick tasks (no roadmapped). Detalle por tarea en STATE.md → "Quick Tasks Completed".
+
+**Key accomplishments:**
+
+- LLM provider migrado de Anthropic a **OpenAI** (Instructor); scoring configurable vía `OPENAI_MODEL_SCORING`, por defecto **gpt-4o-mini** (~15× más barato que gpt-4o).
+- Servicio **dockerizado**: Dockerfile (uv, Python 3.13) + **docker-compose** con servicio n8n, volúmenes persistentes (SQLite + caché BGE-M3) y healthcheck.
+- **Autenticación por API-key** (middleware `X-API-Key`, opcional, `/health` pública); suite 185 → 195 tests.
+- **Integración n8n end-to-end FUNCIONANDO y verificada**: workflow diario (Schedule → JSearch → /jobs/process → Filter → Telegram) entregando un digest real a Telegram. Guía paso a paso `docs/N8N-WORKFLOW.md` + `n8n/workflow.json` importable (detección de primer-run/backfill, multi-query bilingüe, sub-flujo "subir CV").
+- Mapper JSearch (RapidAPI) y tuning del pipeline (backfill 1 mes, umbral del filtro 50).
+
+**Conocido / pendiente:** OBS-04 (Langfuse real) y STORE-04 (analítica del histórico) → diferidos a v2. Pre-filtrado server-side (descartar onsite-fuera-de-España antes del scoring) propuesto, no implementado. CV real parseado con `años_experiencia_total = None` (mejora pendiente).
+
+---

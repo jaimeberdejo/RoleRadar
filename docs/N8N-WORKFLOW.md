@@ -145,8 +145,45 @@ La respuesta de JSearch tiene esta forma:
 }
 ```
 
-Las ofertas están en el campo `data`. El Code node del paso 3 accede a
-`$('JSearch').first().json.data`.
+Las ofertas están en el campo `data`. El Code node del paso 3 las recoge con
+`$('JSearch').all().flatMap(i => i.json.data || [])` (ver Nodo 3).
+
+#### Buscar varios puestos a la vez (multi-query)
+
+Tu ranking tiene varios puestos (AI Engineer, ML Engineer, Data Engineer,
+MLOps). **No** los metas todos en el mismo `query` — eso es una sola búsqueda en
+texto libre (Google for Jobs por detrás) y mezclar títulos diluye resultados. En
+su lugar, haz que el nodo JSearch **itere sobre una lista de queries**:
+
+**1.** Añade un **Code node ANTES** del JSearch que emita un item por puesto:
+
+```javascript
+return [
+  { json: { query: 'AI Engineer in Barcelona' } },
+  { json: { query: 'ML Engineer in Barcelona' } },
+  { json: { query: 'Data Engineer remote' } },
+  { json: { query: 'MLOps Engineer remote' } },
+];
+```
+
+**2.** En el nodo JSearch, pon el `Value` del query-param `query` como
+**expresión** (icono `=`):
+
+```
+={{ $json.query }}
+```
+
+n8n ejecuta el HTTP Request **una vez por item** → una llamada por puesto. El
+resto de params (`page`, `num_pages`, `date_posted`) quedan fijos. La salida son
+N items, cada uno con su propio `data`; por eso el Code node del paso 3 usa
+`.all()` + `flatMap` y no `.first()`.
+
+> **Duplicados:** si dos queries devuelven la misma oferta, **el servicio la
+> deduplica** (hash exacto + semántico con BGE-M3). Manda todo crudo sin
+> preocuparte.
+>
+> **Rate limit:** cada query es **1 llamada a RapidAPI**. 4 queries/día ≈
+> 120/mes — revisa tu tier de JSearch y reduce queries o frecuencia si vas justo.
 
 **Para añadir más fuentes** (FlyByAPIs u otras): añadir otro nodo HTTP Request
 con el nombre correspondiente y añadir una entrada más en el array `sources`
@@ -176,7 +213,10 @@ coincidir exactamente con los valores reconocidos por el servicio
 
 ```javascript
 const arbeitnow = $('Arbeitnow').first().json.data || [];
-const jsearch   = $('JSearch').first().json.data   || [];
+
+// JSearch puede emitir VARIOS items (uno por query si usas multi-query, ver Nodo 2b).
+// .all() + flatMap recoge las ofertas de todos; funciona también con una sola query.
+const jsearch = $('JSearch').all().flatMap(i => i.json.data || []);
 
 return [{
   json: {

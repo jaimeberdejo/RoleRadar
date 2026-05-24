@@ -64,6 +64,35 @@ Antes de activar el workflow en n8n, asegúrate de que se cumplen estos puntos:
 
 ---
 
+## Importar el workflow (atajo)
+
+Si prefieres no montar los nodos a mano, en el repo hay un workflow listo para
+importar: [`n8n/workflow.json`](../n8n/workflow.json). Implementa el flujo
+completo de esta guía (Schedule → Historial → Arbeitnow → Modo de búsqueda →
+JSearch → ProcessRequest → POST /jobs/process → Split Out → Filter → Digest →
+Telegram).
+
+**Cómo importarlo:** en n8n, menú `⋮` (arriba a la derecha) → **Import from
+File** → selecciona `n8n/workflow.json`. (O copia su contenido y usa **Import
+from URL/Clipboard**.)
+
+**Después de importar, configura lo tuyo** (el JSON NO trae secretos):
+
+| Qué | Dónde | Cómo |
+|-----|-------|------|
+| RapidAPI key (JSearch) | nodo `JSearch` → header `X-RapidAPI-Key` | usa `={{ $env.RAPIDAPI_KEY }}` (define esa variable en n8n) o sustitúyela por una credencial Header Auth |
+| `X-API-Key` del servicio | nodos `Historial` y `POST /jobs/process` | igual: `={{ $env.API_KEY }}` o credencial. Si la auth del servicio está desactivada, no hace falta |
+| Token del bot de Telegram | nodo `Telegram` → Credentials | crea la credencial "Telegram API" con el token de @BotFather |
+| Chat ID de Telegram | nodo `Telegram` → `Chat ID` | reemplaza `REEMPLAZA_CON_TU_CHAT_ID` por tu chat id |
+| URLs del servicio | nodos `Historial` y `POST /jobs/process` | por defecto `host.docker.internal:8000`; ajusta según tu entorno (ver Nodo 4) |
+| Lista de puestos | nodo `Modo de búsqueda` | edita el array `puestos` con tu ranking real |
+
+El resto de esta guía explica cada nodo en detalle, por si quieres entender o
+afinar lo que importaste. El workflow viene **desactivado** (`active: false`):
+pruébalo con **Execute Workflow** antes de activar el Schedule.
+
+---
+
 ## Paso a paso nodo a nodo
 
 ### Nodo 1: Schedule Trigger

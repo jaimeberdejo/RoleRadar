@@ -1,0 +1,237 @@
+{
+  "name": "BuscadorDeEmpleo — Digest diario",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "node-schedule",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:8000/jobs/history",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "limit", "value": "1" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-API-Key", "value": "={{ $env.API_KEY }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-historial",
+      "name": "Historial",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 300],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "https://www.arbeitnow.com/api/job-board-api",
+        "options": {}
+      },
+      "id": "node-arbeitnow",
+      "name": "Arbeitnow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ¿Hay ofertas ya guardadas? BD vacía = primer run = backfill de 2 meses.\nconst filas = $('Historial').all().filter(i => i.json && i.json.id);\nconst primerRun = filas.length === 0;\n\nconst datePosted = primerRun ? 'all' : '3days';\nconst numPages = primerRun ? '10' : '1';\n\n// Un puesto de tu ranking por línea (ajusta a tu profile.yaml):\nconst puestos = [\n  'AI Engineer in Barcelona',\n  'ML Engineer in Barcelona',\n  'Data Engineer remote',\n  'MLOps Engineer remote',\n];\n\nreturn puestos.map(query => ({ json: { query, date_posted: datePosted, num_pages: numPages } }));"
+      },
+      "id": "node-modo",
+      "name": "Modo de búsqueda",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://jsearch.p.rapidapi.com/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "query", "value": "={{ $json.query }}" },
+            { "name": "page", "value": "1" },
+            { "name": "num_pages", "value": "={{ $json.num_pages }}" },
+            { "name": "date_posted", "value": "={{ $json.date_posted }}" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-RapidAPI-Key", "value": "={{ $env.RAPIDAPI_KEY }}" },
+            { "name": "X-RapidAPI-Host", "value": "jsearch.p.rapidapi.com" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-jsearch",
+      "name": "JSearch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const arbeitnow = $('Arbeitnow').first().json.data || [];\nlet jsearch = $('JSearch').all().flatMap(i => i.json.data || []);\n\n// Backfill: recorta a 60 días por job_posted_at_timestamp (Unix s). No-op en modo diario.\nconst corte = Math.floor(Date.now() / 1000) - 60 * 24 * 60 * 60;\njsearch = jsearch.filter(o => !o.job_posted_at_timestamp || o.job_posted_at_timestamp >= corte);\n\nreturn [{ json: { sources: [\n  { source: 'arbeitnow', offers: arbeitnow },\n  { source: 'jsearch', offers: jsearch },\n] } }];"
+      },
+      "id": "node-processrequest",
+      "name": "ProcessRequest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/jobs/process",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-API-Key", "value": "={{ $env.API_KEY }}" }
+          ]
+        },
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "node-process",
+      "name": "POST /jobs/process",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "id": "node-splitout",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [1540, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-score",
+              "leftValue": "={{ $json.score.score_total }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "cond-visto",
+              "leftValue": "={{ $json.ya_visto }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-filter",
+      "name": "Filter",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1760, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nif (items.length === 0) { return [{ json: { text: 'No hay ofertas relevantes hoy.' } }]; }\nconst lineas = items.map(i => {\n  const j = i.json.job, s = i.json.score;\n  return '• ' + j.title + ' — ' + j.company + ' (' + j.location + ') · score ' + s.score_total + ' ' + s.recommendation + ' · ' + j.url;\n});\nconst cabecera = 'Ofertas de hoy (' + items.length + ')';\nreturn [{ json: { text: cabecera + '\\n\\n' + lineas.join('\\n') } }];"
+      },
+      "id": "node-digest",
+      "name": "Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1980, 300]
+    },
+    {
+      "parameters": {
+        "chatId": "REEMPLAZA_CON_TU_CHAT_ID",
+        "text": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "id": "node-telegram",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [2200, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [[ { "node": "Historial", "type": "main", "index": 0 } ]]
+    },
+    "Historial": {
+      "main": [[ { "node": "Arbeitnow", "type": "main", "index": 0 } ]]
+    },
+    "Arbeitnow": {
+      "main": [[ { "node": "Modo de búsqueda", "type": "main", "index": 0 } ]]
+    },
+    "Modo de búsqueda": {
+      "main": [[ { "node": "JSearch", "type": "main", "index": 0 } ]]
+    },
+    "JSearch": {
+      "main": [[ { "node": "ProcessRequest", "type": "main", "index": 0 } ]]
+    },
+    "ProcessRequest": {
+      "main": [[ { "node": "POST /jobs/process", "type": "main", "index": 0 } ]]
+    },
+    "POST /jobs/process": {
+      "main": [[ { "node": "Split Out", "type": "main", "index": 0 } ]]
+    },
+    "Split Out": {
+      "main": [[ { "node": "Filter", "type": "main", "index": 0 } ]]
+    },
+    "Filter": {
+      "main": [[ { "node": "Digest", "type": "main", "index": 0 } ]]
+    },
+    "Digest": {
+      "main": [[ { "node": "Telegram", "type": "main", "index": 0 } ]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

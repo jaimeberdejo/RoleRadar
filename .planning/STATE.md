@@ -121,6 +121,7 @@ None yet.
 | fast | docs/N8N-WORKFLOW.md: patrón multi-query JSearch (lista de queries + `={{ $json.query }}`) y Code node con `.all()`/flatMap en vez de `.first()` | 2026-05-24 | 2f99fd5 | — (gsd-fast, follow-up de 260524-sv8) |
 | 260524-tgs | docs/N8N-WORKFLOW.md: backfill automático de 2 meses en el primer run (Nodo 1.5 HTTP /jobs/history + Code "Modo de búsqueda"; JSearch con date_posted/num_pages por expresión; filtro 60 días en Code ProcessRequest) | 2026-05-24 | ef4a9b5 | [260524-tgs-ampliar-docs-n8n-workflow-md-con-backfil](./quick/260524-tgs-ampliar-docs-n8n-workflow-md-con-backfil/) |
 | fast | n8n/workflow.json importable (11 nodos, flujo completo, keys por $env sin hardcodear) + sección "Importar el workflow" en la guía | 2026-05-24 | 323dafd | — (gsd-fast) |
+| fast | servicio n8n añadido al docker-compose.yml (puerto 5678, volumen n8n_data, $env, keys interpoladas desde .env) + URLs del workflow.json a buscadordeempleo:8000 | 2026-05-24 | fc2877e | — (gsd-fast) |
 
 ## Deferred Items
 

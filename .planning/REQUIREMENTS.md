@@ -124,17 +124,55 @@ Exclusiones explícitas (anti-features de la investigación, con su razón).
 
 ## Traceability
 
-Mapeo de requisitos a fases. Lo rellena el roadmapper durante la creación del roadmap.
+Mapeo de requisitos a fases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| _(pendiente de roadmap)_ | — | Pending |
+| MIG-01 | Phase 6 | Pending |
+| MIG-02 | Phase 6 | Pending |
+| MIG-03 | Phase 6 | Pending |
+| MIG-04 | Phase 6 | Pending |
+| STORE-04 | Phase 6 | Pending |
+| STORE-06 | Phase 6 | Pending |
+| DOC-05 | Phase 6 | Pending |
+| SCORE-09 | Phase 7 | Pending |
+| SCORE-10 | Phase 7 | Pending |
+| SCORE-11 | Phase 7 | Pending |
+| SCORE-12 | Phase 7 | Pending |
+| SCORE-13 | Phase 7 | Pending |
+| SCORE-14 | Phase 7 | Pending |
+| SCORE-15 | Phase 7 | Pending |
+| QA-05 | Phase 7 | Pending |
+| QA-07 | Phase 7 | Pending |
+| SRC-01 | Phase 8 | Pending |
+| SRC-02 | Phase 8 | Pending |
+| SRC-03 | Phase 8 | Pending |
+| SCHED-01 | Phase 8 | Pending |
+| SCHED-02 | Phase 8 | Pending |
+| SCHED-03 | Phase 8 | Pending |
+| STORE-05 | Phase 8 | Pending |
+| STORE-07 | Phase 8 | Pending |
+| QA-06 | Phase 8 | Pending |
+| NOTIF-01 | Phase 9 | Pending |
+| NOTIF-02 | Phase 9 | Pending |
+| NOTIF-03 | Phase 9 | Pending |
+| UI-01 | Phase 10 | Pending |
+| UI-02 | Phase 10 | Pending |
+| UI-03 | Phase 10 | Pending |
+| UI-04 | Phase 10 | Pending |
+| UI-05 | Phase 10 | Pending |
+| UI-06 | Phase 10 | Pending |
+| UI-07 | Phase 10 | Pending |
+| UI-08 | Phase 10 | Pending |
+| UI-09 | Phase 10 | Pending |
+| UI-10 | Phase 10 | Pending |
+| DOC-04 | Phase 10 | Pending |
 
 **Coverage:**
 - v2.0 requirements: **39** total (MIG 4 · SRC 3 · SCORE 7 · SCHED 3 · NOTIF 3 · UI 10 · STORE 4 · QA 3 · DOC 2)
-- Mapped to phases: 0 (pendiente)
-- Unmapped: 39 ⚠️ (se resolverá al crear el roadmap)
+- Mapped to phases: **39** (Phase 6: 7 · Phase 7: 9 · Phase 8: 9 · Phase 9: 3 · Phase 10: 11)
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-05-24*
-*Last updated: 2026-05-24 after milestone v2.0 definition*
+*Last updated: 2026-05-24 — traceability filled (roadmap created)*

@@ -245,3 +245,71 @@ def test_seleccion_respeta_sqlite_db_path(monkeypatch, tmp_path) -> None:
 
     assert isinstance(backend, SQLiteStorage)
     assert db_file.exists()  # init_db() creó el fichero en la ruta configurada
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# STORE-04: settings table — defaults, get, set
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def test_get_settings_defaults(db: SQLiteStorage) -> None:
+    """get_settings() devuelve todas las claves por defecto tras init_db(). (STORE-04)"""
+    settings = db.get_settings()
+
+    assert "search_query" in settings
+    assert "schedule_interval_hours" in settings
+    assert settings["score_weight_puesto"] == "0.35"
+    assert settings["notification_channel"] == "none"
+
+
+def test_set_setting_roundtrip(db: SQLiteStorage) -> None:
+    """set_setting() actualiza el valor; get_settings() devuelve el nuevo. (STORE-04)"""
+    db.set_setting("schedule_interval_hours", "12")
+
+    settings = db.get_settings()
+
+    assert settings["schedule_interval_hours"] == "12"
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# STORE-06: WAL mode + busy_timeout
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def test_wal_mode_activo(db: SQLiteStorage) -> None:
+    """PRAGMA journal_mode devuelve 'wal' tras init_db(). (STORE-06)"""
+    import sqlite3
+
+    conn = sqlite3.connect(db._db_path)
+    mode = conn.execute("PRAGMA journal_mode;").fetchone()[0]
+    conn.close()
+
+    assert mode == "wal", f"Se esperaba 'wal', se obtuvo '{mode}'"
+
+
+def test_wal_concurrent_write_read_no_lock(tmp_path) -> None:
+    """Escritura concurrente (hilo worker) + lectura (hilo UI): sin OperationalError. (STORE-06)"""
+    import threading
+    import time
+
+    db = SQLiteStorage(str(tmp_path / "wal_test.db"))
+    db.init_db()
+    errors: list[Exception] = []
+
+    def writer() -> None:
+        for i in range(50):
+            try:
+                db.upsert_scored_jobs([_make_scored_job(f"job-{time.time()}-{i}")])
+            except Exception as exc:  # noqa: BLE001
+                errors.append(exc)
+
+    t = threading.Thread(target=writer)
+    t.start()
+    for _ in range(50):
+        try:
+            db.get_history(limit=10)
+        except Exception as exc:  # noqa: BLE001
+            errors.append(exc)
+    t.join()
+
+    assert errors == [], f"Errores concurrentes WAL: {errors}"

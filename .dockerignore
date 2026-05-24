@@ -18,6 +18,14 @@ __pycache__/
 *.db
 *.sqlite
 
+# OJO: en .dockerignore, *.db / .cache/ solo matchean la RAÍZ del contexto, NO
+# rutas anidadas. Sin estas entradas explícitas, data/jobs.db se hornea en la
+# imagen y siembra el volumen con datos de test (rompe la detección de primer run
+# del backfill). data/profile.yaml SÍ debe ir en la imagen (es configuración).
+data/jobs.db
+data/*.sqlite
+data/.cache/
+
 # ── Artefactos del SO ─────────────────────────────────────────────────────────
 .DS_Store
 

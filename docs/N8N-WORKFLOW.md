@@ -400,7 +400,7 @@ documentación del nodo correspondiente.
 
 - **`X-RapidAPI-Key` (JSearch) vive SOLO en n8n** como credencial de tipo
   "Header Auth". Nunca como texto plano en el nodo ni en el repositorio. Si se
-  rooteó antes, ir al dashboard de RapidAPI y rotar la key.
+  filtró antes, ir al dashboard de RapidAPI y rotar la key.
 
 - **`API_KEY` del servicio** (cabecera `X-API-Key`) también se configura como
   credencial en n8n (Header Auth), no como texto plano. Para referenciarla desde

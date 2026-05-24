@@ -22,7 +22,7 @@ Detalle completo en `milestones/v1.0-ROADMAP.md`. 38 requisitos, 179 tests.
 
 ### v2.0 Standalone App (Streamlit + Scheduler)
 
-- [ ] **Phase 6: Architecture Cleanup & Storage Foundation** - Remove FastAPI/n8n, fix secrets, add settings/WAL
+- [x] **Phase 6: Architecture Cleanup & Storage Foundation** - Remove FastAPI/n8n, fix secrets, add settings/WAL (completed 2026-05-24)
 - [ ] **Phase 7: Embeddings-First Scoring Refactor** - All numeric scores deterministic; OpenAI becomes optional enrichment
 - [ ] **Phase 8: JSearch Client & Worker Pipeline** - App-owned fetch + APScheduler worker + runs table
 - [ ] **Phase 9: Notifications & Digest** - Telegram/email digest after each worker run
@@ -49,7 +49,7 @@ Plans:
 - [x] 06-04-PLAN.md — Wave 1: SQLite WAL + settings table (sqlite.py, protocol.py)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 06-05-PLAN.md — Wave 2: Docker restructure + worker.py stub + .env.example rewrite
+- [x] 06-05-PLAN.md — Wave 2: Docker restructure + worker.py stub + .env.example rewrite
 **UI hint**: yes
 
 ### Phase 7: Embeddings-First Scoring Refactor
@@ -112,7 +112,7 @@ Plans:
 | 3. Heurística de Scoring (núcleo) | v1.0 | 4/4 | Complete | 2026-05-22 |
 | 4. API y Persistencia | v1.0 | 4/4 | Complete | 2026-05-23 |
 | 5. Observabilidad, Robustez y Docs n8n | v1.0 | 3/3 | Complete | 2026-05-23 |
-| 6. Architecture Cleanup & Storage Foundation | v2.0 | 4/5 | In Progress|  |
+| 6. Architecture Cleanup & Storage Foundation | v2.0 | 5/5 | Complete   | 2026-05-24 |
 | 7. Embeddings-First Scoring Refactor | v2.0 | 0/? | Not started | - |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 0/? | Not started | - |
 | 9. Notifications & Digest | v2.0 | 0/? | Not started | - |

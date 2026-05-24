@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Standalone App (Streamlit + Scheduler)
-status: executing
-stopped_at: Completed 06-02-PLAN.md (secret removal; checkpoint skipped — user accepts free-tier key risk)
-last_updated: "2026-05-25T00:00:00.000Z"
+status: completed
+stopped_at: Completed 06-02-PLAN.md (secret removal; checkpoint skipped — user accepts free-tier key risk). Wave 1 of Phase 6 complete.
+last_updated: "2026-05-24T23:39:39.805Z"
 last_activity: 2026-05-25
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 4
-  percent: 80
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-05-24)
 
 ## Current Position
 
-Phase: 6 (Architecture Cleanup & Storage Foundation) — EXECUTING
-Plan: Wave 1 complete (06-01, 06-02, 06-03, 06-04 done); Wave 2 (06-05) remaining
-Status: 4 of 5 plans complete — ready to execute 06-05
+Phase: 6 (Architecture Cleanup & Storage Foundation) — COMPLETE
+Plan: All 5 plans complete (06-01 through 06-05)
+Status: Phase 6 DONE — ready to execute Phase 7 (Embeddings-First Scoring Refactor)
 Last activity: 2026-05-25
 
-Progress bar: [----------] 0% (0/5 phases)
+Progress bar: [##--------] 20% (1/5 phases)
 
 ## Performance Metrics
 
@@ -87,6 +87,8 @@ Recent decisions affecting current work:
 - [v2.0 Architecture]: APScheduler 3.11.x (NO v4 alpha); ZoneInfo("Europe/Madrid") — no pytz
 - [v2.0 Phase 6 P02]: RAPIDAPI_KEY literal removal satisfied transitively by 06-03 (commit 782e463) — n8n block removed; no duplicate 06-02 commit
 - [v2.0 Phase 6 P02]: Key rotation checkpoint SKIPPED — user accepts residual risk on a free-tier RapidAPI key (no billing exposure); key will not be rotated
+- [v2.0 Phase 6 P05]: Neutral Dockerfile CMD ('print Use: docker compose up') — each service overrides via compose command; no hard-coded entrypoint in image
+- [v2.0 Phase 6 P05]: EXPOSE 8000 removed from Dockerfile — v2.0 uses Streamlit port 8501 via compose; removing EXPOSE is cleaner than leaving a misleading port declaration
 
 ### Pending Todos
 
@@ -133,7 +135,7 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-05-25T00:00:00.000Z
-Stopped at: Completed 06-02-PLAN.md (secret removal; checkpoint skipped — user accepts free-tier key risk). Wave 1 of Phase 6 complete.
+Last session: 2026-05-24T23:39:39.802Z
+Stopped at: Completed 06-05-PLAN.md (Docker restructure + worker.py stub + .env.example v2.0). Phase 6 complete.
 Resume file: None
-Next: execute 06-05-PLAN.md (Wave 2: Docker restructure + worker.py stub + .env.example rewrite)
+Next: execute Phase 7 plans (Embeddings-First Scoring Refactor)

@@ -18,9 +18,9 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 
 ### Migración y limpieza (MIG)
 
-- [ ] **MIG-01**: FastAPI retirado — `app/api/` eliminado; el núcleo (cv/dedup/scoring/storage) se consume **en proceso** desde la UI y el worker; deps `fastapi`/`uvicorn`/`python-multipart` removidas
+- [x] **MIG-01**: FastAPI retirado — `app/api/` eliminado; el núcleo (cv/dedup/scoring/storage) se consume **en proceso** desde la UI y el worker; deps `fastapi`/`uvicorn`/`python-multipart` removidas
 - [ ] **MIG-02**: n8n retirado — servicio `n8n` fuera del `docker-compose`; artefactos n8n (`docs/N8N-WORKFLOW.md`, `n8n/workflow.json`) archivados fuera de la ruta activa
-- [ ] **MIG-03**: RapidAPI key nunca inline — `docker-compose` usa `${RAPIDAPI_KEY:-}`, `.env.example` actualizado, key antigua **rotada** (se filtró en chat)
+- [x] **MIG-03**: RapidAPI key nunca inline — `docker-compose` usa `${RAPIDAPI_KEY:-}`, `.env.example` actualizado, key antigua **rotada** (se filtró en chat)
 - [ ] **MIG-04**: `docker-compose` levanta **dos servicios** (UI Streamlit + worker) desde una sola imagen, compartiendo los volúmenes `data` + `hf_cache`
 
 ### Fuentes / cliente JSearch (SRC)
@@ -66,9 +66,9 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 
 ### Persistencia (STORE — continúa desde STORE-03)
 
-- [ ] **STORE-04**: Tabla `settings` (clave-valor) — config operativa editable desde la UI (búsqueda, pesos, umbral, deal-breakers, schedule); el worker la lee al inicio del run; `profile.yaml` sigue siendo identidad editada a mano
+- [x] **STORE-04**: Tabla `settings` (clave-valor) — config operativa editable desde la UI (búsqueda, pesos, umbral, deal-breakers, schedule); el worker la lee al inicio del run; `profile.yaml` sigue siendo identidad editada a mano
 - [ ] **STORE-05**: Tabla `runs` — registra cada run (timestamp, fetched/duped/scored/new, canal + nº del digest); alimenta el panel de estado y la analítica *(cubre el STORE-04 «analítica» diferido de v1.0)*
-- [ ] **STORE-06**: SQLite **WAL + busy_timeout** para lectura-UI / escritura-worker concurrentes seguras; transacciones de escritura cortas
+- [x] **STORE-06**: SQLite **WAL + busy_timeout** para lectura-UI / escritura-worker concurrentes seguras; transacciones de escritura cortas
 - [ ] **STORE-07**: `mark_seen(id)` + marcado de vistas tras la entrega (dedup cross-run / no re-notificar)
 
 ### Calidad / tests (QA — continúa desde QA-04)
@@ -128,12 +128,12 @@ Mapeo de requisitos a fases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MIG-01 | Phase 6 | Pending |
+| MIG-01 | Phase 6 | Complete |
 | MIG-02 | Phase 6 | Pending |
-| MIG-03 | Phase 6 | Pending |
+| MIG-03 | Phase 6 | Complete |
 | MIG-04 | Phase 6 | Pending |
-| STORE-04 | Phase 6 | Pending |
-| STORE-06 | Phase 6 | Pending |
+| STORE-04 | Phase 6 | Complete |
+| STORE-06 | Phase 6 | Complete |
 | DOC-05 | Phase 6 | Pending |
 | SCORE-09 | Phase 7 | Pending |
 | SCORE-10 | Phase 7 | Pending |

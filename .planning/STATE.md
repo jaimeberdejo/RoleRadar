@@ -4,14 +4,14 @@ milestone: v2.0
 milestone_name: Standalone App (Streamlit + Scheduler)
 status: executing
 stopped_at: Roadmap v2.0 created (Phases 6-10, 39 requirements mapped, files written)
-last_updated: "2026-05-24T23:17:41.079Z"
-last_activity: 2026-05-24 -- Phase 6 planning complete
+last_updated: "2026-05-24T23:22:07.932Z"
+last_activity: 2026-05-24
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 5
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 20
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-24)
 
 **Core value:** Puntuar y filtrar ofertas con honestidad contra el perfil REAL de Jaime (CV verdadero + ranking de puestos + preferencias); el ranking pesa graduado, los deal-breakers filtran en duro. En v2.0 el scoring es local-first (BGE-M3 + reglas), OpenAI es enriquecimiento opcional, y todo vive en una app Streamlit autónoma con worker APScheduler.
-**Current focus:** v2.0 roadmap defined (Phases 6-10). Ready to plan Phase 6.
+**Current focus:** Phase 6 — Architecture Cleanup & Storage Foundation
 
 ## Current Position
 
-Phase: Not started (roadmap approved, ready for Phase 6)
-Plan: —
+Phase: 6 (Architecture Cleanup & Storage Foundation) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-05-24 -- Phase 6 planning complete
+Last activity: 2026-05-24
 
 Progress bar: [----------] 0% (0/5 phases)
 
@@ -131,7 +131,7 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-05-24
+Last session: 2026-05-24T23:22:07.927Z
 Stopped at: Roadmap v2.0 created (Phases 6-10, 39 requirements mapped, files written)
 Resume file: None
 Next: `/gsd-plan-phase 6`

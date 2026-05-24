@@ -43,7 +43,7 @@ Detalle completo en `milestones/v1.0-ROADMAP.md`. 38 requisitos, 179 tests.
 **Plans**: 5 plans (Wave 0: 1 plan; Wave 1: 3 plans parallel; Wave 2: 1 plan)
 Plans:
 **Wave 1**
-- [ ] 06-01-PLAN.md — Wave 0: Test stubs (STORE-04/06, MIG-01, MIG-03 guards)
+- [x] 06-01-PLAN.md — Wave 0: Test stubs (STORE-04/06, MIG-01, MIG-03 guards)
 - [ ] 06-02-PLAN.md — Wave 1: Secret removal (docker-compose.yml RAPIDAPI_KEY → env_file)
 - [ ] 06-03-PLAN.md — Wave 1: FastAPI/n8n removal + dep swap (app/api/ delete, pyproject.toml)
 - [ ] 06-04-PLAN.md — Wave 1: SQLite WAL + settings table (sqlite.py, protocol.py)
@@ -112,7 +112,7 @@ Plans:
 | 3. Heurística de Scoring (núcleo) | v1.0 | 4/4 | Complete | 2026-05-22 |
 | 4. API y Persistencia | v1.0 | 4/4 | Complete | 2026-05-23 |
 | 5. Observabilidad, Robustez y Docs n8n | v1.0 | 3/3 | Complete | 2026-05-23 |
-| 6. Architecture Cleanup & Storage Foundation | v2.0 | 0/5 | Not started | - |
+| 6. Architecture Cleanup & Storage Foundation | v2.0 | 1/5 | In Progress|  |
 | 7. Embeddings-First Scoring Refactor | v2.0 | 0/? | Not started | - |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 0/? | Not started | - |
 | 9. Notifications & Digest | v2.0 | 0/? | Not started | - |

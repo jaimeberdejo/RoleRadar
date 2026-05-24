@@ -26,6 +26,7 @@ con n8n.
 8. [Observabilidad](#observabilidad)
 9. [Stack](#stack)
 10. [Integración con n8n](#integración-con-n8n)
+11. [Despliegue (Docker)](#despliegue-docker)
 
 ---
 
@@ -213,6 +214,97 @@ overhead.
 | Persistencia | SQLite local (stdlib `sqlite3`) |
 | Tests | pytest |
 | Tracing LLM (opcional) | Langfuse stub (no-op sin configuración) |
+
+---
+
+## Despliegue (Docker)
+
+Esta sección cubre el despliegue del servicio con Docker + Compose. Para desarrollo
+local sin Docker, ver [Arrancar el servicio](#arrancar-el-servicio).
+
+### Requisitos previos
+
+- Docker >= 24 y Docker Compose v2 (`docker compose` sin guión).
+- Un fichero `.env` con `OPENAI_API_KEY` (ver [Configuración .env](#configuración-env)).
+
+### Build y arranque
+
+```bash
+docker compose up --build
+```
+
+La primera vez tarda más porque:
+1. Se construye la imagen (instala todas las dependencias con uv, ~1-2 min).
+2. En la primera llamada a `/jobs/process`, el modelo BGE-M3 (~2.3 GB) se descarga
+   desde HuggingFace y se guarda en el volumen `hf_cache`. Las llamadas siguientes
+   usan la caché y son inmediatas.
+
+Para arrancar en background:
+
+```bash
+docker compose up --build -d
+```
+
+### Secretos y variables de entorno
+
+| Variable | Dónde va | Obligatoria |
+|---|---|---|
+| `OPENAI_API_KEY` | `.env` (inyectado en este servicio) | **Sí** |
+| `OPENAI_MODEL_CV` | `.env` (opcional) | No |
+| `OPENAI_MODEL_SCORING` | `.env` (opcional) | No |
+| `SQLITE_DB_PATH` | ya configurado en `docker-compose.yml` | — |
+
+> **AVISO DE SEGURIDAD:** La clave de RapidAPI / JSearch (`RAPIDAPI_KEY`) y cualquier
+> credencial de n8n **NO van en este repositorio ni en la imagen Docker**. Esas claves
+> pertenecen a n8n, que llama directamente a las APIs de empleo (Arbeitnow, JSearch,
+> FlyByAPIs). Este servicio solo recibe las ofertas que n8n ya ha obtenido, vía
+> `POST /jobs/process`. Mantenerlas separadas evita filtrar la clave si la imagen
+> se publica o comparte.
+
+### Persistencia
+
+Los datos sobreviven a `docker compose restart` gracias a dos named volumes:
+
+| Volumen | Punto de montaje | Qué contiene |
+|---|---|---|
+| `data` | `/app/data` | SQLite (`jobs.db`) + perfil (`profile.yaml`) |
+| `hf_cache` | `/app/.cache/huggingface` | Modelo BGE-M3 (~2.3 GB, descargado la primera vez) |
+
+Para inspeccionar o hacer backup de la DB:
+
+```bash
+docker volume inspect buscadordeempleo_data
+# La ruta real en el host aparece en "Mountpoint"
+```
+
+### Healthcheck
+
+El servicio declara un healthcheck sobre `GET /health`. Verificar el estado:
+
+```bash
+docker compose ps
+# Estado debe ser "healthy" (puede tardar ~30s en marcar healthy la primera vez)
+```
+
+### Cómo n8n alcanza el servicio
+
+**Desarrollo local (n8n también en Docker):**
+
+Si n8n corre en Docker en la misma máquina:
+- Mac/Windows: usar `http://host.docker.internal:8000` como base URL en los HTTP
+  Request nodes de n8n.
+- Linux: usar la IP del host (`ip addr show docker0 | grep inet`) o añadir
+  `buscadordeempleo` a la red de n8n con `networks` en compose.
+
+**Producción:**
+
+Desplegar el servicio en un host accesible (VPS, Railway, Fly.io, etc.) y configurar
+las URLs de los HTTP Request nodes de n8n con el dominio público, por ejemplo
+`https://buscador.tudominio.com`. Para autenticación, añadir un reverse proxy
+(Nginx/Caddy) con API Key o Basic Auth (fuera del scope de este proyecto).
+
+Ver la sección [Integración con n8n](#integración-con-n8n) para el contrato JSON
+completo de los endpoints.
 
 ---
 

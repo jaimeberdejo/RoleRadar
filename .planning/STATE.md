@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Standalone App (Streamlit + Scheduler)
-status: completed
+status: ready_to_plan
 stopped_at: Completed 06-02-PLAN.md (secret removal; checkpoint skipped — user accepts free-tier key risk). Wave 1 of Phase 6 complete.
 last_updated: "2026-05-24T23:39:39.805Z"
 last_activity: 2026-05-25
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
   completed_plans: 5
-  percent: 100
+  percent: 40
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-05-24)
 
 ## Current Position
 
-Phase: 6 (Architecture Cleanup & Storage Foundation) — COMPLETE
-Plan: All 5 plans complete (06-01 through 06-05)
-Status: Phase 6 DONE — ready to execute Phase 7 (Embeddings-First Scoring Refactor)
-Last activity: 2026-05-25
+Phase: 7
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-05-24
 
 Progress bar: [##--------] 20% (1/5 phases)
 
@@ -36,7 +36,7 @@ Progress bar: [##--------] 20% (1/5 phases)
 
 **Velocity (v1.0 reference):**
 
-- Total plans completed: 19 (v1.0)
+- Total plans completed: 24 (v1.0)
 - Average duration: ~15-30 min/plan
 - Total execution time: ~5-7 hours
 

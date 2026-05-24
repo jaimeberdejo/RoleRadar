@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Deployment & n8n Integration
-status: completed
-stopped_at: v1.1 shipped (tag v1.1) — incremento post-MVP vía quick tasks (Docker + auth + integración n8n end-to-end + gpt-4o-mini). Sin roadmap/fases; detalle en Quick Tasks Completed.
-last_updated: "2026-05-25T00:00:00.000Z"
-last_activity: 2026-05-25
+milestone: v2.0
+milestone_name: Standalone App (Streamlit + Scheduler)
+status: planning
+last_updated: "2026-05-24T22:14:28.747Z"
+last_activity: 2026-05-24
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 19
-  completed_plans: 19
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,12 +24,10 @@ See: .planning/PROJECT.md (updated 2026-05-22)
 
 ## Current Position
 
-Phase: 05 (Observabilidad, Robustez y Docs n8n) — COMPLETE
-Plan: 3 of 3
-Status: Complete
-Last activity: 2026-05-24 - Completed quick task 260524-tgs: backfill automático 2 meses en la guía n8n
-
-Progress: [██████████] 100%
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-05-24 — Milestone v2.0 started
 
 ## Performance Metrics
 

@@ -2,17 +2,26 @@
 
 ## What This Is
 
-Agregador inteligente de ofertas de empleo: un **servicio Python (FastAPI) headless**
-que recibe ofertas crudas, las **normaliza**, **deduplica semánticamente** y las
-**puntúa contra el perfil real de Jaime** (CV en PDF + ranking de puestos +
-preferencias). La orquestación diaria (disparo, llamadas a APIs de empleo, entrega
-por email/telegram) la hace **n8n por fuera**, consumiendo este servicio vía HTTP/JSON.
+Agregador inteligente de ofertas de empleo: una **aplicación Streamlit autónoma**
+que busca ofertas (vía la API de **JSearch**), las **normaliza**, **deduplica
+semánticamente** y las **puntúa contra el perfil real de Jaime** (CV en PDF +
+ranking de puestos + preferencias). Un **worker programado (APScheduler)** ejecuta
+las búsquedas de forma recurrente aunque la app esté cerrada y entrega un digest
+por **Telegram o email** (a elección). El scoring corre **íntegramente con
+embeddings locales (BGE-M3) + reglas deterministas**; **OpenAI es una capa de
+enriquecimiento opcional** (razones honestas + skills emparejadas/faltantes) que se
+activa solo si hay API key.
+
+> **Evolución v1.x → v2.0:** v1.0/v1.1 fueron un servicio FastAPI headless orquestado
+> por n8n. En **v2.0** se reconstruye como app Streamlit autónoma con scheduler propio:
+> se retiran n8n y FastAPI (la lógica núcleo —cv/dedup/scoring/storage— se importa en
+> proceso por la UI y por el worker).
 
 Doble propósito: (1) herramienta real para la búsqueda activa de empleo de Jaime
 (AI Engineer, base en Barcelona, abierto a remoto) y pieza de portfolio — la calidad
 de ingeniería importa; (2) proyecto final que consolida las 5 fases del curso de
-automatización con IA (RPA+IA/n8n, IDP/lectura de documentos, RAG/embeddings,
-agentes/LLM, integración).
+automatización con IA (RPA+IA/automatización, IDP/lectura de documentos,
+RAG/embeddings, agentes/LLM, integración).
 
 ## Core Value
 
@@ -20,6 +29,31 @@ Puntuar y filtrar ofertas con **honestidad** contra el perfil REAL de Jaime (su 
 verdadero, no skills escritas a mano), de forma que el ranking de puestos pese de
 forma graduada y los deal-breakers filtren en duro. Si todo lo demás falla, **la
 heurística de scoring** (FASE 4) debe funcionar y ser confiable.
+
+## Current Milestone: v2.0 Standalone App (Streamlit + Scheduler)
+
+**Goal:** Reconstruir BuscadorDeEmpleo como una **app Streamlit autónoma** con un
+**worker programado siempre activo** — sin n8n, OpenAI totalmente opcional — donde la
+subida del CV, la configuración de búsqueda, el ajuste del scoring, los resultados y
+los digests por Telegram/email viven dentro de la app, y el **scoring corre en local
+(embeddings + reglas) con el LLM como enriquecimiento opcional**.
+
+**Target features:**
+- **UI Streamlit** para todo: subir CV, configurar búsqueda (país, idioma, puesto(s)
+  + filtros), afinar parámetros del scoring (pesos/umbral/deal-breakers) y navegar las
+  ofertas puntuadas.
+- **Cliente JSearch propio** — la app llama a JSearch ella misma (módulo de fuente
+  saliente nuevo; asume el rol que tenía n8n).
+- **Worker programado (APScheduler)** que ejecuta búsquedas de forma recurrente con
+  independencia de si Streamlit está abierto; comparte la BD SQLite local.
+- **Scoring reposicionado:** embeddings BGE-M3 + reglas deterministas producen **todos
+  los scores numéricos** (siempre disponible, gratis, testeable); **OpenAI es una capa
+  de enriquecimiento opcional** (razones honestas + skills emparejadas/faltantes).
+- **Digests por Telegram *o* email** (a elección), empujados automáticamente en el
+  schedule aunque la app esté cerrada.
+- **Limpieza de arquitectura:** retirar FastAPI (núcleo importado en proceso), archivar
+  artefactos n8n, sacar el servicio n8n del `docker-compose` y arreglar/quitar la
+  RapidAPI key inline.
 
 ## Requirements
 
@@ -45,19 +79,33 @@ heurística de scoring** (FASE 4) debe funcionar y ser confiable.
 
 ### Active
 
-<!-- v2 — siguiente milestone. -->
+<!-- v2.0 — milestone en curso. Los REQ-IDs detallados se definen en REQUIREMENTS.md. -->
 
+**Líneas de trabajo v2.0** (Streamlit + Scheduler):
+- [ ] UI Streamlit: subir CV, configurar búsqueda, afinar scoring, navegar ofertas
+- [ ] Cliente JSearch propio (búsqueda saliente dentro de la app)
+- [ ] Worker APScheduler siempre activo (búsquedas recurrentes + persistencia compartida)
+- [ ] Scoring local-first (embeddings + reglas) con OpenAI como enriquecimiento opcional
+- [ ] Entrega de digests por Telegram o email (a elección), automática en el schedule
+- [ ] Retirada de n8n + FastAPI; arreglo de la RapidAPI key inline
+
+**Arrastrados (a valorar si entran en v2.0 o se difieren):**
 - [ ] OBS-04: cableado real completo de Langfuse (más allá del stub no-op)
-- [ ] STORE-04: métricas/analítica sobre el histórico (evolución de matches en el tiempo)
-- [ ] Verificación manual diferida: validar CVProfile/dedup/scoring contra datos REALES (CV + ofertas + claves)
+- [ ] STORE-04: métricas/analítica sobre el histórico (evolución de matches)
+- [ ] Verificación manual diferida: validar CVProfile/dedup/scoring contra datos REALES
 
 ### Out of Scope
 
-- Frontend / dashboard web propio — n8n se encarga de la entrega; el foco es el servicio inteligente headless
-- Orquestación n8n (Schedule, llamadas a APIs de empleo, Merge, entrega por email/telegram) — fuera de este código; se diseña *pensando* en ello pero se construye en n8n
 - Embeddings vía API (OpenAI u otros) — decisión tomada: BGE-M3 local (gratis, privado, coincide con el spec)
-- Scraping/llamadas salientes a las APIs de empleo desde este servicio — las hace n8n y nos manda las ofertas crudas
-- Autenticación/multi-usuario — herramienta personal de un solo usuario (Jaime)
+- Autenticación/multi-usuario — herramienta personal de un solo usuario (Jaime); la UI Streamlit corre en local/self-hosted
+- Despliegue cloud con scheduler gestionado (GitHub Actions / Streamlit Cloud) — descartado: BGE-M3 (~3.6GB) + SQLite local hacen mejor un worker APScheduler en Docker self-hosted
+- Otras fuentes de ofertas además de JSearch — v2.0 se centra en JSearch; el mapeo por fuente queda aislado para añadir más después
+- Múltiples APIs de LLM / proveedores — solo OpenAI (opcional); el resto del scoring es local
+
+> **Revertido en v2.0** (antes Out of Scope en v1.x): el **frontend propio** (ahora UI
+> Streamlit), las **llamadas salientes a APIs de empleo desde la propia app** (ahora
+> cliente JSearch propio) y la **orquestación/scheduling** (ahora worker APScheduler
+> interno en vez de n8n).
 
 ## Context
 
@@ -96,18 +144,25 @@ heurística de scoring** (FASE 4) debe funcionar y ser confiable.
 | LLM no controla score_total/encaje_puesto/ubicación/recommendation | Schema `LLMJobAssessment` los omite → auditable y testeable sin LLM | ✓ Good |
 | Ejecución secuencial en árbol principal (no worktrees) | Cadena de dependencias entre fases; merge-back de worktrees arriesgado sin supervisión | ✓ Good |
 | Opus para planificar/verificar núcleo, Sonnet para ejecutar | Apalancamiento donde más importa | ✓ Good |
+| **v2.0:** App Streamlit autónoma; retirar n8n y FastAPI (núcleo importado en proceso) | Para un standalone local, importar la lógica es más simple que mantener una capa HTTP cuyo único consumidor (n8n) desaparece | Decidido v2.0 |
+| **v2.0:** Scheduler = worker APScheduler en Docker (no cron/GitHub Actions) | Debe correr aunque la UI esté cerrada; self-hosted encaja con SQLite local + BGE-M3 (~3.6GB); GH Actions sería incómodo con ese peso | Decidido v2.0 |
+| **v2.0:** Scoring reposicionado — embeddings+reglas dan TODOS los números; OpenAI es enriquecimiento opcional (no scorer) | Hace los scores deterministas/testeables y la app 100% funcional offline; el LLM aporta solo prosa honesta + skills itemizadas. gpt-4o-mini cuesta ~$0.02/run, así que borrarlo no ahorra y mataría la Fase 4 (juicio LLM) | Decidido v2.0 |
+| **v2.0:** La app llama a JSearch ella misma (cliente de fuente propio) | Sin n8n, la búsqueda saliente vuelve a la app; mapeo por fuente aislado para añadir fuentes después | Decidido v2.0 |
+| **v2.0:** Digests por Telegram o email a elección del usuario | Flexibilidad de entrega sin depender de un orquestador externo | Decidido v2.0 |
+| **v2.0:** Archivar artefactos n8n + arreglar RapidAPI key inline | Repo limpio para v2.0; la key inline en docker-compose es un riesgo aunque esté sin commitear (rotarla) | Decidido v2.0 |
 
 ## Current State
 
-**Shipped:** v1.0 MVP (2026-05-23) — servicio FastAPI headless completo y funcional.
-- **5 fases**, 19 planes, 38 requisitos, **179 tests en verde**.
-- App arranca con `uv run uvicorn app.api.main:app`; importa torch-free y langfuse-free.
-- Stack: Python 3.13 · FastAPI · Pydantic v2 + Instructor · OpenAI (scoring/CV) · BGE-M3 local (dedup) · SQLite · pytest.
-- Cada fase pasó por research → plan (Opus) → plan-check → ejecución TDD → verify → code-review → fix.
+**Shipped:** v1.0 MVP (2026-05-23) + v1.1 Deploy & n8n Integration (2026-05-25).
+- v1.0: servicio FastAPI headless completo — **5 fases**, 19 planes, 38 requisitos, **179 tests**.
+- v1.1: dockerizado, auth `X-API-Key`, migración a OpenAI `gpt-4o-mini`, integración n8n end-to-end verificada (digest real a Telegram). **195 tests**. Vía quick tasks, sin roadmap.
+- Stack v1.x: Python 3.13 · FastAPI · Pydantic v2 + Instructor · OpenAI (scoring/CV) · BGE-M3 local (dedup) · SQLite · pytest · Docker.
 
-**Pendiente para el usuario (verificación manual diferida):** validar el parseo del CV real, la calidad del dedup BGE-M3 y del juicio LLM de scoring contra datos reales (claves + modelo + ofertas). Y construir el workflow en n8n siguiendo el README.
+**Iniciando:** v2.0 Standalone App (Streamlit + Scheduler) — ver `## Current Milestone` arriba.
+- Reaprovecha el núcleo v1.x (cv/dedup/scoring/storage) importándolo en proceso.
+- Retira n8n + FastAPI; añade UI Streamlit, cliente JSearch propio, worker APScheduler, scoring local-first y entrega Telegram/email.
 
-**Next milestone goals (v2):** Langfuse real (OBS-04), analítica de histórico (STORE-04).
+**Pendiente del usuario (heredado):** sacar/rotar la RapidAPI key inline del `docker-compose.yml`; el CV real se parseó con `años_experiencia_total=None` (a afinar).
 
 ## Evolution
 
@@ -127,4 +182,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-23 after v1.0 milestone*
+*Last updated: 2026-05-24 — starting v2.0 milestone (Standalone App: Streamlit + Scheduler)*

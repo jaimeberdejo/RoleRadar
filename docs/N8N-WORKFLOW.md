@@ -25,7 +25,7 @@ Schedule Trigger (08:00)
           ↓
   Split Out (separar results)
           ↓
-  Filter (score_total >= 70 AND ya_visto = false)
+  Filter (score_total >= 50 AND ya_visto = false)
           ↓
   Code (formatear digest Markdown)
           ↓
@@ -491,11 +491,11 @@ Condiciones a configurar:
 
 | # | Campo | Tipo | Operador | Valor |
 |---|-------|------|----------|-------|
-| 1 | `{{ $json.score.score_total }}` | Number | Greater than or equal | `70` |
+| 1 | `{{ $json.score.score_total }}` | Number | Greater than or equal | `50` |
 | 2 | `{{ $json.ya_visto }}` | Boolean | Is equal to | `false` |
 
-- **Condición 1 (score_total >= 70):** el servicio puntúa de 0 a 100; 70 es un
-  umbral razonable para "oferta interesante". Ajústalo a tu criterio.
+- **Condición 1 (score_total >= 50):** el servicio puntúa de 0 a 100; 50 deja
+  pasar más ofertas (encaje moderado). Súbelo (60-70) para ser más selectivo.
 - **Condición 2 (ya_visto = false):** el servicio marca las ofertas que ya
   estaban en el storage de días anteriores. El Filter las excluye del digest
   para no recibir la misma oferta dos días seguidos; el servicio ya habrá

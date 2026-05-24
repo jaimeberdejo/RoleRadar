@@ -147,7 +147,7 @@
             {
               "id": "cond-score",
               "leftValue": "={{ $json.score.score_total }}",
-              "rightValue": 70,
+              "rightValue": 50,
               "operator": {
                 "type": "number",
                 "operation": "gte"

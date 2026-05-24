@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-05-22)
 Phase: 05 (Observabilidad, Robustez y Docs n8n) — COMPLETE
 Plan: 3 of 3
 Status: Complete
-Last activity: 2026-05-24 - Completed quick task 260524-sv8: Guía paso a paso n8n (docs/N8N-WORKFLOW.md)
+Last activity: 2026-05-24 - Completed quick task 260524-tgs: backfill automático 2 meses en la guía n8n
 
 Progress: [██████████] 100%
 
@@ -119,6 +119,7 @@ None yet.
 | 260524-sg6 | Autenticación opcional X-API-Key via Starlette middleware; /health pública; /docs protegida; secrets.compare_digest; 185→195 tests | 2026-05-24 | 9753539 | [260524-sg6-anadir-autenticacion-por-api-key-cabecer](./quick/260524-sg6-anadir-autenticacion-por-api-key-cabecer/) |
 | 260524-sv8 | Guía paso a paso docs/N8N-WORKFLOW.md (montar el workflow en n8n nodo a nodo: Schedule→HTTP→Code→/jobs/process→Filter→Telegram), enlazada desde el README | 2026-05-24 | b17770c | [260524-sv8-crear-docs-n8n-workflow-md-guia-paso-a-p](./quick/260524-sv8-crear-docs-n8n-workflow-md-guia-paso-a-p/) |
 | fast | docs/N8N-WORKFLOW.md: patrón multi-query JSearch (lista de queries + `={{ $json.query }}`) y Code node con `.all()`/flatMap en vez de `.first()` | 2026-05-24 | 2f99fd5 | — (gsd-fast, follow-up de 260524-sv8) |
+| 260524-tgs | docs/N8N-WORKFLOW.md: backfill automático de 2 meses en el primer run (Nodo 1.5 HTTP /jobs/history + Code "Modo de búsqueda"; JSearch con date_posted/num_pages por expresión; filtro 60 días en Code ProcessRequest) | 2026-05-24 | ef4a9b5 | [260524-tgs-ampliar-docs-n8n-workflow-md-con-backfil](./quick/260524-tgs-ampliar-docs-n8n-workflow-md-con-backfil/) |
 
 ## Deferred Items
 

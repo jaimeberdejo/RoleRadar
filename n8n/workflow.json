@@ -195,6 +195,59 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [2200, 300]
+    },
+    {
+      "parameters": {
+        "formTitle": "Subir CV (una vez)",
+        "formDescription": "Sube tu CV en PDF. Se parsea a CVProfile y se cachea en el servicio; solo hace falta repetirlo si cambias el CV.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "CV",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-cvform",
+      "name": "Subir CV (formulario)",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [0, 560]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://buscadordeempleo:8000/cv/parse",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "CV"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-API-Key", "value": "={{ $env.API_KEY }}" }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "node-cvparse",
+      "name": "POST /cv/parse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 560]
     }
   ],
   "connections": {
@@ -227,6 +280,9 @@
     },
     "Digest": {
       "main": [[ { "node": "Telegram", "type": "main", "index": 0 } ]]
+    },
+    "Subir CV (formulario)": {
+      "main": [[ { "node": "POST /cv/parse", "type": "main", "index": 0 } ]]
     }
   },
   "active": false,

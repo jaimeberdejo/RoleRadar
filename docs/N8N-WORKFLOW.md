@@ -93,6 +93,46 @@ pruébalo con **Execute Workflow** antes de activar el Schedule.
 
 ---
 
+## Subir el CV (sub-flujo aparte, una vez)
+
+El scoring compara las ofertas contra tu `CVProfile`, que el servicio extrae de
+tu CV en PDF (vía LLM, con Instructor) y **cachea**. Hay que subirlo **una vez**
+antes de que el flujo diario funcione; solo se repite si cambias el CV. Por eso
+es un **sub-flujo aparte**, con su propio trigger — NO cuelga del Schedule diario.
+
+Son dos nodos:
+
+**1. Form Trigger** (busca "n8n Form Trigger"):
+- Form Title: `Subir CV`
+- Un campo: Field Label `CV`, Field Type **File**, Accepted File Types `.pdf`,
+  Required ON.
+
+**2. HTTP Request "POST /cv/parse"** (conéctalo tras el Form Trigger):
+| Parámetro | Valor |
+|-----------|-------|
+| Method | POST |
+| URL | `http://buscadordeempleo:8000/cv/parse` (mismo host que el resto; ver Nodo 4) |
+| Send Body | ON |
+| Body Content Type | **Form-Data (multipart)** |
+| Body Parameters → 1 fila | Parameter Type **n8n Binary File** · Name `file` · Input Data Field Name `CV` |
+| Send Headers | `X-API-Key` = `={{ $env.API_KEY }}` (si la auth está activa) |
+| Options → Timeout | `120000` (la extracción con LLM tarda ~10-30 s) |
+
+> **El nombre del campo binario.** El Form Trigger expone el PDF subido como una
+> propiedad binaria nombrada según el *Field Label* (aquí `CV`). Si al ejecutar
+> ves otro nombre en la salida del Form Trigger, pon **ese** en *Input Data Field
+> Name*. El `Name` = `file` es el campo que espera la API (no lo cambies).
+
+**Cómo ejecutarlo:** abre el Form Trigger → **Listen for test event** → abre la
+URL del formulario que te da n8n → sube el PDF → enviar. El servicio responde con
+el `CVProfile` y lo cachea. Si no, sale `404 No hay CVProfile cacheado` al correr
+el flujo diario.
+
+> Alternativa sin n8n (igual de válida): `curl -X POST
+> http://localhost:8000/cv/parse -F "file=@/ruta/a/mi_cv.pdf"` una sola vez.
+
+---
+
 ## Paso a paso nodo a nodo
 
 ### Nodo 1: Schedule Trigger

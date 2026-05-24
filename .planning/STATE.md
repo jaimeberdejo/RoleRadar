@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Standalone App (Streamlit + Scheduler)
 status: executing
-stopped_at: Roadmap v2.0 created (Phases 6-10, 39 requirements mapped, files written)
-last_updated: "2026-05-24T23:31:52.835Z"
-last_activity: 2026-05-24
+stopped_at: Completed 06-02-PLAN.md (secret removal; checkpoint skipped — user accepts free-tier key risk)
+last_updated: "2026-05-25T00:00:00.000Z"
+last_activity: 2026-05-25
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
-  percent: 60
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-05-24)
 ## Current Position
 
 Phase: 6 (Architecture Cleanup & Storage Foundation) — EXECUTING
-Plan: 4 of 5
-Status: Ready to execute
-Last activity: 2026-05-24
+Plan: Wave 1 complete (06-01, 06-02, 06-03, 06-04 done); Wave 2 (06-05) remaining
+Status: 4 of 5 plans complete — ready to execute 06-05
+Last activity: 2026-05-25
 
 Progress bar: [----------] 0% (0/5 phases)
 
@@ -85,6 +85,8 @@ Recent decisions affecting current work:
 - [v2.0 Architecture]: mark_seen solo tras entrega exitosa — evita pérdida de notificaciones
 - [v2.0 Architecture]: settings table como bus de config cross-process; profile.yaml solo para identidad editada a mano
 - [v2.0 Architecture]: APScheduler 3.11.x (NO v4 alpha); ZoneInfo("Europe/Madrid") — no pytz
+- [v2.0 Phase 6 P02]: RAPIDAPI_KEY literal removal satisfied transitively by 06-03 (commit 782e463) — n8n block removed; no duplicate 06-02 commit
+- [v2.0 Phase 6 P02]: Key rotation checkpoint SKIPPED — user accepts residual risk on a free-tier RapidAPI key (no billing exposure); key will not be rotated
 
 ### Pending Todos
 
@@ -96,7 +98,7 @@ None yet.
 
 [Issues that affect future work]
 
-- RAPIDAPI_KEY inline en working-tree docker-compose.yml — necesita rotación y reemplazar con `${RAPIDAPI_KEY:-}` como PRIMERA tarea de Phase 6
+- ~~RAPIDAPI_KEY inline en working-tree docker-compose.yml~~ — RESUELTO (06-02/06-03, commit 782e463): literal retirado, inyección vía `env_file: .env`, `test_no_secrets.py` GREEN. Rotación de la clave OMITIDA por decisión del usuario (clave free-tier, sin exposición de facturación).
 - CVProfile cacheado con `anios_experiencia_total=None` — la heurística de seniority en Phase 7 debe tratar None como "desconocido" (valor neutro ~50/100), no como 0 años
 - JSearch mapper en `app/dedup/mappers.py` fue escrito contra datos de n8n, no contra respuesta directa de JSearch API — verificar campo por campo antes de los tests de integración de Phase 8 (budget 1-2 horas)
 - BGE-M3 dual-process RAM (~2-4 GB cada instancia): en una máquina de 8 GB, un run manual desde la UI concurrent con el worker puede ser ajustado. Sin acción hasta observar OOM en la práctica
@@ -131,7 +133,7 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-05-24T23:31:52.830Z
-Stopped at: Roadmap v2.0 created (Phases 6-10, 39 requirements mapped, files written)
+Last session: 2026-05-25T00:00:00.000Z
+Stopped at: Completed 06-02-PLAN.md (secret removal; checkpoint skipped — user accepts free-tier key risk). Wave 1 of Phase 6 complete.
 Resume file: None
-Next: `/gsd-plan-phase 6`
+Next: execute 06-05-PLAN.md (Wave 2: Docker restructure + worker.py stub + .env.example rewrite)

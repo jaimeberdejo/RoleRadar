@@ -40,7 +40,13 @@ Detalle completo en `milestones/v1.0-ROADMAP.md`. 38 requisitos, 179 tests.
   3. The `app/api/` directory is gone; importing the project does not pull in `fastapi`, `uvicorn`, or `python-multipart`; `pyproject.toml` has those deps removed and `streamlit`, `APScheduler`, `python-telegram-bot` added
   4. A `settings` table exists in SQLite; calling `storage.get_settings()` returns defaults for all v2.0 config keys (`search_query`, `search_country`, `schedule_interval_hours`, scoring weights, `dedup_threshold`, etc.) without crashing
   5. A concurrent worker write and UI read on SQLite do not produce `database is locked` — WAL mode and `busy_timeout=5000` are active on every connection
-**Plans**: TBD
+**Plans**: 5 plans (Wave 0: 1 plan; Wave 1: 3 plans parallel; Wave 2: 1 plan)
+Plans:
+- [ ] 06-01-PLAN.md — Wave 0: Test stubs (STORE-04/06, MIG-01, MIG-03 guards)
+- [ ] 06-02-PLAN.md — Wave 1: Secret removal (docker-compose.yml RAPIDAPI_KEY → env_file)
+- [ ] 06-03-PLAN.md — Wave 1: FastAPI/n8n removal + dep swap (app/api/ delete, pyproject.toml)
+- [ ] 06-04-PLAN.md — Wave 1: SQLite WAL + settings table (sqlite.py, protocol.py)
+- [ ] 06-05-PLAN.md — Wave 2: Docker restructure + worker.py stub + .env.example rewrite
 **UI hint**: yes
 
 ### Phase 7: Embeddings-First Scoring Refactor
@@ -103,7 +109,7 @@ Detalle completo en `milestones/v1.0-ROADMAP.md`. 38 requisitos, 179 tests.
 | 3. Heurística de Scoring (núcleo) | v1.0 | 4/4 | Complete | 2026-05-22 |
 | 4. API y Persistencia | v1.0 | 4/4 | Complete | 2026-05-23 |
 | 5. Observabilidad, Robustez y Docs n8n | v1.0 | 3/3 | Complete | 2026-05-23 |
-| 6. Architecture Cleanup & Storage Foundation | v2.0 | 0/? | Not started | - |
+| 6. Architecture Cleanup & Storage Foundation | v2.0 | 0/5 | Not started | - |
 | 7. Embeddings-First Scoring Refactor | v2.0 | 0/? | Not started | - |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 0/? | Not started | - |
 | 9. Notifications & Digest | v2.0 | 0/? | Not started | - |

@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "url": "http://host.docker.internal:8000/jobs/history",
+        "url": "http://buscadordeempleo:8000/jobs/history",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -103,7 +103,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:8000/jobs/process",
+        "url": "http://buscadordeempleo:8000/jobs/process",
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",

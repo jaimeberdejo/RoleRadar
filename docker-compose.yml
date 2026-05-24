@@ -6,11 +6,13 @@
 #   docker compose down              # parar y eliminar contenedores
 #   docker compose restart           # reiniciar (la DB y el modelo persisten)
 #
-# NOTA DE SEGURIDAD: RAPIDAPI_KEY / JSEARCH_KEY no van aquí.
-# Esas claves pertenecen a n8n, que llama a las APIs de empleo directamente
-# (Arbeitnow, JSearch, FlyByAPIs). Este servicio solo recibe las ofertas ya
-# obtenidas por n8n vía POST /jobs/process. Mantenerlas aquí filtraría las
-# credenciales si la imagen o el compose se publican.
+# NOTA DE SEGURIDAD: ninguna clave se hardcodea en este fichero.
+# - El servicio `buscadordeempleo` lee OPENAI_API_KEY / API_KEY desde .env (env_file).
+#   NUNCA recibe ni necesita la RAPIDAPI_KEY: solo procesa las ofertas que n8n
+#   ya obtuvo (POST /jobs/process).
+# - El servicio `n8n` lee RAPIDAPI_KEY / API_KEY desde .env por interpolación
+#   ${VAR}. RAPIDAPI_KEY (JSearch) la usa n8n para llamar a las APIs de empleo.
+# .env está en .dockerignore y .gitignore: nunca se copia en la imagen ni se commitea.
 
 services:
   buscadordeempleo:
@@ -68,6 +70,34 @@ services:
 
     restart: unless-stopped
 
+  # ── n8n (orquestador) ──────────────────────────────────────────────────────
+  # n8n corre en el mismo compose, así alcanza el servicio por su nombre de red:
+  #   http://buscadordeempleo:8000   (sin host.docker.internal ni túnel)
+  # UI de n8n en http://localhost:5678
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      # Zona horaria: que el cron del Schedule dispare a la hora local.
+      GENERIC_TIMEZONE: Europe/Madrid
+      TZ: Europe/Madrid
+      # Permite que las expresiones {{ $env.X }} de los nodos lean el entorno.
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      # Acceso por http en local sin que falle la cookie de sesión.
+      N8N_SECURE_COOKIE: "false"
+      # Claves para los nodos HTTP, interpoladas desde .env (NO hardcodeadas).
+      # Añade RAPIDAPI_KEY=... (y API_KEY=... si activas la auth) a tu .env.
+      # El ":-" deja la var vacía si no está en .env, sin romper el arranque.
+      RAPIDAPI_KEY: ${RAPIDAPI_KEY:-}
+      API_KEY: ${API_KEY:-}
+    volumes:
+      # Persiste workflows, credenciales y la clave de cifrado de n8n.
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - buscadordeempleo
+    restart: unless-stopped
+
 # ── Volúmenes named ───────────────────────────────────────────────────────────
 # Named volumes (no bind mounts): Docker gestiona la ruta en el host.
 # Ventajas sobre bind mounts:
@@ -78,4 +108,6 @@ volumes:
   data:
     driver: local
   hf_cache:
+    driver: local
+  n8n_data:
     driver: local

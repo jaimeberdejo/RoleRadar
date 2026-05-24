@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-05-22)
 Phase: 05 (Observabilidad, Robustez y Docs n8n) — COMPLETE
 Plan: 3 of 3
 Status: Complete
-Last activity: 2026-05-23
+Last activity: 2026-05-24 - Completed quick task 260523-u5d: Dockerfile + docker-compose + nota de despliegue Docker
 
 Progress: [██████████] 100%
 
@@ -110,6 +110,12 @@ None yet.
 
 - REQUIREMENTS.md decía "37 total" pero el conteo real de IDs únicos es 38 (CV 3 + NORM 4 + DEDUP 3 + SCORE 8 + API 7 + STORE 3 + OBS 3 + DOC 3 + QA 4). Coverage corregido a 38/38.
 - ✅ **RESUELTO (2026-05-23) — bloqueo de red de la Fase 4.** La red volvió; se instalaron `fastapi`/`uvicorn[standard]`/`python-multipart` y se reconcilió `uv.lock`. Fase 4 completada y verificada (162→ahora 179 tests). Supabase eliminado del alcance por decisión del usuario (solo SQLite local). `uv run` funciona con normalidad.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260523-u5d | Dockerfile + docker-compose + nota de despliegue Docker (con aviso de que la key de JSearch/RapidAPI va en n8n, no aquí) | 2026-05-24 | aa08eb1 | [260523-u5d-crear-dockerfile-docker-compose-nota-de-](./quick/260523-u5d-crear-dockerfile-docker-compose-nota-de-/) |
 
 ## Deferred Items
 

@@ -318,6 +318,10 @@ Esta sección documenta cómo conectar n8n a este servicio. El código n8n no es
 en este repositorio; aquí se describe el flujo y el contrato JSON para que la
 configuración sea directa.
 
+Para una guía paso a paso de cómo montar este workflow en n8n nodo a nodo
+(nodos exactos, parámetros y snippets copy-paste), ver
+[docs/N8N-WORKFLOW.md](docs/N8N-WORKFLOW.md).
+
 ### Flujo completo
 
 ```

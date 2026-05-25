@@ -137,8 +137,11 @@ def test_run_pipeline_dedup_against_stored(tmp_path):
     storage.init_db()
     fake_embedder = FakeEmbedder()
 
-    # Pre-populate
-    existing = _make_scored_job("pipeline-test-job-1")
+    # Pre-populate with a job whose id matches the SHA-256 stable id that the
+    # raw dict below will produce after normalization via jsearch_mapper.
+    # stable_job_id("PipelineCorp", "AI Engineer", "Barcelona") = this hash.
+    _EXISTING_ID = "c9b290b3eea4a66298d2beab5757ce9b5e461325a2cd50ae5c69dddf006bef9f"
+    existing = _make_scored_job(_EXISTING_ID)
     storage.upsert_scored_jobs([existing])
 
     # Build a raw JSearch-like dict that normalizes to the same stable job id.

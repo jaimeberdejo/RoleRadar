@@ -47,9 +47,9 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 
 ### Notificaciones / digest (NOTIF)
 
-- [ ] **NOTIF-01**: Tras cada run, entrega un digest de las nuevas ofertas strong_fit/good_fit (título, empresa, score, recomendación, top reasons, URL)
-- [ ] **NOTIF-02**: Canal **Telegram O email** según config; skip silencioso si ninguno está configurado; secretos solo desde env
-- [ ] **NOTIF-03**: Umbral mínimo de score configurable; solo ofertas **nuevas** (no vistas); marcar como vista **después** de la entrega exitosa (evita duplicados y pérdidas)
+- [x] **NOTIF-01**: Tras cada run, entrega un digest de las nuevas ofertas strong_fit/good_fit (título, empresa, score, recomendación, top reasons, URL)
+- [x] **NOTIF-02**: Canal **Telegram O email** según config; skip silencioso si ninguno está configurado; secretos solo desde env
+- [x] **NOTIF-03**: Umbral mínimo de score configurable; solo ofertas **nuevas** (no vistas); marcar como vista **después** de la entrega exitosa (evita duplicados y pérdidas)
 
 ### UI Streamlit (UI)
 
@@ -153,9 +153,9 @@ Mapeo de requisitos a fases.
 | STORE-05 | Phase 8 | Complete |
 | STORE-07 | Phase 8 | Complete |
 | QA-06 | Phase 8 | Complete |
-| NOTIF-01 | Phase 9 | Pending |
-| NOTIF-02 | Phase 9 | Pending |
-| NOTIF-03 | Phase 9 | Pending |
+| NOTIF-01 | Phase 9 | Complete |
+| NOTIF-02 | Phase 9 | Complete |
+| NOTIF-03 | Phase 9 | Complete |
 | UI-01 | Phase 10 | Pending |
 | UI-02 | Phase 10 | Pending |
 | UI-03 | Phase 10 | Pending |

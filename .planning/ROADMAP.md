@@ -115,7 +115,7 @@ Plans:
 Plans:
 
 **Wave 0**
-- [ ] 09-01-PLAN.md — RED guard test scaffolding (tests/notifications/ + tests/storage/test_undelivered.py)
+- [x] 09-01-PLAN.md — RED guard test scaffolding (tests/notifications/ + tests/storage/test_undelivered.py)
 
 **Wave 1** *(parallel — disjoint files: storage vs pyproject)*
 - [ ] 09-02-PLAN.md — Storage extensions: get_undelivered_qualifying + runs channel/notified migration
@@ -154,5 +154,5 @@ Plans:
 | 6. Architecture Cleanup & Storage Foundation | v2.0 | 5/5 | Complete    | 2026-05-24 |
 | 7. Embeddings-First Scoring Refactor | v2.0 | 6/6 | Complete    | 2026-05-25 |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 4/4 | Complete   | 2026-05-25 |
-| 9. Notifications & Digest | v2.0 | 0/? | Not started | - |
+| 9. Notifications & Digest | v2.0 | 1/5 | In Progress|  |
 | 10. Streamlit UI | v2.0 | 0/? | Not started | - |

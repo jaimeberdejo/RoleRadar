@@ -168,7 +168,13 @@ def _escape_for_prompt(text: str) -> str:
 
 
 def _format_cv(cv: CVProfile) -> str:
-    """Renderiza CVProfile como texto estructurado legible para el LLM."""
+    """Renderiza CVProfile como texto estructurado legible para el LLM.
+
+    WR-03: All string fields from the CV are XML-escaped via _escape_for_prompt
+    to prevent a corrupted/malicious CV entry (e.g. a company name containing
+    '</cv>') from closing the <cv>…</cv> XML tag early and injecting content
+    into the surrounding prompt structure.
+    """
     lines: list[str] = []
 
     if cv.anios_experiencia_total is not None:
@@ -177,28 +183,28 @@ def _format_cv(cv: CVProfile) -> str:
     if cv.experiencia:
         lines.append("\nExperiencia:")
         for exp in cv.experiencia:
-            linea = f"  - {exp.empresa} | {exp.rol}"
+            linea = f"  - {_escape_for_prompt(exp.empresa)} | {_escape_for_prompt(exp.rol)}"
             if exp.duracion:
-                linea += f" | {exp.duracion}"
+                linea += f" | {_escape_for_prompt(exp.duracion)}"
             if exp.tecnologias:
-                linea += f" | Tecnologías: {', '.join(exp.tecnologias)}"
+                linea += f" | Tecnologías: {', '.join(_escape_for_prompt(t) for t in exp.tecnologias)}"
             lines.append(linea)
             if exp.logros:
                 for logro in exp.logros:
-                    lines.append(f"    * {logro}")
+                    lines.append(f"    * {_escape_for_prompt(logro)}")
 
     if cv.skills_tecnicas:
-        lines.append(f"\nSkills técnicas: {', '.join(cv.skills_tecnicas)}")
+        lines.append(f"\nSkills técnicas: {', '.join(_escape_for_prompt(s) for s in cv.skills_tecnicas)}")
 
     if cv.dominios:
-        lines.append(f"Dominios: {', '.join(cv.dominios)}")
+        lines.append(f"Dominios: {', '.join(_escape_for_prompt(d) for d in cv.dominios)}")
 
     if cv.formacion:
         lines.append("\nFormación:")
         for form in cv.formacion:
-            linea = f"  - {form.titulo}"
+            linea = f"  - {_escape_for_prompt(form.titulo)}"
             if form.institucion:
-                linea += f" ({form.institucion})"
+                linea += f" ({_escape_for_prompt(form.institucion)})"
             if form.anio:
                 linea += f", {form.anio}"
             lines.append(linea)
@@ -211,12 +217,15 @@ def _format_ranking(ranking: list[PuestoRanking]) -> str:
 
     El orden 1-based es crítico (Pitfall 1 de RESEARCH): el LLM debe usar
     el mismo rango para rango_puesto (1 = máxima prioridad).
+
+    WR-03: titulo and sinonimos values are XML-escaped to prevent a manipulated
+    profile.yaml entry from injecting content into the prompt structure.
     """
     lines: list[str] = []
     for i, puesto in enumerate(ranking, start=1):
-        linea = f"{i}. {puesto.titulo}"
+        linea = f"{i}. {_escape_for_prompt(puesto.titulo)}"
         if puesto.sinonimos:
-            linea += f" (sinónimos: {', '.join(puesto.sinonimos)})"
+            linea += f" (sinónimos: {', '.join(_escape_for_prompt(s) for s in puesto.sinonimos)})"
         lines.append(linea)
     return "\n".join(lines)
 

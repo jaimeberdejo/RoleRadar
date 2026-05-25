@@ -155,4 +155,4 @@ Plans:
 | 7. Embeddings-First Scoring Refactor | v2.0 | 6/6 | Complete    | 2026-05-25 |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 4/4 | Complete   | 2026-05-25 |
 | 9. Notifications & Digest | v2.0 | 5/5 | Complete    | 2026-05-25 |
-| 10. Streamlit UI | v2.0 | 1/7 | In Progress|  |
+| 10. Streamlit UI | v2.0 | 2/7 | In Progress|  |

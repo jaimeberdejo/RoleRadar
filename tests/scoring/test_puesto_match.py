@@ -41,19 +41,27 @@ class TestPuestoMatchBasic:
         assert puesto == "AI Engineer"
 
     def test_below_threshold_returns_fuera_de_ranking(self) -> None:
-        """When best cosine is below umbral, returns ('fuera de ranking', None)."""
+        """When best cosine is below umbral, returns ('fuera de ranking', None).
+
+        The query title gets [1,0,0,0] and all corpus texts get [0,1,0,0] (orthogonal).
+        cosine = dot([1,0,0,0], [0,1,0,0]) = 0.0, which is below any positive umbral.
+        """
         ranking = [
             PuestoRanking(titulo="AI Engineer", sinonimos=["LLM Engineer"]),
             PuestoRanking(titulo="Data Engineer", sinonimos=[]),
         ]
+        query_title = "Completely Different Title"
+        # corpus texts: "AI Engineer LLM Engineer" and "Data Engineer "
+        corpus_text_1 = "AI Engineer LLM Engineer"
+        corpus_text_2 = "Data Engineer "
         vecs = {
-            "AI Engineer": np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32),
-            # corpus texts produced by concatenation; use default fallback for the query
+            query_title: np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32),
+            corpus_text_1: np.array([0.0, 1.0, 0.0, 0.0], dtype=np.float32),
+            corpus_text_2: np.array([0.0, 0.0, 1.0, 0.0], dtype=np.float32),
         }
-        embedder = FakeEmbedder(default_vector=np.array([0.0, 1.0, 0.0, 0.0], dtype=np.float32))
+        embedder = FakeEmbedder(vectors=vecs)
 
-        # umbral=0.99 ensures even a good cosine won't pass
-        puesto, rango = match_puesto_por_coseno("Completely Different Title", ranking, embedder, umbral=0.99)
+        puesto, rango = match_puesto_por_coseno(query_title, ranking, embedder)
 
         assert rango is None
         assert puesto == "fuera de ranking"

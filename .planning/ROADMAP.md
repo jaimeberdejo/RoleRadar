@@ -63,7 +63,22 @@ Plans:
   4. A `deal_breaker_hit` is detected by deterministic keyword/substring matching and forces `recommendation=skip` regardless of the numeric score — this works with OpenAI absent
   5. When `OPENAI_API_KEY` is present, `reasons_for`, `reasons_against`, `matched_skills`, and `missing_requirements` are populated; when absent, rule-based fallback strings are present in their place
   6. The full test suite passes with LLM and embeddings mocked; at least one test exercises the complete "no API key" path end-to-end
-**Plans**: TBD
+**Plans**: 6 plans (Wave 0: 1 plan; Wave 1: 3 plans parallel; Wave 2: 1 plan; Wave 3: 1 plan)
+Plans:
+
+**Wave 0**
+- [ ] 07-01-PLAN.md — Wave 0: RED guard tests for new scorer contract (5 failing tests)
+
+**Wave 1** *(parallel — disjoint files)*
+- [ ] 07-02-PLAN.md — Wave 1: puesto_match.py + skills_match.py (BGE-M3 cosine helpers)
+- [ ] 07-03-PLAN.md — Wave 1: seniority.py (deterministic seniority rule engine)
+- [ ] 07-04-PLAN.md — Wave 1: deal_breaker.py (deterministic keyword/substring matcher)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 07-05-PLAN.md — Wave 2: Refactor scorer.py (numbers-first + embedder injection) + llm.py (enrichment-only)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 07-06-PLAN.md — Wave 3: Comprehensive tests (test_scorer, test_llm, test_seniority, test_deal_breaker, test_puesto_match)
 
 ### Phase 8: JSearch Client & Worker Pipeline
 **Goal**: The app fetches job offers from JSearch under its own power and a background worker process runs the full pipeline on a schedule; the pipeline function is shared so a manual UI trigger and the scheduled worker produce identical results
@@ -113,7 +128,7 @@ Plans:
 | 4. API y Persistencia | v1.0 | 4/4 | Complete | 2026-05-23 |
 | 5. Observabilidad, Robustez y Docs n8n | v1.0 | 3/3 | Complete | 2026-05-23 |
 | 6. Architecture Cleanup & Storage Foundation | v2.0 | 5/5 | Complete    | 2026-05-24 |
-| 7. Embeddings-First Scoring Refactor | v2.0 | 0/? | Not started | - |
+| 7. Embeddings-First Scoring Refactor | v2.0 | 0/6 | Not started | - |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 0/? | Not started | - |
 | 9. Notifications & Digest | v2.0 | 0/? | Not started | - |
 | 10. Streamlit UI | v2.0 | 0/? | Not started | - |

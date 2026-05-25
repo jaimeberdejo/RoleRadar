@@ -86,7 +86,12 @@ def _get_cv_profile() -> CVProfile:
         json_files = sorted(cache_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
         for json_file in json_files:
             stem = json_file.stem
-            profile = load_cached_profile(stem)
+            try:
+                profile = load_cached_profile(stem)
+            except ValueError:
+                # stem is not a sha256 hex — skip non-cache files (e.g. backups, test files)
+                logger.debug("_get_cv_profile: skipping non-cache file %s", json_file.name)
+                continue
             if profile is not None:
                 logger.debug("CV profile loaded from cache: %s", json_file.name)
                 return profile

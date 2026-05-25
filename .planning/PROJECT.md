@@ -158,9 +158,11 @@ los digests por Telegram/email viven dentro de la app, y el **scoring corre en l
 - v1.1: dockerizado, auth `X-API-Key`, migración a OpenAI `gpt-4o-mini`, integración n8n end-to-end verificada (digest real a Telegram). **195 tests**. Vía quick tasks, sin roadmap.
 - Stack v1.x: Python 3.13 · FastAPI · Pydantic v2 + Instructor · OpenAI (scoring/CV) · BGE-M3 local (dedup) · SQLite · pytest · Docker.
 
-**Iniciando:** v2.0 Standalone App (Streamlit + Scheduler) — ver `## Current Milestone` arriba.
+**En curso:** v2.0 Standalone App (Streamlit + Scheduler) — ver `## Current Milestone` arriba.
 - Reaprovecha el núcleo v1.x (cv/dedup/scoring/storage) importándolo en proceso.
 - Retira n8n + FastAPI; añade UI Streamlit, cliente JSearch propio, worker APScheduler, scoring local-first y entrega Telegram/email.
+- **Progreso v2.0: 4/5 fases completas.** Fase 6 (limpieza arquitectura), Fase 7 (scoring local-first), Fase 8 (cliente JSearch + worker pipeline) y Fase 9 (notificaciones/digest Telegram+email) hechas. **286 tests.** Queda solo la Fase 10 (UI Streamlit).
+- Fase 9 entrega: paquete `app/notifications/` (digest, Telegram vía httpx, email vía smtplib), `get_undelivered_qualifying` (fuente del digest = query seen=0), mark-seen-tras-entrega con atomicidad por chunk, `python-telegram-bot` retirado.
 
 **Pendiente del usuario (heredado):** sacar/rotar la RapidAPI key inline del `docker-compose.yml`; el CV real se parseó con `años_experiencia_total=None` (a afinar).
 
@@ -182,4 +184,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-24 — starting v2.0 milestone (Standalone App: Streamlit + Scheduler)*
+*Last updated: 2026-05-25 — Phase 9 (Notifications & Digest) complete; v2.0 at 4/5 phases, 286 tests*

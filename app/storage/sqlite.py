@@ -228,12 +228,23 @@ class SQLiteStorage:
         """
         if not recommendations:
             return []
+        # Coerce min_score defensively at the storage boundary so the contract holds
+        # regardless of caller (WR-03). A non-numeric string would otherwise bind into
+        # `score_total >= ?` and, under SQLite's dynamic typing, silently produce
+        # wrong/empty results instead of erroring.
+        try:
+            min_score_i = int(min_score)
+        except (TypeError, ValueError):
+            logger.warning(
+                "get_undelivered_qualifying: min_score=%r invalid → usando 0", min_score
+            )
+            min_score_i = 0
         placeholders = ",".join("?" * len(recommendations))
         with closing(self._connect()) as conn:
             rows = conn.execute(
                 f"SELECT * FROM jobs WHERE seen=0 AND recommendation IN ({placeholders})"
                 " AND score_total >= ? ORDER BY score_total DESC",
-                (*recommendations, min_score),
+                (*recommendations, min_score_i),
             ).fetchall()
         result: list[ScoredJob] = []
         for row in rows:

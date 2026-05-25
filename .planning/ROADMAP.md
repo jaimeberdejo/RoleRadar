@@ -128,7 +128,7 @@ Plans:
 | 4. API y Persistencia | v1.0 | 4/4 | Complete | 2026-05-23 |
 | 5. Observabilidad, Robustez y Docs n8n | v1.0 | 3/3 | Complete | 2026-05-23 |
 | 6. Architecture Cleanup & Storage Foundation | v2.0 | 5/5 | Complete    | 2026-05-24 |
-| 7. Embeddings-First Scoring Refactor | v2.0 | 6/6 | Complete    | 2026-05-25 |
+| 7. Embeddings-First Scoring Refactor | v2.0 | 6/6 | Complete   | 2026-05-25 |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 0/? | Not started | - |
 | 9. Notifications & Digest | v2.0 | 0/? | Not started | - |
 | 10. Streamlit UI | v2.0 | 0/? | Not started | - |

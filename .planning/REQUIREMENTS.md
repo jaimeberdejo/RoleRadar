@@ -55,8 +55,8 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 
 - [x] **UI-01**: Subir CV (PDF) en la app → parsea y cachea `CVProfile`; muestra estado del parseo + perfil extraído
 - [x] **UI-02**: Configurar condiciones de búsqueda (país, idioma, puesto(s), `date_posted`, `employment_types`, remote-only) — persistidas en settings; el worker las lee
-- [ ] **UI-03**: Navegar **todas** las ofertas puntuadas dentro de la app (lista: título, empresa, score, recomendación; ordenar/filtrar por score y recomendación)
-- [ ] **UI-04**: Vista de detalle de oferta — desglose completo del score, `reasons_for`/`reasons_against`, skills emparejadas/faltantes
+- [x] **UI-03**: Navegar **todas** las ofertas puntuadas dentro de la app (lista: título, empresa, score, recomendación; ordenar/filtrar por score y recomendación)
+- [x] **UI-04**: Vista de detalle de oferta — desglose completo del score, `reasons_for`/`reasons_against`, skills emparejadas/faltantes
 - [x] **UI-05**: Afinar pesos del scoring (puesto/skills/ubicación/seniority) + umbral en la app, **persistidos** para que el worker los use
 - [x] **UI-06**: Editar la lista de **deal-breakers** en la app, persistida (no solo a mano en `profile.yaml`)
 - [x] **UI-07**: Botón **"Run now"** — dispara una búsqueda + scoring inmediata desde la UI (reutiliza el pipeline compartido)
@@ -158,8 +158,8 @@ Mapeo de requisitos a fases.
 | NOTIF-03 | Phase 9 | Complete |
 | UI-01 | Phase 10 | Complete |
 | UI-02 | Phase 10 | Complete |
-| UI-03 | Phase 10 | Pending |
-| UI-04 | Phase 10 | Pending |
+| UI-03 | Phase 10 | Complete |
+| UI-04 | Phase 10 | Complete |
 | UI-05 | Phase 10 | Complete |
 | UI-06 | Phase 10 | Complete |
 | UI-07 | Phase 10 | Complete |

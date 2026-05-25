@@ -53,8 +53,8 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 
 ### UI Streamlit (UI)
 
-- [ ] **UI-01**: Subir CV (PDF) en la app → parsea y cachea `CVProfile`; muestra estado del parseo + perfil extraído
-- [ ] **UI-02**: Configurar condiciones de búsqueda (país, idioma, puesto(s), `date_posted`, `employment_types`, remote-only) — persistidas en settings; el worker las lee
+- [x] **UI-01**: Subir CV (PDF) en la app → parsea y cachea `CVProfile`; muestra estado del parseo + perfil extraído
+- [x] **UI-02**: Configurar condiciones de búsqueda (país, idioma, puesto(s), `date_posted`, `employment_types`, remote-only) — persistidas en settings; el worker las lee
 - [ ] **UI-03**: Navegar **todas** las ofertas puntuadas dentro de la app (lista: título, empresa, score, recomendación; ordenar/filtrar por score y recomendación)
 - [ ] **UI-04**: Vista de detalle de oferta — desglose completo del score, `reasons_for`/`reasons_against`, skills emparejadas/faltantes
 - [x] **UI-05**: Afinar pesos del scoring (puesto/skills/ubicación/seniority) + umbral en la app, **persistidos** para que el worker los use
@@ -156,8 +156,8 @@ Mapeo de requisitos a fases.
 | NOTIF-01 | Phase 9 | Complete |
 | NOTIF-02 | Phase 9 | Complete |
 | NOTIF-03 | Phase 9 | Complete |
-| UI-01 | Phase 10 | Pending |
-| UI-02 | Phase 10 | Pending |
+| UI-01 | Phase 10 | Complete |
+| UI-02 | Phase 10 | Complete |
 | UI-03 | Phase 10 | Pending |
 | UI-04 | Phase 10 | Pending |
 | UI-05 | Phase 10 | Complete |

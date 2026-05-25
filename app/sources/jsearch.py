@@ -32,18 +32,27 @@ def fetch_jsearch_query(
     date_posted: str = "3days",
     num_pages: int = 1,
     country: str = "es",
+    language: str | None = None,
+    employment_types: str | None = None,
+    remote_only: bool = False,
     client: httpx.Client | None = None,
 ) -> list[dict]:
     """Fetch a single JSearch query and return the raw ``data[]`` elements.
 
     Args:
-        query:       Search query string (e.g. "AI Engineer Barcelona").
-        date_posted: JSearch date_posted param (e.g. "3days", "month").
-        num_pages:   Number of result pages to fetch (usually 1).
-        country:     ISO country code for the search (e.g. "es").
-        client:      Optional pre-created httpx.Client to reuse (for
-                     connection-pool sharing across multiple queries).
-                     If None, a short-lived client is created and closed.
+        query:            Search query string (e.g. "AI Engineer Barcelona").
+        date_posted:      JSearch date_posted param (e.g. "3days", "month").
+        num_pages:        Number of result pages to fetch (usually 1).
+        country:          ISO country code for the search (e.g. "es").
+        language:         Optional language code → JSearch ``language`` param
+                          (e.g. "es", "en"). Omitted when falsy (CR-01).
+        employment_types: Optional comma-separated JSearch employment_types
+                          (e.g. "FULLTIME,CONTRACTOR"). Omitted when falsy (CR-01).
+        remote_only:      When True, sets JSearch ``remote_jobs_only=true`` so
+                          only remote postings are returned (CR-01).
+        client:           Optional pre-created httpx.Client to reuse (for
+                          connection-pool sharing across multiple queries).
+                          If None, a short-lived client is created and closed.
 
     Returns:
         List of raw job dicts from the ``data`` array, or [] on error.
@@ -61,6 +70,14 @@ def fetch_jsearch_query(
         "date_posted": date_posted,
         "country": country,
     }
+    # CR-01: plumb the saved Search Config knobs into the JSearch request.
+    # Only add optional params when set so we never send empty/false noise.
+    if language:
+        params["language"] = language
+    if employment_types:
+        params["employment_types"] = employment_types
+    if remote_only:
+        params["remote_jobs_only"] = "true"
 
     try:
         if client is None:
@@ -123,6 +140,9 @@ def fetch_all_queries(
                     - date_posted_override (str, default "3days")
                     - search_country (str, default "es")
                     - num_pages (str|int, default "1")
+                    - search_language (str, optional) → JSearch language param
+                    - employment_types (str, optional) → JSearch employment_types
+                    - remote_only ("true"/"false", optional) → remote_jobs_only
         client:   Optional pre-created httpx.Client. If None, a shared client
                   is created for all queries and closed when done.
 
@@ -132,6 +152,10 @@ def fetch_all_queries(
     date_posted = settings.get("date_posted_override", "3days")
     country = settings.get("search_country", "es")
     num_pages = int(settings.get("num_pages", "1"))
+    # CR-01: plumb the user's saved Search Config knobs through to the request.
+    language = settings.get("search_language") or None
+    employment_types = settings.get("employment_types") or None
+    remote_only = str(settings.get("remote_only", "false")).lower() == "true"
 
     all_raw: list[dict] = []
 
@@ -143,6 +167,9 @@ def fetch_all_queries(
                     date_posted=date_posted,
                     num_pages=num_pages,
                     country=country,
+                    language=language,
+                    employment_types=employment_types,
+                    remote_only=remote_only,
                     client=_client,
                 )
                 logger.info("JSearch query=%r fetched=%d", q, len(raw))
@@ -154,6 +181,9 @@ def fetch_all_queries(
                 date_posted=date_posted,
                 num_pages=num_pages,
                 country=country,
+                language=language,
+                employment_types=employment_types,
+                remote_only=remote_only,
                 client=client,
             )
             logger.info("JSearch query=%r fetched=%d", q, len(raw))

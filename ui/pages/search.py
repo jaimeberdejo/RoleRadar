@@ -120,7 +120,11 @@ def _render() -> None:
             employment_types=employment_types,
             remote_only=remote_only,
         )
-        st.success("Guardado — el próximo run del worker usará estos parámetros.")
+        st.success(
+            "Guardado — el próximo run del worker (y «Run now») usará estos "
+            "parámetros: la consulta, país, idioma, tipos de contrato, "
+            "solo-remoto y fecha de publicación."
+        )
 
 
 # Gate: only run the page body when a Streamlit runtime is active.

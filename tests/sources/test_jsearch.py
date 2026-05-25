@@ -246,6 +246,89 @@ def test_fetch_all_queries_non_json_does_not_abort_sibling_queries():
 
 
 # ---------------------------------------------------------------------------
+# CR-01: saved Search Config knobs reach the JSearch request params
+# ---------------------------------------------------------------------------
+
+def test_fetch_all_queries_plumbs_settings_into_params():
+    """CR-01: employment_types / remote_only / search_language from settings
+    must land in the JSearch request params dict.
+
+    Without the fix, fetch_all_queries only forwarded date_posted/country/
+    num_pages, so these three saved settings were silently dropped (no-op).
+    """
+    from app.sources.jsearch import fetch_all_queries  # noqa: PLC0415
+
+    captured_params: dict = {}
+
+    ok_resp = _make_ok_response([])
+
+    with patch("app.sources.jsearch.httpx.Client") as MockClient:
+        instance = MockClient.return_value.__enter__.return_value
+
+        def capture_get(url, *, headers, params, **kwargs):
+            captured_params.update(params)
+            return ok_resp
+
+        instance.get.side_effect = capture_get
+
+        settings = {
+            "search_country": "es",
+            "num_pages": "1",
+            "date_posted_override": "3days",
+            "search_language": "en",
+            "employment_types": "FULLTIME,CONTRACTOR",
+            "remote_only": "true",
+        }
+        fetch_all_queries(["AI Engineer"], settings)
+
+    assert captured_params.get("language") == "en", (
+        "search_language must be forwarded to the JSearch 'language' param"
+    )
+    assert captured_params.get("employment_types") == "FULLTIME,CONTRACTOR", (
+        "employment_types must be forwarded to the JSearch 'employment_types' param"
+    )
+    assert captured_params.get("remote_jobs_only") == "true", (
+        "remote_only=true must map to JSearch 'remote_jobs_only=true'"
+    )
+
+
+def test_fetch_all_queries_omits_unset_optional_params():
+    """CR-01: when the optional knobs are not set, they must NOT appear in params.
+
+    remote_only=false must not emit remote_jobs_only, and an empty language /
+    employment_types must be omitted entirely (no empty-string noise).
+    """
+    from app.sources.jsearch import fetch_all_queries  # noqa: PLC0415
+
+    captured_params: dict = {}
+
+    ok_resp = _make_ok_response([])
+
+    with patch("app.sources.jsearch.httpx.Client") as MockClient:
+        instance = MockClient.return_value.__enter__.return_value
+
+        def capture_get(url, *, headers, params, **kwargs):
+            captured_params.update(params)
+            return ok_resp
+
+        instance.get.side_effect = capture_get
+
+        settings = {
+            "search_country": "es",
+            "num_pages": "1",
+            "date_posted_override": "3days",
+            "search_language": "",
+            "employment_types": "",
+            "remote_only": "false",
+        }
+        fetch_all_queries(["AI Engineer"], settings)
+
+    assert "language" not in captured_params, "empty search_language must be omitted"
+    assert "employment_types" not in captured_params, "empty employment_types must be omitted"
+    assert "remote_jobs_only" not in captured_params, "remote_only=false must omit remote_jobs_only"
+
+
+# ---------------------------------------------------------------------------
 # WR-04: auth failure (401/403) returns [] with targeted log
 # ---------------------------------------------------------------------------
 

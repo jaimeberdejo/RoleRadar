@@ -169,11 +169,20 @@ def run_pipeline(
 
     # ------------------------------------------------------------------
     # 4. Determine date_posted (first-run vs subsequent)
+    #    CR-01: respect the user's saved date_posted unless this is the first
+    #    run, where we widen the window to "month" to backfill history.
     # ------------------------------------------------------------------
-    date_posted = "month" if _is_first_run(storage) else "3days"
+    date_posted = "month" if _is_first_run(storage) else (settings.get("date_posted") or "3days")
     settings = {**settings, "date_posted_override": date_posted}
 
-    queries = [p.titulo for p in user_profile.ranking_puestos]
+    # ------------------------------------------------------------------
+    # CR-01: build queries from the saved search_query when present, else
+    # fall back to the ranking_puestos titles. search.py persists
+    # search_query as a single OR-query string (e.g. '"AI Engineer" OR
+    # "ML Engineer"'), so it is used as ONE query — not split.
+    # ------------------------------------------------------------------
+    raw_query = (settings.get("search_query") or "").strip()
+    queries = [raw_query] if raw_query else [p.titulo for p in user_profile.ranking_puestos]
 
     # ------------------------------------------------------------------
     # 5. Fetch (SCHED-03: errors collected, not re-raised)

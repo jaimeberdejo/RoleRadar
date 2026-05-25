@@ -177,6 +177,91 @@ def test_run_pipeline_dedup_against_stored(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# CR-01: a saved search_query setting must reach the query list passed to fetch
+# ---------------------------------------------------------------------------
+
+def test_run_pipeline_uses_saved_search_query(tmp_path):
+    """A non-empty saved search_query must be the query passed to _fetch_all.
+
+    Without the fix, run_pipeline always built queries from ranking_puestos and
+    ignored the saved search_query, making the Search Config page a no-op (CR-01).
+    """
+    from app.pipeline import run_pipeline  # noqa: PLC0415
+
+    storage = SQLiteStorage(str(tmp_path / "test.db"))
+    storage.init_db()
+    storage.set_setting("search_query", '"AI Engineer" OR "ML Engineer"')
+    fake_embedder = FakeEmbedder()
+
+    captured: dict = {}
+
+    def _capture(queries, settings):
+        captured["queries"] = queries
+        captured["settings"] = settings
+        return []
+
+    with patch("app.pipeline._fetch_all", side_effect=_capture):
+        run_pipeline(storage=storage, embedder=fake_embedder)
+
+    assert captured["queries"] == ['"AI Engineer" OR "ML Engineer"'], (
+        "Saved search_query must be used as the single query, not ranking_puestos"
+    )
+
+
+def test_run_pipeline_falls_back_to_ranking_when_no_search_query(tmp_path):
+    """When search_query is empty, run_pipeline falls back to ranking_puestos titles."""
+    from app.pipeline import run_pipeline  # noqa: PLC0415
+
+    storage = SQLiteStorage(str(tmp_path / "test.db"))
+    storage.init_db()
+    storage.set_setting("search_query", "")  # explicitly empty
+    fake_embedder = FakeEmbedder()
+
+    captured: dict = {}
+
+    def _capture(queries, settings):
+        captured["queries"] = queries
+        return []
+
+    with patch("app.pipeline._fetch_all", side_effect=_capture):
+        run_pipeline(storage=storage, embedder=fake_embedder)
+
+    assert captured["queries"], "queries must not be empty"
+    assert captured["queries"] != [""], (
+        "Empty search_query must fall back to ranking_puestos, not pass an empty query"
+    )
+
+
+def test_run_pipeline_respects_saved_date_posted_when_not_first_run(tmp_path):
+    """On a non-first run, the saved date_posted setting drives date_posted_override.
+
+    Without the fix the pipeline unconditionally forced "3days" for subsequent
+    runs, making the saved date_posted selectbox dead (CR-01).
+    """
+    from app.pipeline import run_pipeline  # noqa: PLC0415
+
+    storage = SQLiteStorage(str(tmp_path / "test.db"))
+    storage.init_db()
+    # Make it a non-first run by pre-seeding a stored job.
+    storage.upsert_scored_jobs([_make_scored_job("date-posted-seed-1")])
+    storage.set_setting("date_posted", "today")
+    fake_embedder = FakeEmbedder()
+
+    captured: dict = {}
+
+    def _capture(queries, settings):
+        captured["settings"] = settings
+        return []
+
+    with patch("app.pipeline._fetch_all", side_effect=_capture):
+        run_pipeline(storage=storage, embedder=fake_embedder)
+
+    assert captured["settings"]["date_posted_override"] == "today", (
+        "Non-first run must honor the saved date_posted setting"
+    )
+
+
+# ---------------------------------------------------------------------------
 # SCHED-03: partial fetch error does not raise
 # ---------------------------------------------------------------------------
 

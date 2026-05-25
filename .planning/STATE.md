@@ -4,14 +4,14 @@ milestone: v2.0
 milestone_name: Standalone App (Streamlit + Scheduler)
 status: executing
 stopped_at: Phase 9 context gathered
-last_updated: "2026-05-25T13:23:37.338Z"
+last_updated: "2026-05-25T13:27:42.090Z"
 last_activity: 2026-05-25
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 20
-  completed_plans: 17
-  percent: 85
+  completed_plans: 18
+  percent: 90
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-05-24)
 ## Current Position
 
 Phase: 9 (Notifications & Digest) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-05-25
 
@@ -51,6 +51,7 @@ Progress bar: [######----] 60% (3/5 phases)
 | 10. Streamlit UI | TBD | v2.0 |
 
 *Updated after each plan completion*
+| Phase 09-notifications-digest P04 | 2 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,7 @@ Recent decisions affecting current work:
 - [v2.0 Phase 7 P05]: score_job signature v2.0: (job, user_profile, cv_profile, embedder, *, client=None) — user_profile 2nd per CONTEXT.md spec
 - [v2.0 Phase 7 P05]: LLMEnrichment local to llm.py (not schemas.py) — it is an implementation detail of enrichment step
 - [v2.0 Phase 7 P06]: puesto_match corpus text = titulo+sinonimos joined (SC3 spec) — CORRECTION from P05 which wrongly used titulo-only; tests now key on full corpus text via _corpus_text() helper
+- [Phase ?]: python-telegram-bot removed from pyproject.toml: Phase 9 Telegram uses raw httpx.Client (sync); PTB v22.7 async-first and never imported — manifest now honest
 
 ### Pending Todos
 
@@ -138,7 +140,7 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-05-25T13:23:37.333Z
+Last session: 2026-05-25T13:27:42.086Z
 Stopped at: Phase 9 context gathered
 Resume file: None
 Next: Phase 9 — Notifications & Digest

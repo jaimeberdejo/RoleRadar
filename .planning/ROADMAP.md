@@ -119,7 +119,7 @@ Plans:
 
 **Wave 1** *(parallel — disjoint files: storage vs pyproject)*
 - [x] 09-02-PLAN.md — Storage extensions: get_undelivered_qualifying + runs channel/notified migration
-- [ ] 09-04-PLAN.md — Remove python-telegram-bot from pyproject.toml + regenerate uv.lock
+- [x] 09-04-PLAN.md — Remove python-telegram-bot from pyproject.toml + regenerate uv.lock
 
 **Wave 2** *(blocked on 09-02 — needs get_undelivered_qualifying)*
 - [ ] 09-03-PLAN.md — Notifications package: digest.py, telegram.py, email_smtp.py, send_digest
@@ -154,5 +154,5 @@ Plans:
 | 6. Architecture Cleanup & Storage Foundation | v2.0 | 5/5 | Complete    | 2026-05-24 |
 | 7. Embeddings-First Scoring Refactor | v2.0 | 6/6 | Complete    | 2026-05-25 |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 4/4 | Complete   | 2026-05-25 |
-| 9. Notifications & Digest | v2.0 | 2/5 | In Progress|  |
+| 9. Notifications & Digest | v2.0 | 3/5 | In Progress|  |
 | 10. Streamlit UI | v2.0 | 0/? | Not started | - |

@@ -33,6 +33,7 @@ El margen entre matches reales (~0.70+) y falsos positivos (<0.40) es amplio;
 from __future__ import annotations
 
 import logging
+import math
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -135,10 +136,13 @@ def match_puesto_por_coseno(
     best_idx: int = int(np.argmax(cosines))
     best_cosine: float = float(cosines[best_idx])
 
-    if best_cosine < umbral:
+    # WR-02: NaN guard — IEEE 754: NaN < umbral is False, so NaN would silently
+    # pass the threshold and report a false positive match.  Treat NaN as
+    # below-threshold (e.g. zero-norm embedding on empty/whitespace title).
+    if math.isnan(best_cosine) or best_cosine < umbral:
         logger.debug(
             "match_puesto_por_coseno: %r → fuera de ranking "
-            "(best_cosine=%.3f < umbral=%.3f)",
+            "(best_cosine=%s < umbral=%.3f)",
             title,
             best_cosine,
             umbral,

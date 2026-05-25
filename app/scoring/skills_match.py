@@ -47,6 +47,7 @@ caracteres (aproximación conservadora; 500 chars ≈ 100-125 tokens en inglés/
 from __future__ import annotations
 
 import logging
+import math
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -146,6 +147,16 @@ def encaje_skills_por_coseno(
 
     # Coseno = producto punto (vectores L2-normalizados: dot == cosine)
     cosine: float = float(np.dot(cv_vec, job_vec))
+
+    # WR-02: NaN guard — a zero-norm embedding produces NaN via 0/0 in L2
+    # normalisation; int(round(NaN)) raises ValueError and crashes the batch.
+    # Treat NaN as 0 (neutral — no meaningful signal).
+    if math.isnan(cosine):
+        logger.warning(
+            "encaje_skills_por_coseno: cosine es NaN (vector de norma cero) → "
+            "devolviendo 0 (neutral)"
+        )
+        return 0
 
     # Mapeo lineal al rango 0-100; clamp para cosenos negativos (anómalos pero posibles)
     score: int = int(round(max(0.0, min(1.0, cosine)) * 100))

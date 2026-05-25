@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from app.notifications.digest import (
     build_subject,
     build_telegram_header,
-    chunk_offers,
+    chunk_offers_with_indices,
     format_offer_block,
     resolve_channel,
 )
@@ -84,21 +84,30 @@ def _send_telegram(storage, jobs, result: DigestResult) -> None:
 
     blocks = [format_offer_block(j) for j in jobs]
     header = build_telegram_header(len(jobs))
-    chunk_texts = chunk_offers(header, blocks)
 
-    # Re-pair each chunk text with the job_ids it contains.
-    # chunk_offers preserves block order and never splits a block across chunks,
-    # so we can walk blocks/jobs in insertion order matching each block's substring
-    # presence to its chunk. This guarantees D-11: a failed chunk's job_ids are
+    # Pair each chunk text with the job_ids it contains BY BLOCK INDEX, captured at
+    # chunk-construction time. Substring re-pairing (the old approach) misassigns
+    # IDs when two blocks are byte-identical or one is a substring of another,
+    # causing failed-chunk jobs to be marked seen (data loss) or delivered jobs to
+    # never be marked (CR-01). Index pairing is sound because block i in offer_blocks
+    # corresponds to jobs[i], and chunk_offers_with_indices records exactly which
+    # indices each chunk holds. This guarantees D-11: a failed chunk's job_ids are
     # never added to delivered_ids → those jobs stay seen=0.
-    chunks: list[tuple[str, list[str]]] = []
-    job_idx = 0
-    for text in chunk_texts:
-        ids_here: list[str] = []
-        while job_idx < len(jobs) and blocks[job_idx] in text:
-            ids_here.append(jobs[job_idx].job.id)
-            job_idx += 1
-        chunks.append((text, ids_here))
+    paired = chunk_offers_with_indices(header, blocks)
+    chunks: list[tuple[str, list[str]]] = [
+        (text, [jobs[i].job.id for i in idxs]) for text, idxs in paired
+    ]
+
+    # Post-condition guard (WR-02): with the index pairing above every job must be
+    # assigned to exactly one chunk; a mismatch would mean jobs silently never get
+    # marked seen on a successful send. Should never trigger — guards regressions.
+    assigned = sum(len(ids) for _text, ids in chunks)
+    if assigned != len(jobs):
+        logger.error(
+            "telegram chunk pairing lost jobs: assigned=%d expected=%d",
+            assigned,
+            len(jobs),
+        )
 
     delivered_ids, errors = send_telegram_digest(chunks)
     for jid in delivered_ids:

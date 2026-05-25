@@ -107,6 +107,39 @@ def format_offer_block(sjob: ScoredJob) -> str:
 # Telegram chunking (D-06)
 # ---------------------------------------------------------------------------
 
+def chunk_offers_with_indices(
+    header: str, offer_blocks: list[str]
+) -> list[tuple[str, list[int]]]:
+    """Split offer_blocks into Telegram chunks, recording each chunk's block indices.
+
+    Identical packing to chunk_offers but ALSO returns, for every chunk, the list
+    of original ``offer_blocks`` indices it contains — captured AT CONSTRUCTION
+    TIME. This is the sound source of truth for pairing job IDs to chunks: callers
+    must NOT reverse-engineer chunk membership via substring matching, which
+    misassigns IDs when two blocks are byte-identical or one is a substring of
+    another (CR-01).
+
+    Same rules as chunk_offers (D-06): never splits a block across chunks, header
+    on the first chunk only, an over-long single block still gets its own chunk.
+    Every block index appears in exactly one chunk.
+    """
+    chunks: list[tuple[str, list[int]]] = []
+    current = header
+    idxs: list[int] = []
+    for i, block in enumerate(offer_blocks):
+        candidate = current + "\n\n" + block
+        if len(candidate) > TELEGRAM_MAX_CHARS and current != header and current:
+            chunks.append((current, idxs))
+            current = block
+            idxs = [i]
+        else:
+            current = candidate
+            idxs = idxs + [i]
+    if current:
+        chunks.append((current, idxs))
+    return chunks
+
+
 def chunk_offers(header: str, offer_blocks: list[str]) -> list[str]:
     """Split offer_blocks into Telegram messages of ≤4096 chars each.
 
@@ -116,19 +149,12 @@ def chunk_offers(header: str, offer_blocks: list[str]) -> list[str]:
 
     Invariant: every offer block appears in exactly one chunk, intact. This
     guarantee is required by the per-chunk mark_seen logic in send_digest (D-11).
+
+    Thin wrapper over chunk_offers_with_indices that drops the index metadata;
+    kept with its original signature/behavior because other code and tests depend
+    on the plain list[str] return.
     """
-    chunks: list[str] = []
-    current = header
-    for block in offer_blocks:
-        candidate = current + "\n\n" + block
-        if len(candidate) > TELEGRAM_MAX_CHARS and current != header and current:
-            chunks.append(current)
-            current = block
-        else:
-            current = candidate
-    if current:
-        chunks.append(current)
-    return chunks
+    return [text for text, _idxs in chunk_offers_with_indices(header, offer_blocks)]
 
 
 # ---------------------------------------------------------------------------

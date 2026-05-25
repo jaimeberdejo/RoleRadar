@@ -536,6 +536,140 @@ def test_telegram_partial_chunk_failure_marks_only_delivered(tmp_path, monkeypat
 
 
 # ---------------------------------------------------------------------------
+# Test 14 (CR-01 regression): byte-identical offer blocks across chunks must be
+#          paired to jobs BY INDEX, not by fragile substring matching.
+# ---------------------------------------------------------------------------
+
+def _make_identical_block_job(job_id: str, big_reason: str) -> ScoredJob:
+    """ScoredJob whose format_offer_block output is byte-identical across calls.
+
+    Every display field used by format_offer_block (title, company, score,
+    recommendation, reasons_for[:3], url) is held constant — including a SHARED
+    url — so two such jobs with DIFFERENT ids produce byte-identical blocks. This
+    is the realistic cross-run scenario from CR-01 (a re-listed posting with a
+    different id hash but identical digest text). A single large reason forces the
+    block past ~2KB so two blocks exceed 4096 chars and split into ≥2 chunks.
+    """
+    job = Job(
+        id=job_id,
+        title="AI Engineer",
+        company="Corp",
+        location="Barcelona",
+        remote=RemoteJob.remote,
+        description="We build AI systems.",
+        url="https://shared.example.com/apply",  # SHARED url → blocks byte-identical
+        source="jsearch",
+    )
+    score = JobScore(
+        score_total=82,
+        recommendation=Recommendation.good_fit,
+        desglose=Desglose(
+            encaje_puesto=88,
+            encaje_skills=80,
+            encaje_ubicacion=95,
+            encaje_seniority=72,
+        ),
+        puesto_detectado="Ingeniero de IA / AI Engineer",
+        rango_puesto=1,
+        reasons_for=[big_reason],
+        reasons_against=["Kubernetes gap"],
+        matched_skills=["Python"],
+        missing_requirements=["Kubernetes"],
+        deal_breaker_hit=False,
+        deal_breaker_cual=None,
+    )
+    return ScoredJob(job=job, score=score)
+
+
+def test_telegram_identical_blocks_partial_failure_pairs_by_index(tmp_path, monkeypatch):
+    """CR-01: two byte-identical offer blocks in separate chunks, 2nd chunk POST 500.
+
+    Regression for the D-11 delivery guarantee. With the OLD substring re-pairing
+    (`blocks[job_idx] in text`), block B (chunk 1) is also a substring of chunk 0
+    (the blocks are byte-identical), so chunk 0 over-consumes BOTH job ids and
+    chunk 1 gets []. When chunk 0 returns 200 and chunk 1 returns 500, the old code
+    marks BOTH jobs seen — silently dropping job B (whose delivery actually failed)
+    from every future digest. The index-based pairing fix assigns exactly one id
+    per chunk, so:
+      - first-chunk job  → seen=1 (delivered on the 200 chunk)
+      - second-chunk job → seen=0 (held; reappears in get_undelivered_qualifying)
+    """
+    from app.notifications import send_digest  # noqa: PLC0415
+    from app.notifications.digest import (  # noqa: PLC0415
+        build_telegram_header,
+        chunk_offers_with_indices,
+        format_offer_block,
+    )
+
+    db_path = str(tmp_path / "test.db")
+    storage = SQLiteStorage(db_path)
+    storage.init_db()
+    storage.set_setting("notification_channel", "telegram")
+
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token-fake")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "123456789")
+
+    # A single ~2.5KB reason makes each block ~2.6KB, so two blocks exceed 4096
+    # and split into exactly two chunks (one block each).
+    big_reason = "X" * 2500
+    job_a = _make_identical_block_job("identical-job-A", big_reason)
+    job_b = _make_identical_block_job("identical-job-B", big_reason)
+    storage.upsert_scored_jobs([job_a, job_b])
+
+    # Pull jobs in the exact order the implementation will (query order) and confirm
+    # the precondition: byte-identical blocks landing in two separate chunks.
+    qualifying = storage.get_undelivered_qualifying(70, ["strong_fit", "good_fit"])
+    assert len(qualifying) == 2, "both jobs must qualify"
+    blocks = [format_offer_block(sj) for sj in qualifying]
+    assert blocks[0] == blocks[1], "precondition: the two offer blocks must be byte-identical"
+    header = build_telegram_header(len(qualifying))
+    paired = chunk_offers_with_indices(header, blocks)
+    assert len(paired) == 2, f"precondition: expected 2 chunks, got {len(paired)}"
+    assert [idxs for _t, idxs in paired] == [[0], [1]], (
+        "index pairing must place exactly one block per chunk"
+    )
+
+    first_chunk_id = qualifying[paired[0][1][0]].job.id
+    second_chunk_id = qualifying[paired[1][1][0]].job.id
+
+    # First chunk POST → 200, second chunk POST → 500.
+    side_effects = [_make_200_response(), _make_error_response(500)]
+    with patch("app.notifications.telegram.httpx.Client") as MockClient:
+        instance = MockClient.return_value.__enter__.return_value
+        instance.post.side_effect = side_effects
+
+        result = send_digest(storage, storage.get_settings())
+
+    assert len(result.errors) > 0, "the failed (500) chunk must be reported in errors"
+    assert result.delivered == 1, f"exactly one job delivered, got {result.delivered}"
+
+    conn = sqlite3.connect(db_path)
+    seen_first = conn.execute(
+        "SELECT seen FROM jobs WHERE id = ?", (first_chunk_id,)
+    ).fetchone()
+    seen_second = conn.execute(
+        "SELECT seen FROM jobs WHERE id = ?", (second_chunk_id,)
+    ).fetchone()
+    conn.close()
+
+    assert seen_first is not None and seen_first[0] == 1, (
+        f"first-chunk job {first_chunk_id} (200) must be seen=1"
+    )
+    assert seen_second is not None and seen_second[0] == 0, (
+        f"second-chunk job {second_chunk_id} (500) must stay seen=0 — NOT dropped (CR-01)"
+    )
+
+    # The held job must reappear; the delivered one must not.
+    next_run_ids = {
+        sj.job.id for sj in storage.get_undelivered_qualifying(70, ["strong_fit", "good_fit"])
+    }
+    assert second_chunk_id in next_run_ids, (
+        "failed-chunk job must reappear in get_undelivered_qualifying (no data loss)"
+    )
+    assert first_chunk_id not in next_run_ids, "delivered job must not reappear"
+
+
+# ---------------------------------------------------------------------------
 # SC1: telegram message contains all required fields per offer (NOTIF-01)
 # ---------------------------------------------------------------------------
 

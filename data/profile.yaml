@@ -2,8 +2,8 @@
 # El CV se parsea aparte (PDF) y se combina con esto.
 
 datos_personales:
-  nombre: "Jaime Berdejo"
-  email: "jaimeberdejo1902@gmail.com"
+  nombre: "Tu Nombre"
+  email: "tu-email@example.com"
   telefono: ""
   ubicacion_actual: "Barcelona, España"
   derecho_a_trabajar_en: ["UE", "España"]

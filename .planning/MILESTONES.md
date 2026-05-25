@@ -1,5 +1,39 @@
 # Milestones
 
+## v2.0 Standalone App (Streamlit + Scheduler) (Shipped: 2026-05-25)
+
+**Phases completed:** 5 phases, 27 plans, 28 tasks
+
+**Key accomplishments:**
+
+- 6 new pytest guards (3 files) establish RED-first safety net for Phase 6 migration: import-cleanliness, secrets regression, settings table, and WAL concurrency tests
+- Literal RAPIDAPI_KEY purged from docker-compose.yml (now injected via env_file only); test_no_secrets.py GREEN — code change already landed in 06-03 commit 782e463, and the leaked key rotation is accepted-as-skipped for a free-tier API key.
+- One-liner:
+- SQLiteStorage gains WAL mode with per-connection busy_timeout=5000, a 10-key settings table, and get_settings/set_setting methods backed by parameterized upserts — all 14 storage tests GREEN.
+- One-liner:
+- One-liner:
+- 1. [Rule 1 - Bug] Fixed below-threshold test vectors in test_puesto_match.py
+- 1. [Rule 1 - Bug] Fixed hyphen-range regex lower-bound capture
+- One-liner:
+- Deterministic numbers-first scorer with embedder injection and optional-only OpenAI enrichment: score_job produces a complete JobScore with all 4 sub-scores from BGE-M3 cosine + rules, with no OpenAI dependency
+- Full suite GREEN (235 tests, 0 failures): restored SC3 synonyms in puesto_match corpus, rewrote scorer tests for v2 API with FakeEmbedder injection, added QA-07 end-to-end no-API-key path, added make_enrichment_client helper.
+- 15 RED guard tests across 3 new test files that define exact expected behaviour for JSearch client, shared pipeline, and SQLite runs/mark_seen additions — all fail with ImportError or AttributeError until Wave 1/2 implementations ship.
+- One-liner:
+- One-liner:
+- One-liner:
+- One-liner:
+- python-telegram-bot v22.7 removed from pyproject.toml and uv.lock after confirming zero live imports; Telegram notifications use raw httpx throughout
+- One-liner:
+- One-liner:
+- One-liner:
+- One-liner:
+- One-liner:
+- Created:
+- ui/settings_logic.py
+- README.md rewritten end-to-end for the v2.0 standalone Streamlit + APScheduler app, removing all FastAPI/n8n/uvicorn operational content and replacing it with docker compose up, the 5-page in-app workflow, digest delivery, and a security note; legacy n8n archive signpost added at docs/archive/n8n/README.md
+
+---
+
 ## v1.0 MVP (Shipped: 2026-05-23)
 
 **Phases completed:** 5 phases, 19 plans, 33 tasks

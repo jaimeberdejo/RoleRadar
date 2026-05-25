@@ -26,10 +26,18 @@ def test_valid_weights_pack():
     ok, payload = validate_and_pack_weights(0.35, 0.30, 0.20, 0.15)
     assert ok is True
     assert isinstance(payload, dict)
-    assert payload["score_weight_puesto"] == "0.35"
-    assert payload["score_weight_skills"] == "0.30"
-    assert payload["score_weight_ubicacion"] == "0.20"
-    assert payload["score_weight_seniority"] == "0.15"
+    # str(0.35) == "0.35", str(0.30) == "0.3", str(0.20) == "0.2", str(0.15) == "0.15"
+    assert float(payload["score_weight_puesto"]) == pytest.approx(0.35)
+    assert float(payload["score_weight_skills"]) == pytest.approx(0.30)
+    assert float(payload["score_weight_ubicacion"]) == pytest.approx(0.20)
+    assert float(payload["score_weight_seniority"]) == pytest.approx(0.15)
+    # The mapping keys must be the score_weight_* settings keys
+    assert set(payload.keys()) == {
+        "score_weight_puesto",
+        "score_weight_skills",
+        "score_weight_ubicacion",
+        "score_weight_seniority",
+    }
 
 
 def test_invalid_weights_blocked():

@@ -200,7 +200,17 @@ class SQLiteStorage:
                     "company": row["company"],
                     "remote": row["remote"],
                     "url": row["url"],
-                    "score_total": row["score_total"],
+                    # WR-06: coerce score_total defensively. The column is declared
+                    # INTEGER but SQLite's dynamic typing does not guarantee it; a
+                    # NULL or non-int row would otherwise crash filter_history's
+                    # `score_total >= min_score` for the WHOLE page. bool is a
+                    # subclass of int and must not slip through, so reject it.
+                    "score_total": (
+                        row["score_total"]
+                        if isinstance(row["score_total"], int)
+                        and not isinstance(row["score_total"], bool)
+                        else 0
+                    ),
                     "recommendation": row["recommendation"],
                     "first_seen": row["first_seen"],
                     "last_seen": row["last_seen"],

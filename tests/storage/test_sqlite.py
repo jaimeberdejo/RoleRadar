@@ -143,6 +143,43 @@ def test_get_history_devuelve_score_y_fecha(db: SQLiteStorage) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# WR-06: get_history coacciona score_total NULL/no-int a 0 (defensivo)
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def test_get_history_coerces_null_score_total(db: SQLiteStorage) -> None:
+    """WR-06: una fila con score_total NULL no debe crashear get_history/filter_history.
+
+    El comparador `score_total >= min_score` de filter_history reventaría con
+    TypeError para TODA la página si una fila tiene NULL. get_history debe
+    devolver 0 en su lugar (coerción defensiva en el límite de almacenamiento).
+    """
+    import sqlite3
+    from contextlib import closing
+    from ui.results_logic import filter_history
+
+    db.upsert_scored_jobs([_make_scored_job("wr06-null-score")])
+
+    # Forzar score_total = NULL directamente en la fila (simula drift de esquema /
+    # una ruta que no fijó score_total).
+    with closing(sqlite3.connect(db._db_path)) as conn:
+        with conn:
+            conn.execute(
+                "UPDATE jobs SET score_total = NULL WHERE id = ?", ("wr06-null-score",)
+            )
+
+    history = db.get_history()
+    row = next(r for r in history if r["id"] == "wr06-null-score")
+    assert row["score_total"] == 0, (
+        f"NULL score_total debe coaccionarse a 0, got {row['score_total']!r}"
+    )
+
+    # filter_history no debe lanzar TypeError con la fila coaccionada.
+    filtered = filter_history(history, min_score=0, recommendations=[row["recommendation"]])
+    assert any(r["id"] == "wr06-null-score" for r in filtered)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # STORE-03: paginación de get_history
 # ──────────────────────────────────────────────────────────────────────────────
 

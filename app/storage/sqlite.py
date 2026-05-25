@@ -16,6 +16,7 @@ Decisiones de diseño:
 """
 from __future__ import annotations
 
+import json
 import logging
 import sqlite3
 from contextlib import closing
@@ -86,6 +87,18 @@ class SQLiteStorage:
                         value TEXT NOT NULL
                     )
                 """)
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS runs (
+                        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                        started_at  TEXT NOT NULL,
+                        finished_at TEXT,
+                        fetched     INTEGER DEFAULT 0,
+                        deduped     INTEGER DEFAULT 0,
+                        scored      INTEGER DEFAULT 0,
+                        new_seen    INTEGER DEFAULT 0,
+                        errors      TEXT
+                    )
+                """)
                 _SETTING_DEFAULTS = {
                     "search_query": '"AI Engineer" OR "ML Engineer"',
                     "search_country": "ES",
@@ -103,7 +116,7 @@ class SQLiteStorage:
                     list(_SETTING_DEFAULTS.items()),
                 )
         logger.debug(
-            "SQLiteStorage.init_db: tablas jobs + settings listas en %s", self._db_path
+            "SQLiteStorage.init_db: tablas jobs + settings + runs listas en %s", self._db_path
         )
 
     def upsert_scored_jobs(self, scored: list[ScoredJob]) -> None:
@@ -214,3 +227,68 @@ class SQLiteStorage:
                     "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
                     (key, value),
                 )
+
+    def record_run(
+        self,
+        *,
+        started_at: str,
+        finished_at: str,
+        fetched: int,
+        deduped: int,
+        scored: int,
+        new_seen: int,
+        errors: list[str] | None = None,
+    ) -> None:
+        """Inserta una fila en la tabla runs registrando las métricas del run.
+
+        errors se serializa como JSON string si se proporciona; None queda como NULL.
+        Útil para el panel de estado de la UI (Phase 10) y para auditoría del worker.
+        """
+        errors_json = json.dumps(errors) if errors else None
+        with closing(self._connect()) as conn:
+            with conn:
+                conn.execute(
+                    """
+                    INSERT INTO runs
+                        (started_at, finished_at, fetched, deduped, scored, new_seen, errors)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (started_at, finished_at, fetched, deduped, scored, new_seen, errors_json),
+                )
+        logger.info(
+            "record_run: fetched=%d deduped=%d scored=%d new=%d errors=%s",
+            fetched, deduped, scored, new_seen, errors_json,
+        )
+
+    def get_recent_runs(self, limit: int = 10) -> list[dict]:
+        """Devuelve los runs más recientes, ordenados por id descendente.
+
+        errors se deserializa de JSON string a lista si es posible; si falla el
+        parse (dato corrupto), se devuelve el string crudo tal cual.
+        """
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                "SELECT * FROM runs ORDER BY id DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        result = []
+        for row in rows:
+            d = dict(row)
+            if d.get("errors"):
+                try:
+                    d["errors"] = json.loads(d["errors"])
+                except (json.JSONDecodeError, TypeError):
+                    pass  # devolver string crudo si falla el parse
+            result.append(d)
+        return result
+
+    def mark_seen(self, job_id: str) -> None:
+        """Marca un job como visto (seen=1). No lanza si el id no existe.
+
+        job_id es siempre un hash SHA-256 hex — pasado como parámetro ?
+        (nunca interpolado en SQL) para prevenir inyección (T-08-07).
+        """
+        with closing(self._connect()) as conn:
+            with conn:
+                conn.execute("UPDATE jobs SET seen = 1 WHERE id = ?", (job_id,))
+        logger.debug("mark_seen: job_id=%s", job_id)

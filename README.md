@@ -1,32 +1,73 @@
 # BuscadorDeEmpleo — Agregador inteligente de ofertas de empleo
 
-Servicio **Python (FastAPI) headless** que recibe ofertas de empleo crudas,
-las **normaliza**, las **deduplica semánticamente** (BGE-M3 local) y las
-**puntúa con honestidad contra el perfil real de Jaime** (CV en PDF + ranking
-de puestos + preferencias). La orquestación diaria (disparo, llamadas a las
-APIs de empleo, entrega por email o Telegram) la hace **n8n por fuera**,
-consumiendo este servicio vía HTTP/JSON.
+App **Python standalone** que busca ofertas de empleo automáticamente, las
+**deduplica semánticamente** (BGE-M3 local) y las **puntúa con honestidad
+contra el perfil real de Jaime** (CV en PDF + ranking de puestos + preferencias).
+El scoring funciona **100 % local** sin ninguna clave de OpenAI; OpenAI es
+enriquecimiento opcional que añade razonamientos detallados.
+
+La app se compone de dos procesos:
+- **`ui`** — Streamlit multipage en `http://localhost:8501`: sube el CV, configura
+  la búsqueda, navega y filtra resultados, ajusta pesos, y lanza un run manual.
+- **`worker`** — APScheduler que busca ofertas (JSearch vía RapidAPI), puntúa y
+  entrega el digest (Telegram o email) de forma autónoma cada X horas.
+
+Ambos arrancan con un solo `docker compose up` y comparten el mismo volumen de datos.
 
 **Doble propósito:** herramienta real para la búsqueda activa de empleo como
-AI Engineer (base Barcelona, abierto a remoto) + pieza de portfolio que
-consolida RAG/embeddings, scoring con LLM, parseo de documentos y orquestación
-con n8n.
+AI Engineer (base Barcelona, abierto a remoto) + pieza de portfolio que consolida
+RAG/embeddings, scoring local-first con LLM opcional, parseo de documentos PDF y
+entrega de notificaciones.
 
 ---
 
 ## Tabla de contenidos
 
-1. [Instalación](#instalación)
-2. [Configuración `.env`](#configuración-env)
-3. [Editar el perfil (`data/profile.yaml`)](#editar-el-perfil)
-4. [Subir el CV](#subir-el-cv)
-5. [Arrancar el servicio](#arrancar-el-servicio)
-6. [Correr los tests](#correr-los-tests)
-7. [Endpoints](#endpoints)
-8. [Observabilidad](#observabilidad)
+1. [Arquitectura](#arquitectura)
+2. [Instalación](#instalación)
+3. [Configuración `.env`](#configuración-env)
+4. [Editar el perfil (`data/profile.yaml`)](#editar-el-perfil)
+5. [Arrancar la app (Docker)](#arrancar-la-app-docker)
+6. [Usar la app](#usar-la-app)
+7. [Entrega del digest](#entrega-del-digest)
+8. [Nota de seguridad](#nota-de-seguridad)
 9. [Stack](#stack)
-10. [Integración con n8n](#integración-con-n8n)
-11. [Despliegue (Docker)](#despliegue-docker)
+10. [Correr los tests](#correr-los-tests)
+11. [Legado: n8n (retirado en v2.0)](#legado-n8n-retirado-en-v20)
+
+---
+
+## Arquitectura
+
+```
+┌─────────────────────────────────┐   ┌───────────────────────────────────┐
+│  ui  (Streamlit :8501)          │   │  worker  (APScheduler)            │
+│  • Sube CV → parsea/cachea      │   │  • Busca ofertas (JSearch)        │
+│  • Configura búsqueda           │   │  • Dedup semántico (BGE-M3)       │
+│  • Navega/filtra resultados     │   │  • Scoring local-first + LLM opt. │
+│  • Ajusta pesos y deal-breakers │   │  • Entrega digest (Telegram/SMTP) │
+│  • Lanza "Run now" en hilo bg   │   │  • Marca ofertas como vistas      │
+└────────────┬────────────────────┘   └────────────┬──────────────────────┘
+             │                                     │
+             └─────────────┬───────────────────────┘
+                           │
+              ┌────────────▼────────────┐
+              │  data/  (volumen named) │
+              │  ├── jobs.db (SQLite)   │
+              │  └── profile.yaml       │
+              └─────────────────────────┘
+```
+
+Los dos servicios se construyen desde **una sola imagen** (`buscadordeempleo:latest`).
+La tabla `settings` (en SQLite) actúa como bus de configuración cross-process: la UI
+edita pesos, deal-breakers y parámetros de búsqueda; el worker los lee en cada run
+sin necesidad de reiniciar Docker.
+
+`data/profile.yaml` es la identidad editada a mano: ranking de puestos, datos
+personales, preferencias de ubicación.
+
+El modelo BGE-M3 (~2.3 GB) se descarga la primera vez en el volumen `hf_cache`
+(también named) y se reutiliza en todos los arranques siguientes.
 
 ---
 
@@ -44,36 +85,54 @@ uv sync
 virtual gestionado por uv. No hace falta activar el venv manualmente: todos los
 comandos se prefijan con `uv run`.
 
+**Fallback sin uv:**
+
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -e .
+```
+
+Para el uso diario, el camino recomendado es Docker (ver
+[Arrancar la app (Docker)](#arrancar-la-app-docker)).
+
 ---
 
-## Configuración .env
+## Configuración `.env`
 
 ```bash
 cp .env.example .env
 ```
 
-Edita `.env` y establece como mínimo:
+Edita `.env` y establece las claves necesarias:
 
 | Variable | Requerida | Descripción |
 |---|---|---|
-| `OPENAI_API_KEY` | **Sí** | Clave de OpenAI para parseo de CV y scoring |
+| `RAPIDAPI_KEY` | **Sí** (para el worker) | Clave de JSearch vía RapidAPI — el worker la usa para buscar ofertas |
+| `OPENAI_API_KEY` | **No** (opcional) | Scoring funciona 100 % local sin esta clave; si se define, añade reasons_for/against y matched/missing skills vía LLM |
 | `OPENAI_MODEL_CV` | No | Modelo para parseo de CV (default: `gpt-4o-mini`) |
 | `OPENAI_MODEL_SCORING` | No | Modelo para scoring (default: `gpt-4o`) |
 | `SQLITE_DB_PATH` | No | Ruta del fichero SQLite (default: `data/jobs.db`) |
-| `LANGFUSE_PUBLIC_KEY` | No | Activa el tracing LLM con Langfuse (OBS-02) |
-| `LANGFUSE_SECRET_KEY` | No | Requerida junto con `LANGFUSE_PUBLIC_KEY` |
-| `API_KEY` | No | Habilita autenticación X-API-Key. Si ausente → auth desactivada (WARNING al arrancar). Generar con `openssl rand -hex 32`. |
+| `TELEGRAM_BOT_TOKEN` | No | Token del bot de Telegram para el digest; requiere también `TELEGRAM_CHAT_ID` |
+| `TELEGRAM_CHAT_ID` | No | ID del chat de Telegram destino; ambas vars necesarias para activar el canal |
+| `SMTP_HOST` | No | Servidor SMTP (ej. `smtp.gmail.com`); requiere también las demás vars SMTP |
+| `SMTP_PORT` | No | Puerto SMTP (default: `587`) |
+| `SMTP_USER` | No | Usuario/remitente SMTP |
+| `SMTP_PASSWORD` | No | Contraseña SMTP |
+| `SMTP_TO` | No | Destinatario del digest (por defecto = `SMTP_USER`, autoenvío) |
+| `LANGFUSE_PUBLIC_KEY` | No | Activa el tracing LLM con Langfuse (stub; requiere también `LANGFUSE_SECRET_KEY`) |
+| `LANGFUSE_SECRET_KEY` | No | Clave secreta de Langfuse |
 
-El servicio funciona sin Langfuse. Ver la sección [Observabilidad](#observabilidad)
-para activarlo.
-
-> `.env` está en `.gitignore` y nunca se sube al repositorio.
+> `.env` está en `.gitignore` y en `.dockerignore` — nunca se commitea ni se
+> copia en la imagen Docker. Si no existe, `docker compose` falla con un mensaje
+> de error claro antes de arrancar.
 
 ---
 
 ## Editar el perfil
 
-El perfil se configura en `data/profile.yaml` **sin tocar código**. Contiene:
+El perfil de identidad se configura en `data/profile.yaml` **sin tocar código**.
+Contiene:
 
 - `datos_personales`: nombre, email, ubicación, idiomas.
 - `preferencias_ubicacion`: ciudades preferidas, país, si está dispuesto a reubicarse.
@@ -84,11 +143,12 @@ El perfil se configura en `data/profile.yaml` **sin tocar código**. Contiene:
 - `deal_breakers`: condiciones que descartan una oferta en duro (p. ej.
   `"exige 5+ años de experiencia"`, `"presencial fuera de Barcelona"`).
 - `pesos`: ponderación del `score_total` (puesto, skills, ubicación, seniority).
-  Deben sumar 1.0.
+  Deben sumar 1.0. Estos pesos también son editables desde la página **Configuración**
+  de la UI sin tocar el fichero.
 - `dedup_umbral`: similitud coseno a partir de la cual dos ofertas se consideran
   duplicadas (default: `0.85`).
 
-Ejemplo del fichero incluido (`data/profile.yaml`):
+Ejemplo incluido (`data/profile.yaml`):
 
 ```yaml
 ranking_puestos:
@@ -110,125 +170,9 @@ pesos:
 
 ---
 
-## Subir el CV
+## Arrancar la app (Docker)
 
-El CV en PDF se parsea una vez con el LLM y el resultado (`CVProfile`) se cachea
-en disco. El scoring usa el `CVProfile` real —no una lista de skills escrita a mano.
-
-```bash
-curl -X POST http://localhost:8000/cv/parse \
-  -F "file=@/ruta/a/mi_cv.pdf"
-```
-
-El endpoint devuelve el `CVProfile` extraído (experiencia, skills técnicas,
-formación, años de experiencia, dominios). El caché se invalida automáticamente
-si el CV cambia (hash del fichero).
-
----
-
-## Arrancar el servicio
-
-```bash
-uv run uvicorn app.api.main:app --reload
-```
-
-El servicio arranca en `http://localhost:8000` por defecto. Para cambiar host/puerto:
-
-```bash
-uv run uvicorn app.api.main:app --reload --host 0.0.0.0 --port 8080
-```
-
-Documentación interactiva (Swagger UI): `http://localhost:8000/docs`
-
----
-
-## Correr los tests
-
-```bash
-uv run pytest -q
-```
-
-La suite completa cubre: parseo de CV, normalización por fuente, deduplicación
-semántica, la heurística de scoring (ranking como peso, deal-breakers, ubicación,
-seniority), los endpoints FastAPI y los ejemplos de `examples/`.
-
----
-
-## Endpoints
-
-| Método | Ruta | Descripción |
-|---|---|---|
-| `POST` | `/cv/parse` | Sube CV (PDF), devuelve y cachea `CVProfile` |
-| `GET` | `/profile` | Devuelve el `UserProfile` cargado de `data/profile.yaml` |
-| `POST` | `/jobs/normalize` | Normaliza ofertas crudas de una fuente → `{jobs, errors}` |
-| `POST` | `/jobs/score` | Puntúa una lista de `Job` normalizados → `[ScoredJob]` |
-| `POST` | `/jobs/process` | **Endpoint principal de n8n**: normalize + dedup + score + persist → `ProcessResponse` ordenado por `score_total` DESC |
-| `GET` | `/jobs/history` | Historial de ofertas guardadas (paginable: `?limit=50&offset=0`) |
-
-Todos los endpoints son batch-resilientes: una oferta mal formada va al campo
-`errors[]` de la respuesta sin tumbar el batch completo.
-
----
-
-## Observabilidad
-
-### Logging estructurado
-
-El servicio usa `stdlib logging` con formato `key=value`. Cada run de
-`/jobs/process` emite un log con los contadores:
-
-```
-process_jobs: entradas=4 unicos=3 puntuados=3 llm_calls=3 errores=0
-```
-
-### Tracing LLM con Langfuse (opcional)
-
-Para activar el tracing de las llamadas al LLM con [Langfuse](https://langfuse.com):
-
-1. Instalar Langfuse (no incluida en las dependencias del proyecto):
-   ```bash
-   uv add langfuse
-   ```
-
-2. Añadir las credenciales a `.env`:
-   ```
-   LANGFUSE_PUBLIC_KEY=pk-lf-...
-   LANGFUSE_SECRET_KEY=sk-lf-...
-   ```
-
-El servicio detecta automáticamente si Langfuse está instalado y configurado. Sin
-las variables de entorno (o sin el paquete instalado), opera como no-op sin ningún
-overhead.
-
----
-
-## Stack
-
-| Componente | Tecnología |
-|---|---|
-| Lenguaje | Python 3.11+ |
-| Gestión de dependencias | uv |
-| Framework web | FastAPI + uvicorn |
-| Modelos de datos | Pydantic v2 + Instructor (structured outputs) |
-| LLM (scoring + parseo CV) | OpenAI (API key requerida) |
-| Embeddings (deduplicación) | BGE-M3 local (FlagEmbedding / sentence-transformers) |
-| Persistencia | SQLite local (stdlib `sqlite3`) |
-| Tests | pytest |
-| Tracing LLM (opcional) | Langfuse stub (no-op sin configuración) |
-
----
-
-## Despliegue (Docker)
-
-Esta sección cubre el despliegue del servicio con Docker + Compose. Para desarrollo
-local sin Docker, ver [Arrancar el servicio](#arrancar-el-servicio).
-
-### Requisitos previos
-
-- Docker >= 24 y Docker Compose v2 (`docker compose` sin guión).
-- Un fichero `.env` con `OPENAI_API_KEY` (ver [Configuración .env](#configuración-env)).
-
-### Build y arranque
+### Primera vez (build + arranque)
 
 ```bash
 docker compose up --build
@@ -236,32 +180,24 @@ docker compose up --build
 
 La primera vez tarda más porque:
 1. Se construye la imagen (instala todas las dependencias con uv, ~1-2 min).
-2. En la primera llamada a `/jobs/process`, el modelo BGE-M3 (~2.3 GB) se descarga
-   desde HuggingFace y se guarda en el volumen `hf_cache`. Las llamadas siguientes
-   usan la caché y son inmediatas.
+2. El primer run del worker descarga el modelo BGE-M3 (~2.3 GB) desde HuggingFace
+   y lo guarda en el volumen `hf_cache`. Los runs siguientes usan la caché.
 
-Para arrancar en background:
+Una vez construida la imagen, arranque habitual:
 
 ```bash
-docker compose up --build -d
+docker compose up -d
 ```
 
-### Secretos y variables de entorno
+Esto levanta **ambos servicios**:
+- `ui` — Streamlit en `http://localhost:8501`
+- `worker` — APScheduler en background (sin puerto expuesto)
 
-| Variable | Dónde va | Obligatoria |
-|---|---|---|
-| `OPENAI_API_KEY` | `.env` (inyectado en este servicio) | **Sí** |
-| `OPENAI_MODEL_CV` | `.env` (opcional) | No |
-| `OPENAI_MODEL_SCORING` | `.env` (opcional) | No |
-| `SQLITE_DB_PATH` | ya configurado en `docker-compose.yml` | — |
-| `API_KEY` | `.env` (opcional pero recomendada en producción) | No |
+Para parar:
 
-> **AVISO DE SEGURIDAD:** La clave de RapidAPI / JSearch (`RAPIDAPI_KEY`) y cualquier
-> credencial de n8n **NO van en este repositorio ni en la imagen Docker**. Esas claves
-> pertenecen a n8n, que llama directamente a las APIs de empleo (Arbeitnow, JSearch,
-> FlyByAPIs). Este servicio solo recibe las ofertas que n8n ya ha obtenido, vía
-> `POST /jobs/process`. Mantenerlas separadas evita filtrar la clave si la imagen
-> se publica o comparte.
+```bash
+docker compose down
+```
 
 ### Persistencia
 
@@ -279,224 +215,169 @@ docker volume inspect buscadordeempleo_data
 # La ruta real en el host aparece en "Mountpoint"
 ```
 
-### Healthcheck
+### Arranque sin Docker (desarrollo)
 
-El servicio declara un healthcheck sobre `GET /health`. Verificar el estado:
+Para desarrollar o depurar sin Docker, abre dos terminales:
 
 ```bash
-docker compose ps
-# Estado debe ser "healthy" (puede tardar ~30s en marcar healthy la primera vez)
+# Terminal 1 — UI
+uv run streamlit run ui/app.py --server.port 8501
+
+# Terminal 2 — Worker
+uv run python worker.py
 ```
 
-### Cómo n8n alcanza el servicio
-
-**Desarrollo local (n8n también en Docker):**
-
-Si n8n corre en Docker en la misma máquina:
-- Mac/Windows: usar `http://host.docker.internal:8000` como base URL en los HTTP
-  Request nodes de n8n.
-- Linux: usar la IP del host (`ip addr show docker0 | grep inet`) o añadir
-  `buscadordeempleo` a la red de n8n con `networks` en compose.
-
-**Producción:**
-
-Desplegar el servicio en un host accesible (VPS, Railway, Fly.io, etc.) y configurar
-las URLs de los HTTP Request nodes de n8n con el dominio público, por ejemplo
-`https://buscador.tudominio.com`. El servicio incluye autenticación nativa por
-cabecera `X-API-Key`. Configura `API_KEY` en `.env` para activarla. Sin `API_KEY`,
-el servicio arranca sin autenticación (útil en dev local) y emite un WARNING al
-arrancar. Ver [Configuración .env](#configuración-env).
-
-Ver la sección [Integración con n8n](#integración-con-n8n) para el contrato JSON
-completo de los endpoints.
+Asegúrate de que `.env` está presente y que `SQLITE_DB_PATH` apunta al mismo
+fichero en ambos procesos.
 
 ---
 
-## Integración con n8n
+## Usar la app
 
-Esta sección documenta cómo conectar n8n a este servicio. El código n8n no está
-en este repositorio; aquí se describe el flujo y el contrato JSON para que la
-configuración sea directa.
+Abre `http://localhost:8501` en el navegador. La app tiene cinco páginas accesibles
+desde la barra lateral:
 
-Para una guía paso a paso de cómo montar este workflow en n8n nodo a nodo
-(nodos exactos, parámetros y snippets copy-paste), ver
-[docs/N8N-WORKFLOW.md](docs/N8N-WORKFLOW.md).
+### CV
 
-### Flujo completo
+Sube el PDF de tu CV. La app calcula un hash del fichero: si el perfil ya está
+cacheado, lo muestra sin re-parsear; si es nuevo o cambiado, llama al parser (LLM
+si `OPENAI_API_KEY` está definida, de lo contrario extracción básica) y guarda el
+`CVProfile` resultante.
 
-```
-Schedule (diario)
-  → HTTP Request a Arbeitnow API       → array de offers
-  → HTTP Request a JSearch / FlyByAPIs → array de offers
-  → Merge (un nodo que une todos los arrays)
-  → HTTP Request: POST /jobs/process   → array de ofertas puntuadas y ordenadas
-  → IF: score.score_total >= 70        → Filter para quedarse con las relevantes
-  → Send Email / Telegram              → digest diario
-```
+El `CVProfile` extraído incluye: experiencia (empresa, rol, tecnologías, logros),
+skills técnicas, formación, años de experiencia total y dominios. El scoring usa
+este perfil real — no una lista de skills escrita a mano.
 
-### Prerequisito: subir el CV una vez
+### Search Config (Búsqueda)
 
-Antes de que n8n llame a `/jobs/process`, debe existir un `CVProfile` cacheado.
-Llamar a `/cv/parse` una vez manualmente (o como primer nodo del flujo):
+Configura los parámetros que el worker usa para buscar ofertas en JSearch:
 
-```bash
-curl -X POST http://localhost:8000/cv/parse \
-  -F "file=@/ruta/a/mi_cv.pdf"
-```
+- **País / idioma** del mercado objetivo.
+- **Puesto(s)** a buscar (uno o varios términos).
+- **Fecha mínima** de publicación (`month`, `3days`, `today`).
+- **Tipo de empleo** (full-time, part-time, contractor, etc.).
+- **Solo remoto** (toggle).
 
-Si no hay `CVProfile` cacheado, `/jobs/process` devuelve HTTP 404:
-```json
-{"detail": "No hay CVProfile cacheado. Llama a POST /cv/parse primero."}
-```
+Los cambios se persisten en la tabla `settings`. El worker los leerá en el
+siguiente run **sin necesidad de reiniciar Docker**.
 
-### Contrato: POST /jobs/process
+### Results (Resultados)
 
-**Request** (`ProcessRequest`):
+Lista paginable y ordenable de todas las ofertas puntuadas. Columnas principales:
+título, empresa, `score_total`, recomendación. Filtros: slider de puntuación
+mínima y multiselect por recomendación (`strong_fit`, `good_fit`, `maybe`, `skip`).
 
-```json
-{
-  "sources": [
-    {
-      "source": "arbeitnow",
-      "offers": [
-        {
-          "slug": "ai-engineer-techcorp-12345",
-          "company_name": "TechCorp GmbH",
-          "title": "AI Engineer",
-          "description": "<h2>About</h2><p>We build AI.</p>",
-          "remote": false,
-          "url": "https://www.arbeitnow.com/jobs/ai-engineer-techcorp-12345",
-          "tags": ["Engineering"],
-          "job_types": ["berufserfahren"],
-          "location": "Berlin",
-          "created_at": 1716350400
-        }
-      ]
-    },
-    {
-      "source": "generic",
-      "offers": [
-        {
-          "employer": "RemoteStack S.L.",
-          "job_title": "MLOps Engineer",
-          "city": "Remote",
-          "body": "We need an MLOps Engineer.",
-          "apply_url": "https://remotestack.io/jobs/mlops",
-          "is_remote": true
-        }
-      ]
-    }
-  ]
-}
-```
+Al expandir una fila se muestra el desglose completo:
+- Los 4 sub-scores: encaje_puesto, encaje_skills, encaje_ubicación, encaje_seniority.
+- `reasons_for` / `reasons_against` (honesto).
+- `matched_skills` / `missing_requirements`.
+- Si se ha disparado algún deal-breaker.
+- URL de aplicación directa.
 
-El campo `source` identifica el mapper a usar. Los valores reconocidos son
-`"arbeitnow"` (mapper específico con los campos reales de la API) y cualquier
-otro string (usa el mapper genérico de fallback). Los campos de cada oferta
-varían por fuente.
+**"▶ Run now"** — lanza una búsqueda y scoring inmediata en un hilo de fondo.
+La UI muestra un spinner y se actualiza automáticamente al terminar. El botón se
+deshabilita mientras el run está en progreso para evitar runs concurrentes desde
+la UI.
 
-**Response** (`ProcessResponse`):
+**"↻ Re-score stored"** — re-puntúa las ofertas ya almacenadas en la base de datos
+con los pesos y parámetros actuales, sin volver a buscar. Útil después de editar
+pesos o deal-breakers en la página de Configuración. Muestra una advertencia con el
+número de ofertas a re-puntuar (y posibles llamadas LLM si `OPENAI_API_KEY` está
+definida) antes de confirmar.
 
-```json
-{
-  "results": [
-    {
-      "job": {
-        "id": "abc123...",
-        "title": "AI Engineer",
-        "company": "TechCorp GmbH",
-        "location": "Berlin",
-        "remote": "unknown",
-        "description": "We build AI.",
-        "salary": null,
-        "url": "https://www.arbeitnow.com/jobs/ai-engineer-techcorp-12345",
-        "source": "arbeitnow",
-        "posted_at": "2024-05-22T00:00:00+00:00",
-        "raw": {},
-        "urls_alternativas": []
-      },
-      "score": {
-        "score_total": 82,
-        "recommendation": "good_fit",
-        "desglose": {
-          "encaje_puesto": 90,
-          "encaje_skills": 85,
-          "encaje_ubicacion": 40,
-          "encaje_seniority": 75
-        },
-        "puesto_detectado": "Ingeniero de IA / AI Engineer",
-        "rango_puesto": 1,
-        "reasons_for": ["Match en skills principales: Python, LLMs"],
-        "reasons_against": ["Presencial en Berlin, fuera de Barcelona"],
-        "matched_skills": ["Python", "LLMs"],
-        "missing_requirements": [],
-        "deal_breaker_hit": false,
-        "deal_breaker_cual": null
-      },
-      "ya_visto": false
-    }
-  ],
-  "errors": []
-}
-```
+### Settings (Configuración)
 
-Puntos clave del response:
-- `results` viene ordenado por `score.score_total` DESC.
-- `ya_visto: true` si la oferta ya estaba en el storage antes de este run (permite
-  a n8n filtrar las repetidas entre días).
-- `errors[]` contiene `{"job_id": str, "error": str}` para cada oferta que falló.
-- `recommendation` enum: `"strong_fit"` | `"good_fit"` | `"maybe"` | `"skip"`.
-- `remote` enum en `job`: `"remote"` | `"hybrid"` | `"onsite"` | `"unknown"`.
+Edita los parámetros operativos del scoring sin tocar `profile.yaml`:
 
-### Probar sin n8n con los ejemplos incluidos
+- **Pesos del score** (puesto, skills, ubicación, seniority): deben sumar 1.0.
+  La UI valida esto antes de guardar.
+- **Deal-breakers**: lista editable, uno por línea. Se persiste en la tabla
+  `settings` y el worker la usa en el siguiente run.
+- **Umbral de notificación**: puntuación mínima para incluir una oferta en el digest.
 
-El directorio `examples/` contiene payloads listos para usar:
+Los secretos (Telegram, SMTP, OpenAI) se muestran **solo como booleanos** (✓/✗) —
+la UI nunca expone los valores reales de las claves.
+
+### Status (Estado)
+
+Panel de estado del scheduler:
+
+- Último run: timestamp + contadores (buscadas, deduplicadas, puntuadas, nuevas, notificadas).
+- Próximo run estimado (último + `schedule_interval_hours`).
+- Historial de runs recientes en tabla.
+
+Si el worker aún no ha ejecutado ningún run, muestra el mensaje correspondiente.
+
+---
+
+## Entrega del digest
+
+Después de cada run, el worker envía las nuevas ofertas que superen el umbral
+(`strong_fit` y `good_fit` por defecto) a **un solo canal de notificación**:
+
+1. **Telegram** — si `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` están definidos.
+2. **Email (SMTP)** — si Telegram no está configurado y `SMTP_HOST` + credenciales están presentes.
+3. **Sin notificación** — si ninguno está configurado (skip silencioso; las ofertas
+   se puntúan y guardan igualmente).
+
+Solo se notifican ofertas **nuevas** (no vistas en runs anteriores). Las ofertas se
+marcan como vistas tras una entrega exitosa, por lo que no se repiten en el siguiente run.
+
+---
+
+## Nota de seguridad
+
+La UI de Streamlit **no tiene autenticación integrada** — es una herramienta personal
+local. Mientras solo sea accesible desde `localhost`, no hay riesgo de exposición.
+
+Si la expones fuera de localhost (en un servidor o VPS), **pon la UI detrás de un
+reverse proxy con autenticación** (por ejemplo, Nginx + autenticación básica, Caddy,
+Traefik) o accede únicamente a través de VPN. Sin esta capa, cualquier persona con
+acceso a la red puede usar la UI.
+
+En v2.0 no existe ningún endpoint HTTP público ni autenticación por cabecera — la
+app es standalone y no expone ninguna API REST.
+
+---
+
+## Stack
+
+| Componente | Tecnología |
+|---|---|
+| Lenguaje | Python 3.11+ |
+| Gestión de dependencias | uv |
+| UI | Streamlit (multipage via `st.navigation`) |
+| Scheduler | APScheduler 3.x (BlockingScheduler en proceso worker) |
+| Cliente JSearch | httpx async |
+| Modelos de datos | Pydantic v2 + Instructor (structured outputs) |
+| LLM (enriquecimiento, opcional) | OpenAI API — `OPENAI_API_KEY` opcional; scoring funciona sin él |
+| Embeddings (deduplicación + scoring) | BGE-M3 local (FlagEmbedding / sentence-transformers) |
+| Persistencia | SQLite local (stdlib `sqlite3`, modo WAL) |
+| Tests | pytest |
+| Tracing LLM (opcional) | Langfuse stub (no-op sin configuración) |
+
+---
+
+## Correr los tests
 
 ```bash
-# 1. Subir el CV (una vez)
-curl -X POST http://localhost:8000/cv/parse \
-  -F "file=@/ruta/a/mi_cv.pdf"
-
-# 2. Procesar el batch de ejemplo
-curl -X POST http://localhost:8000/jobs/process \
-  -H "Content-Type: application/json" \
-  -d @examples/process_request.json
+uv run pytest -q
 ```
 
-> **Con autenticación activada** (`API_KEY` configurada), añadir la cabecera
-> `X-API-Key` en todas las llamadas:
->
-> ```bash
-> curl -X POST http://localhost:8000/jobs/process \
->   -H "Content-Type: application/json" \
->   -H "X-API-Key: <tu-api-key>" \
->   -d @examples/process_request.json
-> ```
+La suite cubre: parseo de CV, normalización por fuente, deduplicación semántica,
+la heurística de scoring local-first (ranking como peso, deal-breakers, ubicación,
+seniority), el cliente JSearch, el pipeline worker, las notificaciones (Telegram y
+SMTP) y los helpers de UI.
 
-Los ficheros `examples/arbeitnow_offers.json` y `examples/generic_offers.json`
-contienen las mismas ofertas por separado, útiles para probar `/jobs/normalize`.
+---
 
-### Exponer el servicio para n8n
+## Legado: n8n (retirado en v2.0)
 
-**Desarrollo local:** n8n en Docker puede alcanzar el servicio en
-`http://host.docker.internal:8000` (Mac/Windows) o en la IP del host (Linux).
+En v1.0, la orquestación (disparo diario, llamadas a las APIs de empleo, entrega
+del digest) la hacía **n8n** por fuera, consumiendo un servicio FastAPI headless
+mediante una llamada HTTP. En **v2.0** la app hace su propio fetch (JSearch vía
+RapidAPI) y entrega el digest directamente; n8n ya no es necesario.
 
-**Producción:** desplegar el servicio accesible (VPS, Railway, Fly.io, etc.) y
-configurar las URLs de los HTTP Request de n8n con el dominio público. El servicio
-incluye autenticación nativa vía cabecera `X-API-Key` — configura `API_KEY` en
-`.env` para activarla antes de exponerlo en producción.
-
-### Nodos n8n por endpoint
-
-| Nodo n8n | Endpoint | Cuándo usarlo |
-|---|---|---|
-| HTTP Request (POST) | `/cv/parse` | Una vez, antes de arrancar el flujo diario |
-| HTTP Request (GET) | `/profile` | Para debug o verificar la config activa |
-| HTTP Request (POST) | `/jobs/normalize` | Si quieres normalizar por fuente antes del merge |
-| HTTP Request (POST) | `/jobs/process` | **Nodo principal**: normalize + dedup + score en un solo paso |
-| HTTP Request (GET) | `/jobs/history` | Para mostrar histórico en un dashboard o auditoría |
-
-> **Autenticación:** Si `API_KEY` está configurada, cada nodo HTTP Request de n8n
-> debe incluir una cabecera `X-API-Key` con el valor de tu `API_KEY`. En n8n:
-> edita el nodo → pestaña "Headers" → añade `X-API-Key: {{ $env.API_KEY }}` (o
-> el valor literal). `GET /health` es la única ruta pública y no requiere la cabecera.
+La documentación histórica del workflow n8n se conserva en
+[`docs/archive/n8n/`](docs/archive/n8n/) como referencia, pero ya no forma parte
+de la configuración activa.

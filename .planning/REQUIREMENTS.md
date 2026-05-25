@@ -62,7 +62,7 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 - [x] **UI-07**: Botón **"Run now"** — dispara una búsqueda + scoring inmediata desde la UI (reutiliza el pipeline compartido)
 - [x] **UI-08**: **Re-puntuar** ofertas existentes de la BD con los pesos actuales (sin re-fetch), con aviso de coste
 - [x] **UI-09**: **Panel de estado del scheduler** — último run / próximo run / nuevas ofertas encontradas (desde la tabla runs)
-- [ ] **UI-10**: La UI sigue respondiendo durante operaciones largas y el modelo de embeddings **no se recarga** en cada interacción (`@st.cache_resource`)
+- [x] **UI-10**: La UI sigue respondiendo durante operaciones largas y el modelo de embeddings **no se recarga** en cada interacción (`@st.cache_resource`)
 
 ### Persistencia (STORE — continúa desde STORE-03)
 
@@ -165,7 +165,7 @@ Mapeo de requisitos a fases.
 | UI-07 | Phase 10 | Complete |
 | UI-08 | Phase 10 | Complete |
 | UI-09 | Phase 10 | Complete |
-| UI-10 | Phase 10 | Pending |
+| UI-10 | Phase 10 | Complete |
 | DOC-04 | Phase 10 | Pending |
 
 **Coverage:**

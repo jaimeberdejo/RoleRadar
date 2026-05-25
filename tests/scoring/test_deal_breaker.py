@@ -161,18 +161,29 @@ class TestDetectarDealBreaker:
     # ---------------------------------------------------------------------------
 
     def test_no_app_dedup_import(self) -> None:
-        """deal_breaker.py must NOT import from app.dedup (torch avoidance)."""
-        import importlib
-        import sys
+        """deal_breaker.py source must NOT have import statements for app.dedup.
 
-        # Remove cached module to inspect fresh
-        modules_before = set(sys.modules.keys())
-        # Reload the module to check imports
-        import app.scoring.deal_breaker as db_module  # noqa: F401
+        We check the source file directly for import lines instead of inspecting
+        sys.modules, because other test modules may have already imported app.dedup
+        earlier in the session, which would cause a false positive in a sys.modules
+        check.
 
-        # No app.dedup module should be imported as side effect
-        dedup_modules = [k for k in sys.modules if k.startswith("app.dedup")]
-        assert not dedup_modules, (
-            f"deal_breaker.py should not import app.dedup, "
-            f"but found: {dedup_modules}"
+        The check only looks at import-statement lines (lines starting with 'import'
+        or 'from') to avoid matching the docstring comment that mentions app.dedup.
+        """
+        import inspect
+
+        import app.scoring.deal_breaker as db_module
+
+        source = inspect.getsource(db_module)
+        # Only check import-statement lines, not comments or docstrings
+        import_lines = [
+            line.strip()
+            for line in source.splitlines()
+            if line.strip().startswith(("import ", "from "))
+        ]
+        dedup_imports = [l for l in import_lines if "app.dedup" in l]
+        assert not dedup_imports, (
+            f"deal_breaker.py must not import from app.dedup (Pitfall 7 — "
+            f"drags BGE-M3/torch into scorer tests). Found: {dedup_imports}"
         )

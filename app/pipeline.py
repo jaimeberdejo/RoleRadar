@@ -154,24 +154,29 @@ def run_pipeline(
         embedder = BgeM3Embedder()
 
     # ------------------------------------------------------------------
-    # 2. Load user profile + CV profile
+    # 2. Load settings (needed before profile so overlay can apply them)
     # ------------------------------------------------------------------
-    from app.config.loader import load_user_profile  # noqa: PLC0415
+    settings = storage.get_settings()
 
-    user_profile = load_user_profile(path=profile_path)
+    # ------------------------------------------------------------------
+    # 3. Build effective user profile + CV profile
+    #    (D-07: overlay settings pesos + deal_breakers onto profile.yaml identity)
+    # ------------------------------------------------------------------
+    from app.profile_overlay import build_effective_profile  # noqa: PLC0415
+
+    user_profile = build_effective_profile(settings, profile_path)
     cv_profile = _get_cv_profile()
 
     # ------------------------------------------------------------------
-    # 3. Settings + determine date_posted (first-run vs subsequent)
+    # 4. Determine date_posted (first-run vs subsequent)
     # ------------------------------------------------------------------
-    settings = storage.get_settings()
     date_posted = "month" if _is_first_run(storage) else "3days"
     settings = {**settings, "date_posted_override": date_posted}
 
     queries = [p.titulo for p in user_profile.ranking_puestos]
 
     # ------------------------------------------------------------------
-    # 4. Fetch (SCHED-03: errors collected, not re-raised)
+    # 5. Fetch (SCHED-03: errors collected, not re-raised)
     # ------------------------------------------------------------------
     started_at = _now_iso()
 
@@ -282,6 +287,98 @@ def run_pipeline(
         result.deduped,
         result.scored,
         result.new_seen,
+        len(result.errors),
+    )
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Re-score stored jobs (no fetch — D-09)
+# ---------------------------------------------------------------------------
+
+def rescore_stored(
+    *,
+    storage=None,
+    embedder=None,
+    profile_path=None,
+    limit: int = 1000,
+) -> PipelineResult:
+    """Re-score all stored jobs using the current effective profile.
+
+    Reads stored jobs via get_history (which now includes the remote field after
+    Plan 02), reconstructs minimal Job objects, and re-runs score_job with the
+    effective profile (overlaid settings pesos + deal_breakers).
+
+    Differences from run_pipeline:
+      - NO _fetch_all call (D-09: no JSearch fetch on re-score).
+      - NO record_run (re-score is not a fetch run; runs table semantics preserved).
+      - description is "" (not stored in the DB) — encaje_skills will be neutral;
+        documented limitation surfaced in the UI cost warning (Plan 05).
+
+    Import-clean: no streamlit, no apscheduler. All heavy deps deferred.
+
+    Args:
+        storage: Storage backend. None → get_storage_backend() (deferred import).
+        embedder: Embedder. None → BgeM3Embedder() (deferred import, heavy).
+        profile_path: Override path to profile.yaml (used in tests).
+        limit: Max number of stored jobs to re-score (default 1000).
+
+    Returns:
+        PipelineResult with scored = number of jobs successfully re-scored.
+        Errors are isolated per job (batch-resilient).
+    """
+    result = PipelineResult()
+
+    # Build dependencies if not injected
+    if storage is None:
+        from app.storage import get_storage_backend  # noqa: PLC0415
+        storage = get_storage_backend()
+
+    if embedder is None:
+        from app.dedup.embedder import BgeM3Embedder  # noqa: PLC0415
+        embedder = BgeM3Embedder()
+
+    # Build effective profile (D-07: overlay settings pesos + deal_breakers)
+    settings = storage.get_settings()
+    from app.profile_overlay import build_effective_profile  # noqa: PLC0415
+    user_profile = build_effective_profile(settings, profile_path)
+    cv_profile = _get_cv_profile()
+
+    # Read stored jobs
+    history = storage.get_history(limit=limit)
+
+    # Reconstruct minimal Job objects and re-score
+    rescored: list[ScoredJob] = []
+    for row in history:
+        try:
+            from app.models.schemas import Job, RemoteJob  # noqa: PLC0415
+            job = Job(
+                id=row["id"],
+                title=row["title"],
+                company=row["company"],
+                location=row.get("location"),
+                # T-10-02-03: None remote must never crash (RemoteJob(None) raises)
+                remote=RemoteJob(row["remote"]) if row.get("remote") else RemoteJob.unknown,
+                url=row.get("url"),
+                source=row.get("source") or "rescore",
+                # description is "" — not stored; encaje_skills neutral ~50 (D-09 limitation)
+            )
+            job_score = score_job(job, user_profile, cv_profile, embedder, client=None)
+            rescored.append(ScoredJob(job=job, score=job_score))
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("rescore_stored: score_job failed for job_id=%s: %s", row.get("id"), exc)
+            result.errors.append(f"rescore({row.get('id')}): {exc}")
+
+    if rescored:
+        storage.upsert_scored_jobs(rescored)
+
+    result.scored = len(rescored)
+    result.new_seen = len(rescored)
+    result.scored_jobs = rescored
+
+    logger.info(
+        "rescore_stored complete: scored=%d errors=%d",
+        result.scored,
         len(result.errors),
     )
     return result

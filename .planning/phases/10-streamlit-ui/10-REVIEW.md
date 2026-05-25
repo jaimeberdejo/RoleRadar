@@ -23,7 +23,9 @@ findings:
   warning: 7
   info: 5
   total: 13
-status: issues_found
+status: resolved
+resolved_at: 2026-05-25
+resolution: "CR-01 + WR-01..WR-07 fixed (IN-03 too; IN-01/IN-02 acknowledged as intentional/noted). CR-01 (pipeline now consumes saved search settings — SC2) and WR-07 (re-score preserves original encaje_skills) each have a new regression test verified to fail without the fix. 363 tests green. Commits 50b8d10, b264045, 5adaea6, 31fc967, 0728e8d, 22035ed, 24eb91d."
 ---
 
 # Phase 10: Code Review Report

@@ -119,6 +119,7 @@ class SQLiteStorage:
                     "score_weight_seniority": "0.15",
                     "notification_min_score": "70",
                     "notification_channel": "none",
+                    "deal_breakers": "[]",
                 }
                 conn.executemany(
                     "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
@@ -197,6 +198,8 @@ class SQLiteStorage:
                     "id": row["id"],
                     "title": row["title"],
                     "company": row["company"],
+                    "remote": row["remote"],
+                    "url": row["url"],
                     "score_total": row["score_total"],
                     "recommendation": row["recommendation"],
                     "first_seen": row["first_seen"],

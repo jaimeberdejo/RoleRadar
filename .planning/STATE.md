@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Standalone App (Streamlit + Scheduler)
 status: executing
-stopped_at: Phase 10 context gathered
-last_updated: "2026-05-25T17:44:59.652Z"
-last_activity: 2026-05-25 -- Phase 10 planning complete
+stopped_at: Completed 10-01-PLAN.md (Wave 0 RED guards)
+last_updated: "2026-05-25T18:00:24.252Z"
+last_activity: 2026-05-25
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 27
-  completed_plans: 20
-  percent: 74
+  completed_plans: 21
+  percent: 78
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-24)
 
 **Core value:** Puntuar y filtrar ofertas con honestidad contra el perfil REAL de Jaime (CV verdadero + ranking de puestos + preferencias); el ranking pesa graduado, los deal-breakers filtran en duro. En v2.0 el scoring es local-first (BGE-M3 + reglas), OpenAI es enriquecimiento opcional, y todo vive en una app Streamlit autónoma con worker APScheduler.
-**Current focus:** Phase 9 — Notifications & Digest
+**Current focus:** Phase 10 — Streamlit UI
 
 ## Current Position
 
-Phase: 10
-Plan: Not started
+Phase: 10 (Streamlit UI) — EXECUTING
+Plan: 2 of 7
 Status: Ready to execute
-Last activity: 2026-05-25 -- Phase 10 planning complete
+Last activity: 2026-05-25
 
 Progress bar: [######----] 60% (3/5 phases)
 
@@ -53,6 +53,7 @@ Progress bar: [######----] 60% (3/5 phases)
 *Updated after each plan completion*
 | Phase 09-notifications-digest P04 | 2 | 1 tasks | 2 files |
 | Phase 09-notifications-digest P03 | 15 | 3 tasks | 5 files |
+| Phase 10-streamlit-ui P01 | 390s | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,7 @@ Recent decisions affecting current work:
 - [v2.0 Phase 7 P05]: LLMEnrichment local to llm.py (not schemas.py) — it is an implementation detail of enrichment step
 - [v2.0 Phase 7 P06]: puesto_match corpus text = titulo+sinonimos joined (SC3 spec) — CORRECTION from P05 which wrongly used titulo-only; tests now key on full corpus text via _corpus_text() helper
 - [Phase ?]: python-telegram-bot removed from pyproject.toml: Phase 9 Telegram uses raw httpx.Client (sync); PTB v22.7 async-first and never imported — manifest now honest
+- [Phase ?]: Wave 0 RED guards use deferred import pattern (import inside test body) so --collect-only passes while tests still fail with ImportError/KeyError
 
 ### Pending Todos
 
@@ -141,7 +143,7 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-05-25T15:46:59.541Z
-Stopped at: Phase 10 context gathered
-Resume file: .planning/phases/10-streamlit-ui/10-CONTEXT.md
+Last session: 2026-05-25T18:00:24.246Z
+Stopped at: Completed 10-01-PLAN.md (Wave 0 RED guards)
+Resume file: None
 Next: Phase 9 — Notifications & Digest

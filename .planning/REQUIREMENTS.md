@@ -57,11 +57,11 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 - [ ] **UI-02**: Configurar condiciones de búsqueda (país, idioma, puesto(s), `date_posted`, `employment_types`, remote-only) — persistidas en settings; el worker las lee
 - [ ] **UI-03**: Navegar **todas** las ofertas puntuadas dentro de la app (lista: título, empresa, score, recomendación; ordenar/filtrar por score y recomendación)
 - [ ] **UI-04**: Vista de detalle de oferta — desglose completo del score, `reasons_for`/`reasons_against`, skills emparejadas/faltantes
-- [ ] **UI-05**: Afinar pesos del scoring (puesto/skills/ubicación/seniority) + umbral en la app, **persistidos** para que el worker los use
-- [ ] **UI-06**: Editar la lista de **deal-breakers** en la app, persistida (no solo a mano en `profile.yaml`)
-- [ ] **UI-07**: Botón **"Run now"** — dispara una búsqueda + scoring inmediata desde la UI (reutiliza el pipeline compartido)
-- [ ] **UI-08**: **Re-puntuar** ofertas existentes de la BD con los pesos actuales (sin re-fetch), con aviso de coste
-- [ ] **UI-09**: **Panel de estado del scheduler** — último run / próximo run / nuevas ofertas encontradas (desde la tabla runs)
+- [x] **UI-05**: Afinar pesos del scoring (puesto/skills/ubicación/seniority) + umbral en la app, **persistidos** para que el worker los use
+- [x] **UI-06**: Editar la lista de **deal-breakers** en la app, persistida (no solo a mano en `profile.yaml`)
+- [x] **UI-07**: Botón **"Run now"** — dispara una búsqueda + scoring inmediata desde la UI (reutiliza el pipeline compartido)
+- [x] **UI-08**: **Re-puntuar** ofertas existentes de la BD con los pesos actuales (sin re-fetch), con aviso de coste
+- [x] **UI-09**: **Panel de estado del scheduler** — último run / próximo run / nuevas ofertas encontradas (desde la tabla runs)
 - [ ] **UI-10**: La UI sigue respondiendo durante operaciones largas y el modelo de embeddings **no se recarga** en cada interacción (`@st.cache_resource`)
 
 ### Persistencia (STORE — continúa desde STORE-03)
@@ -160,11 +160,11 @@ Mapeo de requisitos a fases.
 | UI-02 | Phase 10 | Pending |
 | UI-03 | Phase 10 | Pending |
 | UI-04 | Phase 10 | Pending |
-| UI-05 | Phase 10 | Pending |
-| UI-06 | Phase 10 | Pending |
-| UI-07 | Phase 10 | Pending |
-| UI-08 | Phase 10 | Pending |
-| UI-09 | Phase 10 | Pending |
+| UI-05 | Phase 10 | Complete |
+| UI-06 | Phase 10 | Complete |
+| UI-07 | Phase 10 | Complete |
+| UI-08 | Phase 10 | Complete |
+| UI-09 | Phase 10 | Complete |
 | UI-10 | Phase 10 | Pending |
 | DOC-04 | Phase 10 | Pending |
 

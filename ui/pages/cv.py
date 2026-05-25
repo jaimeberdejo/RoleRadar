@@ -3,6 +3,9 @@
 Delegates the cache-first resolution logic to ui.cv_logic.resolve_cv_profile
 so the core behaviour is unit-testable without a Streamlit runtime.
 
+The page render body is gated behind streamlit.runtime.exists() so importing
+this module under pytest does not require a running Streamlit runtime (D-12 pattern).
+
 States (per 10-UI-SPEC.md):
 - empty:   No file uploaded → info banner with Spanish copy.
 - cache hit: Render CVProfile with a caption noting it came from cache (no re-parse).
@@ -17,13 +20,11 @@ Security (threat model T-10-04-01 / T-10-04-02):
 """
 from __future__ import annotations
 
-import streamlit as st
-
-from ui.cv_logic import resolve_cv_profile
-
 
 def _render_cv_profile(profile) -> None:
     """Render a parsed CVProfile using Streamlit built-in widgets."""
+    import streamlit as st
+
     st.subheader("Resumen")
     if profile.anios_experiencia_total is not None:
         st.metric("Años de experiencia estimados", f"{profile.anios_experiencia_total:.1f}")
@@ -58,32 +59,48 @@ def _render_cv_profile(profile) -> None:
             st.write(" | ".join(parts))
 
 
-# ── Page body ────────────────────────────────────────────────────────────────
+def _render() -> None:
+    """Streamlit page body for CV upload (UI-01)."""
+    import streamlit as st
 
-st.header("CV")
+    from ui.cv_logic import resolve_cv_profile
 
-uploaded = st.file_uploader(
-    "Sube tu CV en PDF — se cachea y no se vuelve a parsear si no cambia.",
-    type=["pdf"],
-)
+    st.header("CV")
 
-if uploaded is None:
-    st.info("Aún no has subido un CV. El scoring de skills usará un perfil vacío.")
-else:
-    pdf_bytes: bytes = uploaded.read()
+    uploaded = st.file_uploader(
+        "Sube tu CV en PDF — se cachea y no se vuelve a parsear si no cambia.",
+        type=["pdf"],
+    )
 
-    try:
-        with st.spinner("Procesando CV…"):
-            profile, was_cached = resolve_cv_profile(pdf_bytes)
+    if uploaded is None:
+        st.info("Aún no has subido un CV. El scoring de skills usará un perfil vacío.")
+    else:
+        pdf_bytes: bytes = uploaded.read()
 
-        if was_cached:
-            st.caption("Perfil cargado de caché (mismo PDF, no se re-parsea).")
-        else:
-            st.success("CV parseado y guardado en caché.")
+        try:
+            with st.spinner("Procesando CV…"):
+                profile, was_cached = resolve_cv_profile(pdf_bytes)
 
-        _render_cv_profile(profile)
+            if was_cached:
+                st.caption("Perfil cargado de caché (mismo PDF, no se re-parsea).")
+            else:
+                st.success("CV parseado y guardado en caché.")
 
-    except Exception as exc:  # noqa: BLE001
-        st.error(
-            f"No se pudo parsear el CV: {exc}. Revisa que sea un PDF válido."
-        )
+            _render_cv_profile(profile)
+
+        except Exception as exc:  # noqa: BLE001
+            st.error(
+                f"No se pudo parsear el CV: {exc}. Revisa que sea un PDF válido."
+            )
+
+
+# Gate: only render the page body when a Streamlit runtime is active.
+# Keeps the module import-safe for unit tests (D-12 / SC6).
+try:
+    from streamlit.runtime import exists as _st_running  # noqa: PLC0415
+
+    if _st_running():
+        _render()
+except Exception:  # noqa: BLE001
+    # Not in a Streamlit context — module imported for testing only.
+    pass

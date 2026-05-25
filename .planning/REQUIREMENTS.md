@@ -25,9 +25,9 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 
 ### Fuentes / cliente JSearch (SRC)
 
-- [ ] **SRC-01**: Cliente JSearch propio (httpx) que llama a RapidAPI con `query`/país/idioma/`date_posted`/`employment_types`/remote-only configurables; key solo desde env
-- [ ] **SRC-02**: Soporte de varios puestos — lista de posiciones → varias llamadas JSearch, fusionadas (patrón multi-query bilingüe de v1.1)
-- [ ] **SRC-03**: Fetch resiliente — 429/cuota y fallos parciales no tumban el batch; los errores por query se registran y se saltan
+- [x] **SRC-01**: Cliente JSearch propio (httpx) que llama a RapidAPI con `query`/país/idioma/`date_posted`/`employment_types`/remote-only configurables; key solo desde env
+- [x] **SRC-02**: Soporte de varios puestos — lista de posiciones → varias llamadas JSearch, fusionadas (patrón multi-query bilingüe de v1.1)
+- [x] **SRC-03**: Fetch resiliente — 429/cuota y fallos parciales no tumban el batch; los errores por query se registran y se saltan
 
 ### Scoring local-first (SCORE — continúa desde SCORE-08) ← **núcleo del milestone**
 
@@ -43,7 +43,7 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 
 - [ ] **SCHED-01**: Worker siempre activo (APScheduler, **proceso propio**, sin importar Streamlit) que ejecuta el pipeline en un schedule configurable aunque la UI esté cerrada
 - [ ] **SCHED-02**: Pipeline compartido `fetch(JSearch) → normalizar → dedup (incl. cross-run contra la BD) → score → persistir`, reutilizable por el worker y por el botón "Run now" de la UI
-- [ ] **SCHED-03**: Schedule configurable (intervalo/cron) desde settings; zona horaria `Europe/Madrid` (zoneinfo, no pytz); manejo de misfire (coalesce/grace) que sobrevive a reinicios
+- [x] **SCHED-03**: Schedule configurable (intervalo/cron) desde settings; zona horaria `Europe/Madrid` (zoneinfo, no pytz); manejo de misfire (coalesce/grace) que sobrevive a reinicios
 
 ### Notificaciones / digest (NOTIF)
 
@@ -67,14 +67,14 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 ### Persistencia (STORE — continúa desde STORE-03)
 
 - [x] **STORE-04**: Tabla `settings` (clave-valor) — config operativa editable desde la UI (búsqueda, pesos, umbral, deal-breakers, schedule); el worker la lee al inicio del run; `profile.yaml` sigue siendo identidad editada a mano
-- [ ] **STORE-05**: Tabla `runs` — registra cada run (timestamp, fetched/duped/scored/new, canal + nº del digest); alimenta el panel de estado y la analítica *(cubre el STORE-04 «analítica» diferido de v1.0)*
+- [x] **STORE-05**: Tabla `runs` — registra cada run (timestamp, fetched/duped/scored/new, canal + nº del digest); alimenta el panel de estado y la analítica *(cubre el STORE-04 «analítica» diferido de v1.0)*
 - [x] **STORE-06**: SQLite **WAL + busy_timeout** para lectura-UI / escritura-worker concurrentes seguras; transacciones de escritura cortas
-- [ ] **STORE-07**: `mark_seen(id)` + marcado de vistas tras la entrega (dedup cross-run / no re-notificar)
+- [x] **STORE-07**: `mark_seen(id)` + marcado de vistas tras la entrega (dedup cross-run / no re-notificar)
 
 ### Calidad / tests (QA — continúa desde QA-04)
 
 - [x] **QA-05**: Tests del scorer local-first (scores numéricos deterministas y testeables **sin LLM**; enriquecimiento LLM mockeado)
-- [ ] **QA-06**: Tests del cliente JSearch (httpx mockeado), del pipeline del worker, de notificaciones (envío mockeado) y del storage settings/runs
+- [x] **QA-06**: Tests del cliente JSearch (httpx mockeado), del pipeline del worker, de notificaciones (envío mockeado) y del storage settings/runs
 - [x] **QA-07**: Test del camino **"sin `OPENAI_API_KEY`"** (sin error de import, scores presentes y digest funcional)
 
 ### Documentación (DOC — continúa desde DOC-03)
@@ -144,15 +144,15 @@ Mapeo de requisitos a fases.
 | SCORE-15 | Phase 7 | Complete |
 | QA-05 | Phase 7 | Complete |
 | QA-07 | Phase 7 | Complete |
-| SRC-01 | Phase 8 | Pending |
-| SRC-02 | Phase 8 | Pending |
-| SRC-03 | Phase 8 | Pending |
+| SRC-01 | Phase 8 | Complete |
+| SRC-02 | Phase 8 | Complete |
+| SRC-03 | Phase 8 | Complete |
 | SCHED-01 | Phase 8 | Pending |
 | SCHED-02 | Phase 8 | Pending |
-| SCHED-03 | Phase 8 | Pending |
-| STORE-05 | Phase 8 | Pending |
-| STORE-07 | Phase 8 | Pending |
-| QA-06 | Phase 8 | Pending |
+| SCHED-03 | Phase 8 | Complete |
+| STORE-05 | Phase 8 | Complete |
+| STORE-07 | Phase 8 | Complete |
+| QA-06 | Phase 8 | Complete |
 | NOTIF-01 | Phase 9 | Pending |
 | NOTIF-02 | Phase 9 | Pending |
 | NOTIF-03 | Phase 9 | Pending |

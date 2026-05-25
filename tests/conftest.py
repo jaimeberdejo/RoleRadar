@@ -297,6 +297,32 @@ def make_scoring_client(assessment: LLMJobAssessment) -> MagicMock:
     return mock_client
 
 
+# ── LLM enrichment mock helpers (Phase 7 — enrich_job) ──────────────────────
+from app.scoring.llm import LLMEnrichment  # noqa: E402 — after make_scoring_client
+
+EXPECTED_ENRICHMENT = LLMEnrichment(
+    razonamiento="El candidato tiene Python y LLMs que la oferta pide directamente.",
+    reasons_for=["Experiencia en Python", "Match con AI Engineer"],
+    reasons_against=["Requiere Kubernetes (no en CV)"],
+    matched_skills=["Python", "LLMs"],
+    missing_requirements=[],
+)
+
+
+def make_enrichment_client(enrichment: LLMEnrichment) -> MagicMock:
+    """Mock instructor client that returns an LLMEnrichment from enrich_job().
+
+    Args:
+        enrichment: LLMEnrichment que el mock debe devolver.
+
+    Returns:
+        MagicMock con .chat.completions.create.return_value = enrichment.
+    """
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = enrichment
+    return mock_client
+
+
 @pytest.fixture
 def mock_scoring_client() -> MagicMock:
     """Fixture (function scope): cliente LLM mockeado que devuelve EXPECTED_ASSESSMENT.

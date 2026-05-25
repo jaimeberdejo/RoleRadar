@@ -188,7 +188,11 @@ def run_pipeline(
     # ------------------------------------------------------------------
     if raw_jobs:
         jobs, norm_errors = normalize_jobs(raw_jobs, source="jsearch")
-        result.errors.extend(f"normalize: {e}" for e in norm_errors)
+        # WR-02: preserve structured fields from norm_errors dicts as readable strings
+        result.errors.extend(
+            f"normalize[{e['index']}]({e.get('source', '')}): {e.get('error', e)}"
+            for e in norm_errors
+        )
     else:
         jobs = []
 
@@ -209,7 +213,6 @@ def run_pipeline(
     # 7. Dedup against stored (hash check — was_seen, no re-embedding)
     # ------------------------------------------------------------------
     new_jobs = [j for j in deduped if not storage.was_seen(j.id)]
-    result.scored = len(new_jobs)
 
     # ------------------------------------------------------------------
     # 8. Score new jobs (per-job error isolation)
@@ -226,6 +229,8 @@ def run_pipeline(
             result.errors.append(f"score_job({job.id}): {exc}")
 
     result.scored_jobs = scored_list
+    # WR-01: scored = jobs successfully scored (not candidates attempted)
+    result.scored = len(scored_list)
 
     # ------------------------------------------------------------------
     # 9. Upsert scored jobs

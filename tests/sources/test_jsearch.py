@@ -4,6 +4,8 @@ These tests FAIL until Wave 1 creates app/sources/jsearch.py.
 They define the exact expected behaviour of the JSearch HTTP client:
 - Successful single-query fetch (SRC-01)
 - Per-query 429 isolation: one 429 does not abort other queries (SRC-02)
+- Per-query non-JSON isolation (CR-01): HTML/non-JSON response does not abort sibling queries
+- Auth failure returns [] with targeted log (WR-04)
 - Network errors return [] without raising
 - RapidAPI key sourced from environment, never hardcoded
 
@@ -38,6 +40,23 @@ def _make_429_response() -> MagicMock:
     """Build a mock httpx response with status_code=429."""
     resp = MagicMock()
     resp.status_code = 429
+    return resp
+
+
+def _make_non_json_response(status_code: int = 200) -> MagicMock:
+    """Build a mock response whose .json() raises json.JSONDecodeError (e.g. HTML page)."""
+    import json
+    resp = MagicMock()
+    resp.status_code = status_code
+    resp.raise_for_status = lambda: None
+    resp.json.side_effect = json.JSONDecodeError("No JSON object could be decoded", "", 0)
+    return resp
+
+
+def _make_auth_failure_response(status_code: int = 401) -> MagicMock:
+    """Build a mock response for auth failures (401/403)."""
+    resp = MagicMock()
+    resp.status_code = status_code
     return resp
 
 
@@ -170,3 +189,99 @@ def test_fetch_jsearch_uses_rapidapi_key_from_env(monkeypatch):
     assert captured_headers.get("X-RapidAPI-Host") == "jsearch.p.rapidapi.com", (
         "X-RapidAPI-Host must be jsearch.p.rapidapi.com"
     )
+
+
+# ---------------------------------------------------------------------------
+# CR-01: non-JSON response per-query isolation (SRC-02 invariant)
+# ---------------------------------------------------------------------------
+
+def test_fetch_jsearch_query_non_json_returns_empty():
+    """fetch_jsearch_query returns [] when the response body is not valid JSON.
+
+    CR-01: json.JSONDecodeError (a ValueError subclass) from resp.json() must
+    be caught inside _do_get and return [] — it must NOT propagate as an
+    unhandled exception.
+    """
+    from app.sources.jsearch import fetch_jsearch_query  # noqa: PLC0415
+
+    with patch("app.sources.jsearch.httpx.Client") as MockClient:
+        instance = MockClient.return_value.__enter__.return_value
+        instance.get.return_value = _make_non_json_response(status_code=200)
+
+        result = fetch_jsearch_query(
+            "AI Engineer", date_posted="3days", num_pages=1, country="es"
+        )
+
+    assert result == [], "Non-JSON 200 response must return empty list, not raise"
+
+
+def test_fetch_all_queries_non_json_does_not_abort_sibling_queries():
+    """fetch_all_queries: a non-JSON response on one query does not abort other queries.
+
+    CR-01 / SRC-02: verifies that json.JSONDecodeError from resp.json() is
+    contained per-query. The sibling query still runs and returns its jobs.
+    """
+    from app.sources.jsearch import fetch_all_queries  # noqa: PLC0415
+
+    ok_job = {"job_title": "Data Engineer", "employer_name": "DataCo", "job_description": "d"}
+
+    with patch("app.sources.jsearch.httpx.Client") as MockClient:
+        instance = MockClient.return_value.__enter__.return_value
+        instance.get.side_effect = [
+            _make_non_json_response(status_code=200),   # first query → HTML page
+            _make_ok_response([ok_job]),                 # second query → ok
+        ]
+
+        settings = {
+            "search_country": "es",
+            "num_pages": "1",
+            "date_posted_override": "3days",
+        }
+        result = fetch_all_queries(["ML Engineer", "Data Engineer"], settings)
+
+    assert len(result) == 1, (
+        "Sibling query job must be present; non-JSON first query must not abort"
+    )
+    assert result[0]["job_title"] == "Data Engineer"
+
+
+# ---------------------------------------------------------------------------
+# WR-04: auth failure (401/403) returns [] with targeted log
+# ---------------------------------------------------------------------------
+
+def test_fetch_jsearch_query_401_returns_empty():
+    """fetch_jsearch_query returns [] on 401 Unauthorized — does not raise.
+
+    WR-04: a 401 (missing/invalid RAPIDAPI_KEY) must be caught before
+    raise_for_status() and return [], not propagate as an HTTPStatusError.
+    """
+    from app.sources.jsearch import fetch_jsearch_query  # noqa: PLC0415
+
+    with patch("app.sources.jsearch.httpx.Client") as MockClient:
+        instance = MockClient.return_value.__enter__.return_value
+        instance.get.return_value = _make_auth_failure_response(status_code=401)
+
+        result = fetch_jsearch_query(
+            "AI Engineer", date_posted="3days", num_pages=1, country="es"
+        )
+
+    assert result == [], "401 must return empty list, not raise"
+
+
+def test_fetch_jsearch_query_403_returns_empty():
+    """fetch_jsearch_query returns [] on 403 Forbidden — does not raise.
+
+    WR-04: a 403 (bad/missing RAPIDAPI_KEY plan) must be caught before
+    raise_for_status() and return [], not propagate as an HTTPStatusError.
+    """
+    from app.sources.jsearch import fetch_jsearch_query  # noqa: PLC0415
+
+    with patch("app.sources.jsearch.httpx.Client") as MockClient:
+        instance = MockClient.return_value.__enter__.return_value
+        instance.get.return_value = _make_auth_failure_response(status_code=403)
+
+        result = fetch_jsearch_query(
+            "AI Engineer", date_posted="3days", num_pages=1, country="es"
+        )
+
+    assert result == [], "403 must return empty list, not raise"

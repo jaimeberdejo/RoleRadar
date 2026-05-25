@@ -310,3 +310,112 @@ def test_run_pipeline_stray_cache_file_does_not_abort_sibling_queries(tmp_path, 
     assert result is not None, "run_pipeline must return a result"
     runs = storage.get_recent_runs(limit=1)
     assert len(runs) == 1, "run_pipeline must write a runs row"
+
+
+# ---------------------------------------------------------------------------
+# D-13: send_digest failure does not abort pipeline (notify-failure isolation)
+# ---------------------------------------------------------------------------
+
+def test_run_pipeline_notify_failure_does_not_abort(tmp_path):
+    """A send_digest that raises must not propagate out of run_pipeline.
+
+    D-13: The pipeline must complete, return a PipelineResult, collect the error
+    in result.errors (a "notify:" entry), AND still write a runs row.
+    """
+    from app.pipeline import run_pipeline  # noqa: PLC0415
+
+    storage = SQLiteStorage(str(tmp_path / "test.db"))
+    storage.init_db()
+    fake_embedder = FakeEmbedder()
+
+    with patch("app.pipeline._fetch_all", return_value=[]):
+        with patch("app.notifications.send_digest", side_effect=RuntimeError("boom")):
+            result = run_pipeline(storage=storage, embedder=fake_embedder)
+
+    # Pipeline must return normally (no exception)
+    assert result is not None, "run_pipeline must return a PipelineResult even when send_digest raises"
+
+    # Error must be recorded in result.errors with "notify:" prefix
+    assert any("notify:" in e for e in result.errors), (
+        f"result.errors must contain a 'notify:' entry when send_digest raises; got {result.errors}"
+    )
+
+    # Run row must still be written (D-13: record_run runs even if notify failed)
+    runs = storage.get_recent_runs(1)
+    assert len(runs) == 1, "A runs row must be written even when send_digest raises"
+
+
+# ---------------------------------------------------------------------------
+# D-14: record_run captures channel + notified from DigestResult
+# ---------------------------------------------------------------------------
+
+def test_run_pipeline_records_channel_and_notified(tmp_path, monkeypatch):
+    """After a successful telegram digest, the runs row has channel='telegram' and notified=1.
+
+    D-14: record_run is called AFTER send_digest so the digest channel + notified
+    count land in the same INSERT row.
+    """
+    from app.pipeline import run_pipeline  # noqa: PLC0415
+
+    # Set up storage with one qualifying pre-seeded job (seen=0, good_fit, score 80)
+    db_path = str(tmp_path / "test.db")
+    storage = SQLiteStorage(db_path)
+    storage.init_db()
+    storage.set_setting("notification_channel", "telegram")
+    # Pre-seed one qualifying job so get_undelivered_qualifying returns it
+    storage.upsert_scored_jobs([_make_scored_job("d14-test-job-1")])
+
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token-fake")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "123456789")
+
+    fake_embedder = FakeEmbedder()
+
+    with patch("app.pipeline._fetch_all", return_value=[]):
+        with patch("app.notifications.telegram.httpx.Client") as MockClient:
+            instance = MockClient.return_value.__enter__.return_value
+            # Return 200 for the Telegram POST so delivery succeeds
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.json.return_value = {"ok": True, "result": {}}
+            instance.post.return_value = mock_resp
+
+            result = run_pipeline(storage=storage, embedder=fake_embedder)
+
+    # The pipeline must have completed normally
+    assert result is not None, "run_pipeline must return a PipelineResult"
+
+    # The runs row must capture channel and notified from the digest
+    runs = storage.get_recent_runs(1)
+    assert len(runs) == 1, "A runs row must exist"
+    run_row = runs[0]
+    assert run_row["channel"] == "telegram", (
+        f"runs row must have channel='telegram', got {run_row.get('channel')!r}"
+    )
+    assert run_row["notified"] == 1, (
+        f"runs row must have notified=1, got {run_row.get('notified')!r}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# SC5 regression guard: import cleanliness still holds after lazy send_digest wiring
+# ---------------------------------------------------------------------------
+
+def test_run_pipeline_still_import_clean():
+    """Re-affirm that importing app.pipeline does not pull streamlit/apscheduler.
+
+    Even though run_pipeline now lazily imports send_digest, the module-level
+    import must stay clean. (Regression guard for the D-12 wiring.)
+    """
+    # Scrub any leftover streamlit / apscheduler state
+    for mod in list(sys.modules.keys()):
+        if "streamlit" in mod or "apscheduler" in mod:
+            del sys.modules[mod]
+
+    import app.pipeline  # noqa: F401, PLC0415
+
+    assert "streamlit" not in sys.modules, (
+        "app.pipeline must not import streamlit at module level (SC5 regression)"
+    )
+    assert "apscheduler" not in sys.modules, (
+        "app.pipeline must not import apscheduler at module level (SC5 regression)"
+    )

@@ -79,7 +79,7 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 
 ### Documentación (DOC — continúa desde DOC-03)
 
-- [ ] **DOC-04**: README reescrito para v2.0 standalone (instalación, `.env`, arrancar UI Streamlit + worker vía Docker, configurar búsqueda, subir CV); la sección de integración n8n se archiva/retira
+- [x] **DOC-04**: README reescrito para v2.0 standalone (instalación, `.env`, arrancar UI Streamlit + worker vía Docker, configurar búsqueda, subir CV); la sección de integración n8n se archiva/retira
 - [x] **DOC-05**: `.env.example` actualizado (RAPIDAPI_KEY, OPENAI opcional, TELEGRAM_*, SMTP_*, schedule; vars de FastAPI/API eliminadas)
 
 ---
@@ -166,7 +166,7 @@ Mapeo de requisitos a fases.
 | UI-08 | Phase 10 | Complete |
 | UI-09 | Phase 10 | Complete |
 | UI-10 | Phase 10 | Complete |
-| DOC-04 | Phase 10 | Pending |
+| DOC-04 | Phase 10 | Complete |
 
 **Coverage:**
 - v2.0 requirements: **39** total (MIG 4 · SRC 3 · SCORE 7 · SCHED 3 · NOTIF 3 · UI 10 · STORE 4 · QA 3 · DOC 2)

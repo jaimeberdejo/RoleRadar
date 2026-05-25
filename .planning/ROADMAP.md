@@ -26,7 +26,7 @@ Detalle completo en `milestones/v1.0-ROADMAP.md`. 38 requisitos, 179 tests.
 - [x] **Phase 7: Embeddings-First Scoring Refactor** - All numeric scores deterministic; OpenAI becomes optional enrichment (completed 2026-05-25)
 - [x] **Phase 8: JSearch Client & Worker Pipeline** - App-owned fetch + APScheduler worker + runs table (completed 2026-05-25)
 - [x] **Phase 9: Notifications & Digest** - Telegram/email digest after each worker run (completed 2026-05-25)
-- [ ] **Phase 10: Streamlit UI** - Full interactive app: CV upload, search config, results, settings, scheduler status
+- [x] **Phase 10: Streamlit UI** - Full interactive app: CV upload, search config, results, settings, scheduler status (completed 2026-05-25)
 
 ## Phase Details
 
@@ -155,4 +155,4 @@ Plans:
 | 7. Embeddings-First Scoring Refactor | v2.0 | 6/6 | Complete    | 2026-05-25 |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 4/4 | Complete   | 2026-05-25 |
 | 9. Notifications & Digest | v2.0 | 5/5 | Complete    | 2026-05-25 |
-| 10. Streamlit UI | v2.0 | 6/7 | In Progress|  |
+| 10. Streamlit UI | v2.0 | 7/7 | Complete   | 2026-05-25 |

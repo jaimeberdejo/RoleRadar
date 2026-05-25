@@ -67,12 +67,12 @@ Plans:
 Plans:
 
 **Wave 0**
-- [ ] 07-01-PLAN.md — Wave 0: RED guard tests for new scorer contract (5 failing tests)
+- [x] 07-01-PLAN.md — Wave 0: RED guard tests for new scorer contract (5 failing tests)
 
 **Wave 1** *(parallel — disjoint files)*
-- [ ] 07-02-PLAN.md — Wave 1: puesto_match.py + skills_match.py (BGE-M3 cosine helpers)
-- [ ] 07-03-PLAN.md — Wave 1: seniority.py (deterministic seniority rule engine)
-- [ ] 07-04-PLAN.md — Wave 1: deal_breaker.py (deterministic keyword/substring matcher)
+- [x] 07-02-PLAN.md — Wave 1: puesto_match.py + skills_match.py (BGE-M3 cosine helpers)
+- [x] 07-03-PLAN.md — Wave 1: seniority.py (deterministic seniority rule engine)
+- [x] 07-04-PLAN.md — Wave 1: deal_breaker.py (deterministic keyword/substring matcher)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 07-05-PLAN.md — Wave 2: Refactor scorer.py (numbers-first + embedder injection) + llm.py (enrichment-only)
@@ -128,7 +128,7 @@ Plans:
 | 4. API y Persistencia | v1.0 | 4/4 | Complete | 2026-05-23 |
 | 5. Observabilidad, Robustez y Docs n8n | v1.0 | 3/3 | Complete | 2026-05-23 |
 | 6. Architecture Cleanup & Storage Foundation | v2.0 | 5/5 | Complete    | 2026-05-24 |
-| 7. Embeddings-First Scoring Refactor | v2.0 | 0/6 | Not started | - |
+| 7. Embeddings-First Scoring Refactor | v2.0 | 4/6 | In Progress|  |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 0/? | Not started | - |
 | 9. Notifications & Digest | v2.0 | 0/? | Not started | - |
 | 10. Streamlit UI | v2.0 | 0/? | Not started | - |

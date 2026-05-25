@@ -122,7 +122,7 @@ Plans:
 - [x] 09-04-PLAN.md — Remove python-telegram-bot from pyproject.toml + regenerate uv.lock
 
 **Wave 2** *(blocked on 09-02 — needs get_undelivered_qualifying)*
-- [ ] 09-03-PLAN.md — Notifications package: digest.py, telegram.py, email_smtp.py, send_digest
+- [x] 09-03-PLAN.md — Notifications package: digest.py, telegram.py, email_smtp.py, send_digest
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 09-05-PLAN.md — Wire send_digest into run_pipeline + record_run accounting + SC1-SC4 e2e tests
@@ -154,5 +154,5 @@ Plans:
 | 6. Architecture Cleanup & Storage Foundation | v2.0 | 5/5 | Complete    | 2026-05-24 |
 | 7. Embeddings-First Scoring Refactor | v2.0 | 6/6 | Complete    | 2026-05-25 |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 4/4 | Complete   | 2026-05-25 |
-| 9. Notifications & Digest | v2.0 | 3/5 | In Progress|  |
+| 9. Notifications & Digest | v2.0 | 4/5 | In Progress|  |
 | 10. Streamlit UI | v2.0 | 0/? | Not started | - |

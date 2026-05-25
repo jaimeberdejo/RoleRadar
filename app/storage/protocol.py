@@ -59,6 +59,8 @@ class Storage(Protocol):
         scored: int,
         new_seen: int,
         errors: list[str] | None = None,
+        channel: str | None = None,
+        notified: int = 0,
     ) -> None: ...
 
     def get_recent_runs(self, limit: int = 10) -> list[dict]: ...

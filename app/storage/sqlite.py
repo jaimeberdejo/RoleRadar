@@ -99,6 +99,15 @@ class SQLiteStorage:
                         errors      TEXT
                     )
                 """)
+                # D-14: migración idempotente — añadir channel + notified a runs.
+                # SQLite no soporta ADD COLUMN IF NOT EXISTS → comprobar con PRAGMA.
+                runs_cols = [
+                    r[1] for r in conn.execute("PRAGMA table_info(runs)").fetchall()
+                ]
+                if "channel" not in runs_cols:
+                    conn.execute("ALTER TABLE runs ADD COLUMN channel TEXT")
+                if "notified" not in runs_cols:
+                    conn.execute("ALTER TABLE runs ADD COLUMN notified INTEGER DEFAULT 0")
                 _SETTING_DEFAULTS = {
                     "search_query": '"AI Engineer" OR "ML Engineer"',
                     "search_country": "ES",
@@ -282,10 +291,14 @@ class SQLiteStorage:
         scored: int,
         new_seen: int,
         errors: list[str] | None = None,
+        channel: str | None = None,
+        notified: int = 0,
     ) -> None:
         """Inserta una fila en la tabla runs registrando las métricas del run.
 
         errors se serializa como JSON string si se proporciona; None queda como NULL.
+        channel es el canal de notificación usado ("telegram"/"email"/None) — no un secreto.
+        notified es el número de ofertas enviadas en este run.
         Útil para el panel de estado de la UI (Phase 10) y para auditoría del worker.
         """
         errors_json = json.dumps(errors) if errors else None
@@ -294,14 +307,16 @@ class SQLiteStorage:
                 conn.execute(
                     """
                     INSERT INTO runs
-                        (started_at, finished_at, fetched, deduped, scored, new_seen, errors)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                        (started_at, finished_at, fetched, deduped, scored,
+                         new_seen, errors, channel, notified)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
-                    (started_at, finished_at, fetched, deduped, scored, new_seen, errors_json),
+                    (started_at, finished_at, fetched, deduped, scored,
+                     new_seen, errors_json, channel, notified),
                 )
         logger.info(
-            "record_run: fetched=%d deduped=%d scored=%d new=%d errors=%s",
-            fetched, deduped, scored, new_seen, errors_json,
+            "record_run: fetched=%d deduped=%d scored=%d new=%d channel=%s notified=%d errors=%s",
+            fetched, deduped, scored, new_seen, channel, notified, errors_json,
         )
 
     def get_recent_runs(self, limit: int = 10) -> list[dict]:

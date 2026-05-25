@@ -16,7 +16,9 @@ findings:
   warning: 4
   info: 4
   total: 9
-status: issues_found
+status: resolved
+resolved_at: 2026-05-25
+resolution: "All 9 findings fixed (CR-01 + WR-01..04 + IN-01..04). CR-01 has an empirically-verified regression test (test_telegram_identical_blocks_partial_failure_pairs_by_index). 286 tests green. Commits a43c2e7, 7879697, fa3fc18, ed663cc, af62a4c, 6dcac0c."
 ---
 
 # Phase 9: Code Review Report

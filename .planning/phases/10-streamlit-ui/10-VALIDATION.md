@@ -40,7 +40,13 @@ created: 2026-05-25
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | Status |
 |---------|------|------|-------------|-----------|-------------------|--------|
-| _to be filled by planner_ | | | UI-01..10, DOC-04 | unit + AppTest smoke | `python -m pytest tests/ui/ -q` | ⬜ pending |
+| 10-01-T1a | 10-01 | 0 | UI-05, UI-06 (D-07) | unit | `python -m pytest tests/ui/test_profile_overlay.py -q` | ❌ red |
+| 10-01-T1b | 10-01 | 0 | UI-09 (SC6) | unit | `python -m pytest tests/ui/test_status_helpers.py -q` | ❌ red |
+| 10-01-T2a | 10-01 | 0 | UI-08 (D-09) | unit | `python -m pytest tests/ui/test_rescore.py -q` | ❌ red |
+| 10-01-T2b | 10-01 | 0 | UI-08 (remote field) | unit | `python -m pytest tests/ui/test_storage_remote_field.py -q` | ❌ red |
+| 10-01-T2c | 10-01 | 0 | UI-06 (deal_breakers default) | unit | `python -m pytest tests/ui/test_deal_breakers_setting.py -q` | ❌ red |
+
+> Rows for Wave 1–4 plans will be appended by their respective plan executors.
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -48,12 +54,12 @@ created: 2026-05-25
 
 ## Wave 0 Requirements
 
-- [ ] `tests/ui/` — package + RED guard stubs for the testable core helpers:
+- [x] `tests/ui/` — package + RED guard stubs for the testable core helpers:
       build_effective_profile (settings→UserProfile overlay), rescore_stored(), next-run
       calculation, run-status state machine, weight-sum validation.
-- [ ] Guard for the `get_history` `remote`-field fix (RESEARCH finding #5) and the new
+- [x] Guard for the `get_history` `remote`-field fix (RESEARCH finding #5) and the new
       `deal_breakers` settings default.
-- [ ] Existing pytest infra covers the rest (no framework install — streamlit already a dep).
+- [x] Existing pytest infra covers the rest (no framework install — streamlit already a dep).
 
 ---
 

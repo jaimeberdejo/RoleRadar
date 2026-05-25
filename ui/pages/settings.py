@@ -12,7 +12,8 @@ Security:
 
 Persistence keys written to the settings table:
   score_weight_puesto, score_weight_skills, score_weight_ubicacion,
-  score_weight_seniority, notification_min_score, deal_breakers (JSON list).
+  score_weight_seniority, notification_min_score, deal_breakers (JSON list),
+  notification_channel.
 """
 from __future__ import annotations
 
@@ -158,6 +159,33 @@ def _render() -> None:
         lines = deal_breakers_text.split("\n")
         storage.set_setting("deal_breakers", pack_deal_breakers(lines))
         st.success("Guardado — afecta al worker y a «Re-score».")
+
+    st.divider()
+
+    # ── Canal de notificación (UI-05 / NOTIF-02) ─────────────────────────
+    st.subheader("Canal de notificación")
+    _channel_options = ["auto", "telegram", "email", "none"]
+    current_channel = settings.get("notification_channel", "none")
+    # Guard: if a persisted value is not in the valid set, fall back to "none"
+    if current_channel not in _channel_options:
+        current_channel = "none"
+    channel_index = _channel_options.index(current_channel)
+    notification_channel = st.selectbox(
+        "Canal de notificación",
+        options=_channel_options,
+        index=channel_index,
+        key="notification_channel",
+    )
+    st.caption(
+        "auto = detecta Telegram/email según las variables de entorno; "
+        "telegram/email fuerzan ese canal; none = sin notificaciones."
+    )
+    if st.button("Guardar canal"):
+        if notification_channel in _channel_options:
+            storage.set_setting("notification_channel", notification_channel)
+            st.success("Guardado — afecta al próximo run del worker.")
+        else:
+            st.error("Valor de canal no válido.")
 
     st.divider()
 

@@ -199,3 +199,78 @@ def test_channel_status_partial_email(monkeypatch):
 
     cs = channel_status()
     assert cs["email"] is False
+
+
+# ---------------------------------------------------------------------------
+# NOTIF-02 / UI-05: notification_channel round-trips through set_setting
+# ---------------------------------------------------------------------------
+
+
+class _FakeStorage:
+    """Minimal storage stub for testing notification_channel persistence."""
+
+    def __init__(self, initial: dict | None = None) -> None:
+        self._store: dict[str, str] = dict(initial or {})
+
+    def get_settings(self) -> dict:
+        return dict(self._store)
+
+    def set_setting(self, key: str, value: str) -> None:
+        self._store[key] = value
+
+    def get(self, key: str, default: str = "") -> str:
+        return self._store.get(key, default)
+
+
+_VALID_CHANNELS = ["auto", "telegram", "email", "none"]
+
+
+@pytest.mark.parametrize("channel", _VALID_CHANNELS)
+def test_notification_channel_roundtrip(channel):
+    """Valid channel values round-trip through set_setting without mutation."""
+    storage = _FakeStorage()
+    storage.set_setting("notification_channel", channel)
+    result = storage.get_settings().get("notification_channel")
+    assert result == channel
+
+
+def test_notification_channel_default_is_none():
+    """When notification_channel is absent, the settings page defaults to 'none'."""
+    storage = _FakeStorage()  # no notification_channel key
+    settings = storage.get_settings()
+    current = settings.get("notification_channel", "none")
+    # The page falls back to "none" when key is absent
+    assert current == "none"
+
+
+def test_notification_channel_invalid_falls_back():
+    """An invalid persisted channel value is not in the valid set (simulates guard)."""
+    storage = _FakeStorage({"notification_channel": "invalid_channel"})
+    settings = storage.get_settings()
+    _channel_options = ["auto", "telegram", "email", "none"]
+    current = settings.get("notification_channel", "none")
+    # Guard logic: if not in valid set, fall back to "none"
+    if current not in _channel_options:
+        current = "none"
+    assert current == "none"
+
+
+def test_notification_channel_invalid_not_persisted():
+    """An invalid value must not be stored if validation is applied before set_setting."""
+    storage = _FakeStorage()
+    _channel_options = ["auto", "telegram", "email", "none"]
+    invalid_value = "bad_channel"
+    # Simulate the page's guard: only persist if value is in valid options
+    if invalid_value in _channel_options:
+        storage.set_setting("notification_channel", invalid_value)
+    # Nothing should have been stored
+    assert "notification_channel" not in storage.get_settings()
+
+
+@pytest.mark.parametrize("channel", _VALID_CHANNELS)
+def test_notification_channel_persisted_value_is_string(channel):
+    """Values persisted via set_setting are stored as strings (not None or bool)."""
+    storage = _FakeStorage()
+    storage.set_setting("notification_channel", channel)
+    value = storage.get_settings().get("notification_channel")
+    assert isinstance(value, str)

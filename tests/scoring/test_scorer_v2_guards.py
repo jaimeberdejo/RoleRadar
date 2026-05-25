@@ -276,16 +276,18 @@ def test_g05_embedder_driven_ranking_match(
 
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
-    ranking_entry_1 = sample_user_profile.ranking_puestos[0].titulo  # "Ingeniero de IA / AI Engineer"
+    entry_1 = sample_user_profile.ranking_puestos[0]
+    # Corpus key = titulo + sinonimos joined (SC3: puesto_match uses synonyms in corpus)
+    ranking_corpus_key_1 = " ".join([entry_1.titulo, *entry_1.sinonimos]).strip()
     job_title = "AI Engineer"
 
     identical_vector = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
 
-    # FakeEmbedder: job title and ranking entry #1 share the same vector → cosine = 1.0
+    # FakeEmbedder: job title and ranking entry #1 corpus key share the same vector → cosine = 1.0
     embedder = FakeEmbedder(
         vectors={
             job_title: identical_vector,
-            ranking_entry_1: identical_vector,
+            ranking_corpus_key_1: identical_vector,
         },
         # All other texts get a hash-based fallback (orthogonal in practice)
     )

@@ -111,13 +111,14 @@ def match_puesto_por_coseno(
         logger.debug("match_puesto_por_coseno: ranking vacío → fuera de ranking (title=%r)", title)
         return ("fuera de ranking", None)
 
-    # Construir textos del corpus: solo el título de cada entrada del ranking.
-    # Los sinónimos se usan para matching semántico implícito via embeddings
-    # (el modelo BGE-M3 generaliza semánticamente entre "AI Engineer" y "LLM Engineer"
-    # sin necesidad de concatenar explícitamente). Usar solo el título también
-    # permite que los tests puedan mapear vectores exactos por clave de título
-    # en FakeEmbedder sin tener que construir la clave concatenada.
-    corpus_texts: list[str] = [entry.titulo for entry in ranking]
+    # Construir textos del corpus: título + sinónimos de cada entrada del ranking.
+    # Concatenar título y sinónimos en un solo texto por entrada maximiza la
+    # similitud semántica cuando la oferta usa variantes como "LLM Engineer" o
+    # "GenAI Engineer" en lugar del título canónico "AI Engineer".
+    # SC3: "cosine between the job title and the ranking entries (+synonyms)".
+    corpus_texts: list[str] = [
+        " ".join([entry.titulo, *entry.sinonimos]).strip() for entry in ranking
+    ]
 
     # Embed en UNA sola llamada (batch efficiency):
     #   posición 0 = vector del título de la oferta

@@ -1,5 +1,5 @@
 """
-Tests for app/scoring/puesto_match.py — TDD RED phase.
+Tests for app/scoring/puesto_match.py — SCORE-11.
 
 Tests cover:
 - Matching via identical vectors (best match returns rango=1)
@@ -9,6 +9,10 @@ Tests cover:
 - Multiple entries: returns the highest cosine match
 - UMBRAL_PUESTO_DEFAULT constant is exported
 - Module import does NOT load torch
+
+IMPORTANT: corpus texts used as FakeEmbedder keys are
+  " ".join([entry.titulo, *entry.sinonimos]).strip()
+which is the format produced by match_puesto_por_coseno (SC3: synonyms included).
 """
 from __future__ import annotations
 
@@ -21,6 +25,15 @@ import pytest
 from app.dedup.embedder import FakeEmbedder
 from app.models.schemas import PuestoRanking
 from app.scoring.puesto_match import UMBRAL_PUESTO_DEFAULT, match_puesto_por_coseno
+
+
+def _corpus_text(entry: PuestoRanking) -> str:
+    """Mirror the corpus-building logic of match_puesto_por_coseno.
+
+    Used to build FakeEmbedder vector keys that exactly match what
+    production code passes to the embedder.
+    """
+    return " ".join([entry.titulo, *entry.sinonimos]).strip()
 
 
 class TestPuestoMatchBasic:
@@ -45,15 +58,17 @@ class TestPuestoMatchBasic:
 
         The query title gets [1,0,0,0] and all corpus texts get [0,1,0,0] (orthogonal).
         cosine = dot([1,0,0,0], [0,1,0,0]) = 0.0, which is below any positive umbral.
+
+        Corpus keys include synonyms: "AI Engineer LLM Engineer", "Data Engineer".
         """
         ranking = [
             PuestoRanking(titulo="AI Engineer", sinonimos=["LLM Engineer"]),
             PuestoRanking(titulo="Data Engineer", sinonimos=[]),
         ]
         query_title = "Completely Different Title"
-        # corpus texts: just the entry titulo (sinonimos are not concatenated)
-        corpus_text_1 = "AI Engineer"
-        corpus_text_2 = "Data Engineer"
+        # Corpus texts include synonyms (as produced by puesto_match.py SC3 fix)
+        corpus_text_1 = _corpus_text(ranking[0])  # "AI Engineer LLM Engineer"
+        corpus_text_2 = _corpus_text(ranking[1])  # "Data Engineer"
         vecs = {
             query_title: np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32),
             corpus_text_1: np.array([0.0, 1.0, 0.0, 0.0], dtype=np.float32),
@@ -83,27 +98,28 @@ class TestPuestoMatchBasic:
         assert puesto == "fuera de ranking"
 
     def test_multiple_entries_returns_best_match(self) -> None:
-        """When multiple entries exceed threshold, returns the one with highest cosine."""
+        """When multiple entries exceed threshold, returns the one with highest cosine.
+
+        Corpus keys include synonyms (SC3 fix).
+        """
         ranking = [
             PuestoRanking(titulo="Data Engineer", sinonimos=[]),
             PuestoRanking(titulo="AI Engineer", sinonimos=["LLM Engineer"]),
         ]
         # Title vector: [1, 0, 0, 0]
-        # Corpus texts are just the entry titulos (sinonimos not concatenated)
-        # "Data Engineer" corpus text → [0.3, 0.7, 0, 0] (normalized): low cosine
-        # "AI Engineer" corpus text → [1, 0, 0, 0]: cosine = 1.0
-        # Use FakeEmbedder with explicit mappings for the corpus texts
+        # Corpus text for entry 0 (Data Engineer, no syns): "Data Engineer"
+        # Corpus text for entry 1 (AI Engineer + LLM Engineer): "AI Engineer LLM Engineer"
         q_vec = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
-        # Corpus text 1 (Data Engineer, no synonyms): just "Data Engineer"
-        # Corpus text 2 (AI Engineer, LLM Engineer sinonimos): just "AI Engineer"
         data_eng_vec = np.array([0.3, 0.7, 0.0, 0.0], dtype=np.float32)  # low cosine
         ai_eng_vec = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)    # cosine=1.0
 
-        # Build exact keys for the corpus texts as produced by the implementation
+        corpus_key_1 = _corpus_text(ranking[0])  # "Data Engineer"
+        corpus_key_2 = _corpus_text(ranking[1])  # "AI Engineer LLM Engineer"
+
         vecs = {
             "Senior AI Position": q_vec,
-            "Data Engineer": data_eng_vec,
-            "AI Engineer": ai_eng_vec,
+            corpus_key_1: data_eng_vec,
+            corpus_key_2: ai_eng_vec,
         }
         embedder = FakeEmbedder(vectors=vecs, default_vector=q_vec)
 
@@ -111,6 +127,28 @@ class TestPuestoMatchBasic:
 
         # AI Engineer has highest cosine → rango=2 (second in list)
         assert rango == 2
+        assert puesto == "AI Engineer"
+
+    def test_synonym_key_matches(self) -> None:
+        """Corpus key includes synonyms, so a synonym-heavy job title matches correctly.
+
+        When the corpus key for an entry is "AI Engineer LLM Engineer" and the
+        job title vector is identical to that key's vector, the entry matches.
+        """
+        ranking = [
+            PuestoRanking(titulo="AI Engineer", sinonimos=["LLM Engineer"]),
+        ]
+        corpus_key = _corpus_text(ranking[0])  # "AI Engineer LLM Engineer"
+        identical_vec = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
+        vecs = {
+            "LLM Engineer Job": identical_vec,
+            corpus_key: identical_vec,
+        }
+        embedder = FakeEmbedder(vectors=vecs)
+
+        puesto, rango = match_puesto_por_coseno("LLM Engineer Job", ranking, embedder)
+
+        assert rango == 1
         assert puesto == "AI Engineer"
 
 
@@ -134,8 +172,6 @@ class TestPuestoMatchImportSafety:
 
     def test_import_does_not_load_torch(self) -> None:
         """After importing puesto_match, 'torch' must not be in sys.modules."""
-        # Force a fresh module check (the module is already imported above,
-        # but if torch were loaded it would show up)
         assert "torch" not in sys.modules, (
             "torch was loaded — puesto_match.py has a runtime import of app.dedup or "
             "sentence_transformers. Use TYPE_CHECKING guard (Pitfall 7)."

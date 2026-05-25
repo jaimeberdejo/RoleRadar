@@ -10,6 +10,7 @@ proceso separado.
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -62,5 +63,11 @@ if __name__ == "__main__":
             "max_instances": 1,
         },
     )
-    scheduler.add_job(run_pipeline, "interval", hours=interval_hours, id="pipeline")
+    scheduler.add_job(
+        run_pipeline,
+        "interval",
+        hours=interval_hours,
+        id="pipeline",
+        next_run_time=datetime.now(),  # fire immediately on startup, then every N hours
+    )
     scheduler.start()

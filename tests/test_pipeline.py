@@ -224,3 +224,89 @@ def test_run_pipeline_creates_run_row(tmp_path):
     assert "deduped" in run_row, "runs row must have 'deduped' key"
     assert "scored" in run_row, "runs row must have 'scored' key"
     assert "new_seen" in run_row, "runs row must have 'new_seen' key"
+
+
+# ---------------------------------------------------------------------------
+# CR-02: stray non-sha256 .json file in cache dir does not crash run_pipeline
+# ---------------------------------------------------------------------------
+
+def test_run_pipeline_stray_cache_file_does_not_crash(tmp_path, monkeypatch):
+    """A .json file with a non-sha256 stem in the CV cache dir must not crash run_pipeline.
+
+    CR-02: _get_cv_profile globs *.json files and calls load_cached_profile(stem),
+    which raises ValueError for non-sha256-hex filenames. The ValueError must be
+    caught per-file and the loop must continue, falling back to an empty CVProfile.
+    run_pipeline must still complete and write a runs row (record_run must be called).
+    """
+    from app.pipeline import run_pipeline  # noqa: PLC0415
+
+    # Create a cache dir with a stray non-sha256-hex .json file
+    cache_dir = tmp_path / ".cache"
+    cache_dir.mkdir(parents=True)
+    stray = cache_dir / "cv_backup.json"
+    stray.write_text('{"skills_tecnicas": [], "experiencia": [], "formacion": [], "dominios": []}')
+
+    # Point CV_CACHE_DIR to our tmp cache dir
+    monkeypatch.setenv("CV_CACHE_DIR", str(cache_dir))
+
+    storage = SQLiteStorage(str(tmp_path / "test.db"))
+    storage.init_db()
+    fake_embedder = FakeEmbedder()
+
+    with patch("app.pipeline._fetch_all", return_value=[]):
+        # Must not raise — stray file must be silently skipped
+        result = run_pipeline(storage=storage, embedder=fake_embedder)
+
+    assert result is not None, "run_pipeline must return a result even with a stray cache file"
+
+    # record_run must have been called — run row must exist
+    runs = storage.get_recent_runs(limit=1)
+    assert len(runs) == 1, (
+        "run_pipeline must write a runs row even when the CV cache has stray files"
+    )
+
+
+def test_run_pipeline_stray_cache_file_does_not_abort_sibling_queries(tmp_path, monkeypatch):
+    """Multiple cache files: stray file is skipped, valid sha256 file is loaded.
+
+    Ensures the loop in _get_cv_profile continues past the stray file
+    and finds the valid cached profile when it exists.
+    """
+    import hashlib
+    import json as _json
+    from app.pipeline import run_pipeline  # noqa: PLC0415
+    from app.models.schemas import CVProfile
+
+    cache_dir = tmp_path / ".cache"
+    cache_dir.mkdir(parents=True)
+
+    # Place stray file (older mtime) — will sort after valid file
+    stray = cache_dir / "not_a_hash.json"
+    stray.write_text("{}")
+
+    # Place a valid sha256-named cache file (newer mtime)
+    valid_hash = hashlib.sha256(b"dummy_pdf").hexdigest()
+    valid_profile = CVProfile(
+        skills_tecnicas=["Python"],
+        experiencia=[],
+        formacion=[],
+        dominios=["AI"],
+    )
+    valid_file = cache_dir / f"{valid_hash}.json"
+    valid_file.write_text(valid_profile.model_dump_json())
+    # Ensure valid_file has a newer mtime than stray
+    import time
+    valid_file.touch()
+
+    monkeypatch.setenv("CV_CACHE_DIR", str(cache_dir))
+
+    storage = SQLiteStorage(str(tmp_path / "test.db"))
+    storage.init_db()
+    fake_embedder = FakeEmbedder()
+
+    with patch("app.pipeline._fetch_all", return_value=[]):
+        result = run_pipeline(storage=storage, embedder=fake_embedder)
+
+    assert result is not None, "run_pipeline must return a result"
+    runs = storage.get_recent_runs(limit=1)
+    assert len(runs) == 1, "run_pipeline must write a runs row"

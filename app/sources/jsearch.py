@@ -79,13 +79,31 @@ def _do_get(
     params: dict,
     query: str,
 ) -> list[dict]:
-    """Execute GET, handle 429, parse response. May raise httpx.HTTPError."""
+    """Execute GET, handle 429/auth errors, parse response. May raise httpx.HTTPError."""
     resp = client.get(JSEARCH_BASE, headers=headers, params=params)
     if resp.status_code == 429:
         logger.warning("JSearch 429 for query=%r — skipping", query)
         return []
+    if resp.status_code in (401, 403):
+        logger.error(
+            "JSearch auth failure (status=%d) for query=%r — "
+            "check RAPIDAPI_KEY env var",
+            resp.status_code,
+            query,
+        )
+        return []
     resp.raise_for_status()
-    return resp.json().get("data", [])
+    try:
+        return resp.json().get("data", [])
+    except (ValueError, KeyError) as exc:
+        # json.JSONDecodeError is a subclass of ValueError; catches HTML/plain error pages
+        logger.warning(
+            "JSearch non-JSON response for query=%r (status=%d): %s",
+            query,
+            resp.status_code,
+            exc,
+        )
+        return []
 
 
 def fetch_all_queries(

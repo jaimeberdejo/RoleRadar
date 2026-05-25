@@ -81,9 +81,13 @@ def _post_chunk(client: httpx.Client, url: str, chat_id: str, text: str) -> bool
         return False
     if resp.status_code == 200:
         return True
+    # Telegram error bodies are normally a JSON object with a "description" field,
+    # but a malformed/non-JSON or non-object body must not raise an AttributeError
+    # here (WR-04). Guard the shape explicitly so the fallback is intentional.
     try:
-        desc = resp.json().get("description")
-    except Exception:  # noqa: BLE001
+        body = resp.json()
+        desc = body.get("description") if isinstance(body, dict) else "(non-dict body)"
+    except ValueError:
         desc = "(non-JSON body)"
     # Log status code + Telegram error description — never the token (T-09-06)
     logger.warning("Telegram API error %d: %s", resp.status_code, desc)

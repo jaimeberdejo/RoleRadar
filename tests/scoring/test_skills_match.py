@@ -11,6 +11,10 @@ Tests cover:
 - job_description empty returns 0 (neutral, with WARNING log)
 - CV_SKILLS_TEXT_MAX_TOKENS constant is 500 and exported
 - Module import does NOT load torch
+
+WR-04 fix: FakeEmbedder is imported DEFERRED inside each test body (Pitfall 7).
+Module-level import of app.dedup.embedder would drag torch/sentence-transformers
+into the process at collection time.
 """
 from __future__ import annotations
 
@@ -19,7 +23,6 @@ import sys
 import numpy as np
 import pytest
 
-from app.dedup.embedder import FakeEmbedder
 from app.scoring.skills_match import CV_SKILLS_TEXT_MAX_TOKENS, encaje_skills_por_coseno
 
 
@@ -28,6 +31,7 @@ class TestSkillsMatchBasic:
 
     def test_identical_vectors_returns_100(self) -> None:
         """Identical vectors → cosine=1.0 → score=100."""
+        from app.dedup.embedder import FakeEmbedder  # deferred — Pitfall 7 (WR-04)
         vec = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
         embedder = FakeEmbedder(default_vector=vec)
         score = encaje_skills_por_coseno("Python LLMs FastAPI", "We need Python and LLMs", embedder)
@@ -35,6 +39,7 @@ class TestSkillsMatchBasic:
 
     def test_orthogonal_vectors_returns_0(self) -> None:
         """Orthogonal vectors → cosine=0.0 → score=0."""
+        from app.dedup.embedder import FakeEmbedder  # deferred — Pitfall 7 (WR-04)
         cv_text = "cv text"
         job_desc = "job desc"
         vecs = {
@@ -47,6 +52,7 @@ class TestSkillsMatchBasic:
 
     def test_negative_cosine_clamped_to_0(self) -> None:
         """Negative cosine (anti-parallel) is clamped to 0, not negative."""
+        from app.dedup.embedder import FakeEmbedder  # deferred — Pitfall 7 (WR-04)
         cv_text = "cv text"
         job_desc = "job desc"
         vecs = {
@@ -61,6 +67,7 @@ class TestSkillsMatchBasic:
 
     def test_partial_cosine_linear_mapping(self) -> None:
         """Cosine maps linearly: a value between 0 and 1 maps to 0-100 range."""
+        from app.dedup.embedder import FakeEmbedder  # deferred — Pitfall 7 (WR-04)
         # We construct vectors with a known cosine.
         # cos(60 degrees) = 0.5 → score = 50
         cv_vec = np.array([1.0, 0.0], dtype=np.float32)
@@ -93,24 +100,28 @@ class TestSkillsMatchGuards:
 
     def test_cv_text_empty_raises_value_error(self) -> None:
         """Empty cv_text raises ValueError."""
+        from app.dedup.embedder import FakeEmbedder  # deferred — Pitfall 7 (WR-04)
         embedder = FakeEmbedder(default_vector=np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32))
         with pytest.raises(ValueError):
             encaje_skills_por_coseno("", "job description", embedder)
 
     def test_cv_text_whitespace_only_raises_value_error(self) -> None:
         """Whitespace-only cv_text raises ValueError."""
+        from app.dedup.embedder import FakeEmbedder  # deferred — Pitfall 7 (WR-04)
         embedder = FakeEmbedder(default_vector=np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32))
         with pytest.raises(ValueError):
             encaje_skills_por_coseno("   \n\t  ", "job description", embedder)
 
     def test_job_description_empty_returns_0(self) -> None:
         """Empty job_description returns 0 (neutral, not an error)."""
+        from app.dedup.embedder import FakeEmbedder  # deferred — Pitfall 7 (WR-04)
         embedder = FakeEmbedder(default_vector=np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32))
         score = encaje_skills_por_coseno("Python FastAPI LLMs", "", embedder)
         assert score == 0, f"Empty job description should return 0, got {score}"
 
     def test_job_description_whitespace_returns_0(self) -> None:
         """Whitespace-only job_description returns 0."""
+        from app.dedup.embedder import FakeEmbedder  # deferred — Pitfall 7 (WR-04)
         embedder = FakeEmbedder(default_vector=np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32))
         score = encaje_skills_por_coseno("Python FastAPI", "   ", embedder)
         assert score == 0, f"Whitespace job description should return 0, got {score}"

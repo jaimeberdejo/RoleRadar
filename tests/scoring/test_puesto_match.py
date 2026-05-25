@@ -13,6 +13,10 @@ Tests cover:
 IMPORTANT: corpus texts used as FakeEmbedder keys are
   " ".join([entry.titulo, *entry.sinonimos]).strip()
 which is the format produced by match_puesto_por_coseno (SC3: synonyms included).
+
+WR-04 fix: FakeEmbedder is imported DEFERRED inside each test body (Pitfall 7).
+Module-level import of app.dedup.embedder would drag torch/sentence-transformers
+into the process at collection time.
 """
 from __future__ import annotations
 
@@ -22,7 +26,6 @@ import sys
 import numpy as np
 import pytest
 
-from app.dedup.embedder import FakeEmbedder
 from app.models.schemas import PuestoRanking
 from app.scoring.puesto_match import UMBRAL_PUESTO_DEFAULT, match_puesto_por_coseno
 
@@ -41,6 +44,7 @@ class TestPuestoMatchBasic:
 
     def test_identical_vectors_returns_rango_1(self) -> None:
         """When all texts get the same vector, best match is the first entry (rango=1)."""
+        from app.dedup.embedder import FakeEmbedder  # deferred — Pitfall 7 (WR-04)
         ranking = [
             PuestoRanking(titulo="AI Engineer", sinonimos=["LLM Engineer"]),
             PuestoRanking(titulo="Data Engineer", sinonimos=[]),
@@ -61,6 +65,7 @@ class TestPuestoMatchBasic:
 
         Corpus keys include synonyms: "AI Engineer LLM Engineer", "Data Engineer".
         """
+        from app.dedup.embedder import FakeEmbedder  # deferred — Pitfall 7 (WR-04)
         ranking = [
             PuestoRanking(titulo="AI Engineer", sinonimos=["LLM Engineer"]),
             PuestoRanking(titulo="Data Engineer", sinonimos=[]),
@@ -90,6 +95,7 @@ class TestPuestoMatchBasic:
 
     def test_empty_ranking_returns_fuera_de_ranking(self) -> None:
         """Empty ranking list returns ('fuera de ranking', None)."""
+        from app.dedup.embedder import FakeEmbedder  # deferred — Pitfall 7 (WR-04)
         embedder = FakeEmbedder(default_vector=np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32))
 
         puesto, rango = match_puesto_por_coseno("AI Engineer", [], embedder)
@@ -102,6 +108,7 @@ class TestPuestoMatchBasic:
 
         Corpus keys include synonyms (SC3 fix).
         """
+        from app.dedup.embedder import FakeEmbedder  # deferred — Pitfall 7 (WR-04)
         ranking = [
             PuestoRanking(titulo="Data Engineer", sinonimos=[]),
             PuestoRanking(titulo="AI Engineer", sinonimos=["LLM Engineer"]),
@@ -135,6 +142,7 @@ class TestPuestoMatchBasic:
         When the corpus key for an entry is "AI Engineer LLM Engineer" and the
         job title vector is identical to that key's vector, the entry matches.
         """
+        from app.dedup.embedder import FakeEmbedder  # deferred — Pitfall 7 (WR-04)
         ranking = [
             PuestoRanking(titulo="AI Engineer", sinonimos=["LLM Engineer"]),
         ]

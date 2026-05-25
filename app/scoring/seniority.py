@@ -233,6 +233,20 @@ def evaluar_seniority(
     # ------------------------------------------------------------------
     # Step 3 — compare and map to score
     # ------------------------------------------------------------------
+    if anos_requeridos == 0.0:
+        # "0-2 years" or "0+ years" → entry-level role with no meaningful floor.
+        # Treat as "no signal" → generous assumption (same as anos_requeridos=None path).
+        logger.debug(
+            "evaluar_seniority: anos_requeridos=0 → treating as no signal "
+            "(anios_candidato=%.1f)",
+            anios_candidato,
+        )
+        return SeniorityResult(
+            encaje_seniority=75,
+            seniority_nota="Sin requisito de años explícito en la oferta (0 interpretado como sin requisito)",
+            anos_requeridos=None,
+        )
+
     ratio = anios_candidato / anos_requeridos
     score = _ratio_to_score(ratio)
     # Clamp to [0, 100] — defensive even though _ratio_to_score already does

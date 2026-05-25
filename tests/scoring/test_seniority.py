@@ -297,3 +297,37 @@ def test_plan_example_5yr_required_none_anios() -> None:
 
     r = evaluar_seniority("5+ years required", None)
     assert r.encaje_seniority == 50
+
+
+# ---------------------------------------------------------------------------
+# CR-01 fix: ZeroDivisionError on "0 years" / "0-2 years" descriptions
+# ---------------------------------------------------------------------------
+def test_zero_years_requirement_no_crash() -> None:
+    """'0-2 years' must not raise ZeroDivisionError — treated as no-signal (score=75)."""
+    from app.scoring.seniority import evaluar_seniority
+
+    r = evaluar_seniority("0-2 years experience preferred", 3.0)
+    assert 0 < r.encaje_seniority <= 100, (
+        f"Must not raise ZeroDivisionError; got score={r.encaje_seniority}"
+    )
+
+
+def test_zero_plus_years_no_crash() -> None:
+    """'0+ years' (sometimes used in internship listings) must not crash."""
+    from app.scoring.seniority import evaluar_seniority
+
+    r = evaluar_seniority("0+ years of experience required", 2.0)
+    assert 0 < r.encaje_seniority <= 100
+
+
+def test_zero_years_treated_as_no_signal_returns_75() -> None:
+    """When anos_requeridos is 0, the generous no-signal score (75) is returned."""
+    from app.scoring.seniority import evaluar_seniority
+
+    r = evaluar_seniority("0-2 years experience preferred", 3.0)
+    assert r.encaje_seniority == 75, (
+        f"anos_requeridos=0 should fall back to no-signal score 75, got {r.encaje_seniority}"
+    )
+    assert r.anos_requeridos is None, (
+        f"anos_requeridos should be None (treated as no signal), got {r.anos_requeridos}"
+    )

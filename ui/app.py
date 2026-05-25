@@ -1,3 +1,11 @@
+# Load .env into os.environ for local runs (uv run / streamlit run). In Docker the
+# `env_file: .env` directive handles this, but a local launch needs load_dotenv() or
+# secrets in .env (RAPIDAPI_KEY, OPENAI_API_KEY, TELEGRAM_*, SMTP_*) are silently ignored.
+# Kept in the entry point (not app/ core) so the core stays import-clean.
+from dotenv import load_dotenv  # noqa: E402
+
+load_dotenv()
+
 import streamlit as st
 
 # st.set_page_config MUST be the first Streamlit call in the script.

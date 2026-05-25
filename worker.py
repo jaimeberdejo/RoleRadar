@@ -13,6 +13,12 @@ import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from dotenv import load_dotenv
+
+# Load .env before the pipeline reads secrets (RAPIDAPI_KEY, OPENAI_API_KEY, TELEGRAM_*,
+# SMTP_*). In Docker `env_file: .env` covers this; a local `python worker.py` needs it.
+load_dotenv()
+
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 from app.pipeline import run_pipeline as _pipeline_run  # noqa: E402

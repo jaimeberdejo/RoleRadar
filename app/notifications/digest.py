@@ -93,8 +93,12 @@ def format_offer_block(sjob: ScoredJob) -> str:
     """
     score, job = sjob.score, sjob.job
     reasons = score.reasons_for[:3]
+    # Strip embedded newlines/control chars from title/company so an attacker- or
+    # LLM-influenced field cannot distort the digest's line-based layout (IN-03).
+    title = job.title.replace("\n", " ").replace("\r", " ").strip()
+    company = job.company.replace("\n", " ").replace("\r", " ").strip()
     lines = [
-        f"{job.title} @ {job.company}",
+        f"{title} @ {company}",
         f"  Score: {score.score_total}/100 ({score.recommendation.value})",
     ]
     lines += [f"  + {r}" for r in reasons]

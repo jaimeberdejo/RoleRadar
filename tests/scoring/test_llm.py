@@ -81,7 +81,7 @@ def sample_profile() -> UserProfile:
     return UserProfile(
         datos_personales=DatosPersonales(
             nombre="Jaime Berdejo",
-            email="jaimeberdejo1902@gmail.com",
+            email="tu-email@example.com",
             ubicacion_actual="Barcelona, España",
         ),
         preferencias_ubicacion=PreferenciasUbicacion(

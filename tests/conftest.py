@@ -59,7 +59,7 @@ EXPECTED_PROFILE = CVProfile(
 EXPECTED_USER_PROFILE = UserProfile(
     datos_personales=DatosPersonales(
         nombre="Jaime Berdejo",
-        email="jaimeberdejo1902@gmail.com",
+        email="tu-email@example.com",
         ubicacion_actual="Barcelona, España",
     ),
     preferencias_ubicacion=PreferenciasUbicacion(

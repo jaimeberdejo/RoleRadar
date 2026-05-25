@@ -1,17 +1,30 @@
 """
-Módulo LLM para evaluación de ofertas de empleo.
+Módulo LLM para enriquecimiento en prosa de evaluaciones de ofertas — v2.0.
 
 Expone:
+- LLMEnrichment: modelo Pydantic con razones/listas (SIN scores numéricos).
+- enrich_job(job, cv_profile, user_profile, client): llama al LLM para obtener SOLO
+  el enriquecimiento en prosa (reasons_for/against, matched_skills, missing_requirements).
 - build_instructor_client(): fábrica del cliente instructor (seam de inyección para tests).
-- assess_job(job, cv_profile, user_profile, client): llama al LLM con
-  response_model=LLMJobAssessment y devuelve una evaluación tipada.
 
-Mitigaciones de seguridad (T-03-08, T-03-09):
+CAMBIO v2.0 (refactor Phase 7):
+  - assess_job() ELIMINADO. Los 4 sub-scores numéricos los calcula scorer.py de forma
+    determinista (location.py, puesto_match.py, skills_match.py, seniority.py).
+  - enrich_job() devuelve SOLO prosa + listas — NUNCA los cuatro números.
+  - response_model: LLMEnrichment (local, NO en schemas.py).
+  - LLMJobAssessment sigue en schemas.py (para compatibilidad durante transición — 07-06).
+
+Mitigaciones de seguridad (T-03-08, T-03-09, T-07-10):
 - El texto de la oferta va SOLO en el mensaje de usuario en sección XML <oferta>;
   el system prompt es una cadena fija sin interpolación de contenido externo
   (anti prompt-injection — la oferta es DATO, no instrucción).
-- La clave de API la lee el SDK de OpenAI del entorno (OPENAI_API_KEY); nunca se referencia aquí.
+- _escape_for_prompt escapa <, >, & del contenido de la oferta antes de inyectarlo
+  en la sección <oferta> (CR-03).
+- La clave de API la lee el SDK de OpenAI del entorno (OPENAI_API_KEY); nunca se
+  referencia aquí directamente.
 - El modelo se configura via OPENAI_MODEL_SCORING con default gpt-4o.
+- max_tokens=1024 (reducido desde 2048 de assess_job — prosa solo necesita menos;
+  T-07-12 DoS mitigation).
 """
 from __future__ import annotations
 
@@ -20,10 +33,128 @@ import os
 
 import instructor
 from openai import OpenAI
+from pydantic import BaseModel, Field
 
-from app.models.schemas import CVProfile, Job, LLMJobAssessment, PuestoRanking, UserProfile
+from app.models.schemas import CVProfile, Job, PuestoRanking, UserProfile
 from app.obs.tracing import trace_llm
 
+
+# ---------------------------------------------------------------------------
+# LLMEnrichment — modelo local (NO en schemas.py)
+# Devuelve SOLO prosa + listas. Los scores numéricos son responsabilidad de scorer.py.
+# ---------------------------------------------------------------------------
+
+class LLMEnrichment(BaseModel):
+    """Prose-only enrichment from the LLM. Numbers come from deterministic rules.
+
+    This model is intentionally LOCAL to llm.py (not in schemas.py) because
+    it represents an implementation detail of the LLM enrichment step, not
+    part of the public API of the scoring system.
+
+    The four numeric sub-scores (encaje_puesto, encaje_skills, encaje_ubicacion,
+    encaje_seniority) are computed deterministically by scorer.py before any
+    LLM call. The LLM's sole responsibility here is to provide honest prose
+    context for the already-computed numeric verdict.
+    """
+
+    razonamiento: str = Field(
+        description=(
+            "Razonamiento honesto del LLM sobre el encaje. "
+            "Sé específico y directo. Máx 2-3 frases."
+        )
+    )
+    reasons_for: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Razones concretas de encaje entre la oferta y el CVProfile. "
+            "Máx 3-4 items. HONESTO — no infles si el encaje es débil."
+        ),
+    )
+    reasons_against: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Razones concretas de NO encaje entre la oferta y el CVProfile. "
+            "HONESTO, sin inflar. Máx 3-4 items. El valor está en filtrar bien."
+        ),
+    )
+    matched_skills: list[str] = Field(
+        default_factory=list,
+        description="Skills del CVProfile que la oferta pide explícitamente.",
+    )
+    missing_requirements: list[str] = Field(
+        default_factory=list,
+        description="Requisitos de la oferta que el candidato podría no cumplir.",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Función pública: enrich_job
+# ---------------------------------------------------------------------------
+
+def enrich_job(
+    job: Job,
+    cv_profile: CVProfile,
+    user_profile: UserProfile,
+    client: instructor.Instructor,
+) -> LLMEnrichment:
+    """Llama al LLM para obtener SOLO el enriquecimiento en prosa.
+
+    Los 4 sub-scores ya han sido calculados de forma determinista en scorer.py.
+    El LLM solo enriquece con: reasons_for/against, matched_skills, missing_requirements.
+
+    La oferta va en sección XML <oferta> (anti prompt-injection, CR-03).
+    El system prompt es FIJO sin interpolación externa (T-03-08).
+
+    Args:
+        job:          Oferta normalizada a evaluar.
+        cv_profile:   CV estructurado del candidato.
+        user_profile: Perfil del usuario (ranking, preferencias, deal-breakers).
+        client:       Cliente instructor inyectado (real o mock).
+
+    Returns:
+        LLMEnrichment con prose-only enrichment (razonamiento + reasons + skills).
+    """
+    model = os.getenv("OPENAI_MODEL_SCORING", "gpt-4o")
+
+    with trace_llm("enrich_job", job_id=job.id, model=model):
+        return client.chat.completions.create(
+            model=model,
+            max_tokens=1024,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Eres un evaluador HONESTO de ofertas de empleo. "
+                        "Los scores numéricos ya han sido calculados. Tu tarea es SOLO "
+                        "proporcionar razones concretas de encaje y desencaje, las skills "
+                        "que coinciden y los requisitos que faltan. "
+                        "NO infles reasons_for. Sé específico en reasons_against y "
+                        "missing_requirements — el valor está en filtrar bien."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": _build_prompt(job, cv_profile, user_profile),
+                },
+            ],
+            response_model=LLMEnrichment,
+            max_retries=2,
+        )
+
+
+# ---------------------------------------------------------------------------
+# build_instructor_client — seam de inyección para tests
+# ---------------------------------------------------------------------------
+
+def build_instructor_client() -> instructor.Instructor:
+    """Construye el cliente instructor sobre OpenAI. Inyectable para tests."""
+    return instructor.from_openai(OpenAI())
+
+
+# ---------------------------------------------------------------------------
+# Helpers privados de formato — texto legible, no model_dump_json crudo
+# (RESEARCH Open Q 2: texto estructurado > JSON para juicio del LLM)
+# ---------------------------------------------------------------------------
 
 def _escape_for_prompt(text: str) -> str:
     """Escapa caracteres XML significativos en campos de la oferta para evitar cierre
@@ -35,16 +166,6 @@ def _escape_for_prompt(text: str) -> str:
     """
     return html.escape(text, quote=False)
 
-
-def build_instructor_client() -> instructor.Instructor:
-    """Construye el cliente instructor sobre OpenAI. Inyectable para tests."""
-    return instructor.from_openai(OpenAI())
-
-
-# ---------------------------------------------------------------------------
-# Helpers privados de formato — texto legible, no model_dump_json crudo
-# (RESEARCH Open Q 2: texto estructurado > JSON para juicio del LLM)
-# ---------------------------------------------------------------------------
 
 def _format_cv(cv: CVProfile) -> str:
     """Renderiza CVProfile como texto estructurado legible para el LLM."""
@@ -141,65 +262,5 @@ def _build_prompt(job: Job, cv_profile: CVProfile, user_profile: UserProfile) ->
         f"<deal_breakers>\n{deal_breakers_text}\n</deal_breakers>\n"
         "</candidato>\n"
         f"<oferta>\n{job_text}\n</oferta>\n"
-        "Evalúa el encaje de esta oferta con el candidato."
+        "Proporciona el enriquecimiento en prosa para esta oferta."
     )
-
-
-# ---------------------------------------------------------------------------
-# Función pública principal
-# ---------------------------------------------------------------------------
-
-def assess_job(
-    job: Job,
-    cv_profile: CVProfile,
-    user_profile: UserProfile,
-    client: instructor.Instructor,
-) -> LLMJobAssessment:
-    """Llama al LLM para evaluar el encaje oferta↔candidato.
-
-    Devuelve un LLMJobAssessment estructurado con:
-    - puesto_detectado + rango_puesto: el LLM empareja la oferta con el ranking.
-    - encaje_skills + encaje_seniority: evaluación 0-100 vs CVProfile real.
-    - matched_skills + missing_requirements: evidencia textual del LLM.
-    - reasons_for + reasons_against: honesto, sin inflar (SCORE-07).
-    - deal_breaker_hit_texto + deal_breaker_cual_texto: deal-breakers textuales.
-
-    NOTA: Esta función es el único punto de entrada LLM para scoring.
-    Fase 5 la envolverá con Langfuse para observabilidad (OBS-02).
-
-    Args:
-        job:          Oferta normalizada a evaluar.
-        cv_profile:   CV estructurado del candidato.
-        user_profile: Perfil del usuario (ranking, preferencias, deal-breakers).
-        client:       Cliente instructor inyectado (real o mock).
-
-    Returns:
-        LLMJobAssessment validado por Pydantic.
-    """
-    model = os.getenv("OPENAI_MODEL_SCORING", "gpt-4o")
-
-    # system prompt FIJO — sin interpolación de contenido externo (T-03-08).
-    # Va como primer mensaje (convención OpenAI), no como parámetro `system=` (Anthropic).
-    with trace_llm("assess_job", job_id=job.id, model=model):
-        return client.chat.completions.create(
-            model=model,
-            max_tokens=2048,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Eres un evaluador HONESTO de ofertas de empleo. "
-                        "Tu objetivo es dar una evaluación realista y calibrada de si la oferta encaja "
-                        "con el candidato. NO infles los reasons_for ni ocultes los reasons_against. "
-                        "Si hay requisitos que el candidato claramente no cumple, ponlos en missing_requirements. "
-                        "El valor de este sistema está en filtrar bien, no en parecer optimista."
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": _build_prompt(job, cv_profile, user_profile),
-                },
-            ],
-            response_model=LLMJobAssessment,
-            max_retries=2,
-        )

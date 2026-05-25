@@ -51,9 +51,9 @@ class TestPuestoMatchBasic:
             PuestoRanking(titulo="Data Engineer", sinonimos=[]),
         ]
         query_title = "Completely Different Title"
-        # corpus texts: "AI Engineer LLM Engineer" and "Data Engineer "
-        corpus_text_1 = "AI Engineer LLM Engineer"
-        corpus_text_2 = "Data Engineer "
+        # corpus texts: just the entry titulo (sinonimos are not concatenated)
+        corpus_text_1 = "AI Engineer"
+        corpus_text_2 = "Data Engineer"
         vecs = {
             query_title: np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32),
             corpus_text_1: np.array([0.0, 1.0, 0.0, 0.0], dtype=np.float32),
@@ -89,20 +89,21 @@ class TestPuestoMatchBasic:
             PuestoRanking(titulo="AI Engineer", sinonimos=["LLM Engineer"]),
         ]
         # Title vector: [1, 0, 0, 0]
-        # "Data Engineer " corpus text → [0.5, 0.5, 0, 0] (normalized): cosine = 0.5 * 1 = 0.5
-        # "AI Engineer LLM Engineer" corpus text → [1, 0, 0, 0]: cosine = 1.0
+        # Corpus texts are just the entry titulos (sinonimos not concatenated)
+        # "Data Engineer" corpus text → [0.3, 0.7, 0, 0] (normalized): low cosine
+        # "AI Engineer" corpus text → [1, 0, 0, 0]: cosine = 1.0
         # Use FakeEmbedder with explicit mappings for the corpus texts
         q_vec = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
-        # Corpus text 1 (Data Engineer, no synonyms): "Data Engineer "
-        # Corpus text 2 (AI Engineer, LLM Engineer sinonimos): "AI Engineer LLM Engineer"
+        # Corpus text 1 (Data Engineer, no synonyms): just "Data Engineer"
+        # Corpus text 2 (AI Engineer, LLM Engineer sinonimos): just "AI Engineer"
         data_eng_vec = np.array([0.3, 0.7, 0.0, 0.0], dtype=np.float32)  # low cosine
         ai_eng_vec = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)    # cosine=1.0
 
         # Build exact keys for the corpus texts as produced by the implementation
         vecs = {
             "Senior AI Position": q_vec,
-            "Data Engineer ": data_eng_vec,
-            "AI Engineer LLM Engineer": ai_eng_vec,
+            "Data Engineer": data_eng_vec,
+            "AI Engineer": ai_eng_vec,
         }
         embedder = FakeEmbedder(vectors=vecs, default_vector=q_vec)
 

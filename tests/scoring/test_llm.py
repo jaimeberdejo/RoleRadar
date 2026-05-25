@@ -1,15 +1,16 @@
 """
-Tests para app/scoring/llm.py.
+Tests para app/scoring/llm.py — v2.0 enrichment-only.
 
 Verifica:
-1. assess_job devuelve un LLMJobAssessment tipado con los datos del mock.
-2. assess_job pasa response_model=LLMJobAssessment, modelo por defecto y max_retries=2.
-3. assess_job respeta OPENAI_MODEL_SCORING si está definida en el entorno.
+1. enrich_job devuelve un LLMEnrichment tipado con los datos del mock.
+2. enrich_job pasa response_model=LLMEnrichment, modelo por defecto y max_retries=2.
+3. enrich_job respeta OPENAI_MODEL_SCORING si está definida en el entorno.
 4. El prompt de usuario incluye: puesto del ranking, skill del CVProfile,
    deal-breaker real y el título de la oferta (SCORE-08).
 
-NOTA: NO se llama a la fábrica de cliente real — eso construiría un cliente OpenAI real.
-Solo se prueba assess_job con un mock inyectado.
+NOTA: assess_job fue eliminado en v2.0 (Phase 7 Plan 05). Se usa enrich_job.
+NO se llama a la fábrica de cliente real — eso construiría un cliente OpenAI real.
+Solo se prueba enrich_job con un mock inyectado.
 """
 from __future__ import annotations
 
@@ -31,32 +32,26 @@ from app.models.schemas import (
     ModalidadRemoto,
     RemoteJob,
 )
-from app.scoring.llm import assess_job
+from app.scoring.llm import LLMEnrichment, enrich_job
 
 
 # ---------------------------------------------------------------------------
-# Constante: assessment de referencia que el mock devuelve
+# Constante: enrichment de referencia que el mock devuelve (v2.0 prose-only)
 # ---------------------------------------------------------------------------
 
-_MOCK_ASSESSMENT = LLMJobAssessment(
+_MOCK_ENRICHMENT = LLMEnrichment(
     razonamiento="El candidato tiene Python y LLMs; la oferta pide exactamente eso.",
-    puesto_detectado="Ingeniero de IA / AI Engineer",
-    rango_puesto=1,
-    encaje_skills=85,
-    encaje_seniority=70,
     matched_skills=["Python", "LLMs"],
     missing_requirements=[],
     reasons_for=["Match en skills principales"],
     reasons_against=["Requiere Kubernetes (no en CV)"],
-    deal_breaker_hit_texto=False,
-    deal_breaker_cual_texto=None,
 )
 
 
 def _make_mock_client() -> MagicMock:
     """Construye un MagicMock que imita la superficie instructor.from_openai()."""
     mock_client = MagicMock()
-    mock_client.chat.completions.create.return_value = _MOCK_ASSESSMENT
+    mock_client.chat.completions.create.return_value = _MOCK_ENRICHMENT
     return mock_client
 
 
@@ -133,34 +128,34 @@ def sample_job() -> Job:
 # Tests
 # ---------------------------------------------------------------------------
 
-def test_assess_job_devuelve_tipado(sample_cv, sample_profile, sample_job) -> None:
-    """assess_job devuelve el LLMJobAssessment que el mock produce (tipado, no str)."""
+def test_enrich_job_devuelve_tipado(sample_cv, sample_profile, sample_job) -> None:
+    """enrich_job devuelve el LLMEnrichment que el mock produce (tipado, no str)."""
     mock_client = _make_mock_client()
 
-    result = assess_job(sample_job, sample_cv, sample_profile, mock_client)
+    result = enrich_job(sample_job, sample_cv, sample_profile, mock_client)
 
-    assert isinstance(result, LLMJobAssessment), (
-        f"Se esperaba LLMJobAssessment, se obtuvo {type(result)}"
+    assert isinstance(result, LLMEnrichment), (
+        f"Se esperaba LLMEnrichment, se obtuvo {type(result)}"
     )
-    assert result.rango_puesto == 1
     assert result.matched_skills == ["Python", "LLMs"]
+    assert result.reasons_for == ["Match en skills principales"]
 
 
-def test_assess_job_pasa_response_model_y_modelo(
+def test_enrich_job_pasa_response_model_y_modelo(
     monkeypatch, sample_cv, sample_profile, sample_job
 ) -> None:
-    """assess_job pasa response_model=LLMJobAssessment, modelo por defecto y max_retries=2."""
+    """enrich_job pasa response_model=LLMEnrichment, modelo por defecto y max_retries=2."""
     # Asegurar que OPENAI_MODEL_SCORING no está definida para forzar el valor por defecto
     monkeypatch.delenv("OPENAI_MODEL_SCORING", raising=False)
     mock_client = _make_mock_client()
 
-    assess_job(sample_job, sample_cv, sample_profile, mock_client)
+    enrich_job(sample_job, sample_cv, sample_profile, mock_client)
 
     mock_client.chat.completions.create.assert_called_once()
     kwargs = mock_client.chat.completions.create.call_args.kwargs
 
-    assert kwargs["response_model"] is LLMJobAssessment, (
-        f"response_model debe ser LLMJobAssessment, se obtuvo {kwargs.get('response_model')}"
+    assert kwargs["response_model"] is LLMEnrichment, (
+        f"response_model debe ser LLMEnrichment, se obtuvo {kwargs.get('response_model')}"
     )
     assert kwargs["model"] == "gpt-4o", (
         f"modelo por defecto incorrecto: {kwargs.get('model')}"
@@ -170,14 +165,14 @@ def test_assess_job_pasa_response_model_y_modelo(
     )
 
 
-def test_assess_job_respeta_env_modelo(
+def test_enrich_job_respeta_env_modelo(
     monkeypatch, sample_cv, sample_profile, sample_job
 ) -> None:
-    """assess_job respeta OPENAI_MODEL_SCORING si está definida en el entorno."""
+    """enrich_job respeta OPENAI_MODEL_SCORING si está definida en el entorno."""
     monkeypatch.setenv("OPENAI_MODEL_SCORING", "modelo-x")
     mock_client = _make_mock_client()
 
-    assess_job(sample_job, sample_cv, sample_profile, mock_client)
+    enrich_job(sample_job, sample_cv, sample_profile, mock_client)
 
     kwargs = mock_client.chat.completions.create.call_args.kwargs
     assert kwargs["model"] == "modelo-x", (
@@ -185,14 +180,14 @@ def test_assess_job_respeta_env_modelo(
     )
 
 
-def test_assess_job_incluye_contexto_en_prompt(
+def test_enrich_job_incluye_contexto_en_prompt(
     monkeypatch, sample_cv, sample_profile, sample_job
 ) -> None:
     """SCORE-08: el prompt de usuario incluye CVProfile, ranking, prefs, deal_breakers, oferta."""
     monkeypatch.delenv("OPENAI_MODEL_SCORING", raising=False)
     mock_client = _make_mock_client()
 
-    assess_job(sample_job, sample_cv, sample_profile, mock_client)
+    enrich_job(sample_job, sample_cv, sample_profile, mock_client)
 
     kwargs = mock_client.chat.completions.create.call_args.kwargs
     content = kwargs["messages"][-1]["content"]
@@ -211,7 +206,7 @@ def test_assess_job_incluye_contexto_en_prompt(
     )
 
 
-def test_prompt_escapa_contenido_oferta(
+def test_enrich_job_escapa_contenido_oferta(
     monkeypatch, sample_cv, sample_profile
 ) -> None:
     """CR-03: una descripción con '</oferta>' se escapa y no rompe el delimitador XML.
@@ -235,7 +230,7 @@ def test_prompt_escapa_contenido_oferta(
         source="test",
     )
 
-    assess_job(job_malicioso, sample_cv, sample_profile, mock_client)
+    enrich_job(job_malicioso, sample_cv, sample_profile, mock_client)
 
     kwargs = mock_client.chat.completions.create.call_args.kwargs
     content = kwargs["messages"][-1]["content"]

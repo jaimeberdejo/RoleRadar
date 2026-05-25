@@ -90,7 +90,17 @@ Plans:
   3. Each run creates a row in the `runs` table recording how many jobs were fetched, deduped, scored, and newly seen — queryable by the UI for the status panel
   4. `mark_seen(job_id)` persists across process restarts; a job stored in a previous run is treated as already-seen by the next run and is not re-scored or re-notified
   5. Calling `run_pipeline()` from any Python context (worker cron, unit test, future UI button) produces the same output — no Streamlit or APScheduler import required inside `pipeline.py`
-**Plans**: TBD
+**Plans**: 4 plans
+
+**Wave 1**
+- [ ] 08-01-PLAN.md — Wave 1: RED guard test scaffolding (tests/sources/, tests/test_pipeline.py, tests/storage/test_runs.py)
+
+**Wave 2** *(parallel — disjoint files)*
+- [ ] 08-02-PLAN.md — Wave 2a: JSearch HTTP client (app/sources/jsearch.py)
+- [ ] 08-03-PLAN.md — Wave 2b: Storage extensions (runs table, record_run, get_recent_runs, mark_seen)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 08-04-PLAN.md — Wave 3: Shared pipeline (app/pipeline.py) + worker.py wiring
 
 ### Phase 9: Notifications & Digest
 **Goal**: After each pipeline run, new strong_fit/good_fit jobs above the configured threshold are delivered to a single chosen channel (Telegram or email) without duplicates; if no channel is configured, the run completes silently
@@ -129,6 +139,6 @@ Plans:
 | 5. Observabilidad, Robustez y Docs n8n | v1.0 | 3/3 | Complete | 2026-05-23 |
 | 6. Architecture Cleanup & Storage Foundation | v2.0 | 5/5 | Complete    | 2026-05-24 |
 | 7. Embeddings-First Scoring Refactor | v2.0 | 6/6 | Complete    | 2026-05-25 |
-| 8. JSearch Client & Worker Pipeline | v2.0 | 0/? | Not started | - |
+| 8. JSearch Client & Worker Pipeline | v2.0 | 0/4 | Not started | - |
 | 9. Notifications & Digest | v2.0 | 0/? | Not started | - |
 | 10. Streamlit UI | v2.0 | 0/? | Not started | - |

@@ -203,3 +203,63 @@ def test_rescore_returns_pipeline_result(tmp_path):
 
     assert hasattr(result, "scored"), "PipelineResult must have 'scored' attribute"
     assert hasattr(result, "errors"), "PipelineResult must have 'errors' attribute"
+
+
+# ---------------------------------------------------------------------------
+# WR-07: re-score must PRESERVE the original encaje_skills (not collapse to ~50)
+# ---------------------------------------------------------------------------
+
+def test_rescore_preserves_original_encaje_skills(tmp_path):
+    """WR-07: after rescore_stored, encaje_skills equals the original stored value.
+
+    Before the fix, rescore_stored reconstructed Job with description="" so
+    score_job returned a neutral encaje_skills (~50), which then overwrote the
+    original good score via upsert — a data-quality regression. The fix preserves
+    the stored encaje_skills while re-applying the (changed) weights to score_total.
+    """
+    rescore_stored = _import()
+
+    storage = SQLiteStorage(str(tmp_path / "test.db"))
+    storage.init_db()
+
+    # Original stored job has a distinctive, non-neutral encaje_skills=75.
+    original = _make_scored_job("wr07-preserve-skills-1")
+    original_skills = original.score.desglose.encaje_skills
+    original_total = original.score.score_total
+    assert original_skills == 75, "fixture must use a non-neutral skills value"
+    storage.upsert_scored_jobs([original])
+
+    # Change the weights so score_total would shift if re-applied — proves the
+    # weight-driven path runs while skills is preserved from the original score.
+    storage.set_setting("score_weight_puesto", "0.50")
+    storage.set_setting("score_weight_skills", "0.20")
+    storage.set_setting("score_weight_ubicacion", "0.20")
+    storage.set_setting("score_weight_seniority", "0.10")
+
+    profile_path = _write_minimal_profile(tmp_path)
+    fake_embedder = FakeEmbedder(
+        default_vector=np.array([1, 0, 0, 0], dtype=np.float32)
+    )
+
+    with patch("app.pipeline._fetch_all", side_effect=AssertionError("no fetch")):
+        rescore_stored(
+            storage=storage,
+            embedder=fake_embedder,
+            profile_path=profile_path,
+        )
+
+    history = storage.get_history()
+    row = next(r for r in history if r["id"] == "wr07-preserve-skills-1")
+    new_skills = row["score"]["desglose"]["encaje_skills"]
+
+    assert new_skills == original_skills, (
+        f"Re-score must preserve original encaje_skills={original_skills}, "
+        f"not collapse it to a neutral value; got {new_skills}"
+    )
+    assert new_skills != 50, (
+        "Re-scored encaje_skills must not be the neutral empty-description value (50)"
+    )
+    # The weight-driven score_total must reflect the new weights (it changed).
+    assert row["score_total"] != original_total, (
+        "score_total must be recomputed with the new weights on re-score"
+    )

@@ -100,8 +100,11 @@ def _render() -> None:
             f"(sin re-buscar). "
             f"Si hay OPENAI_API_KEY, hará **{n_jobs}** llamadas LLM. "
             f"({openai_label})\n\n"
-            f"**Nota:** encaje_skills quedará neutro (~50) porque la descripción "
-            f"no se almacena (D-09). Útil para ajustar pesos y deal-breakers.\n\n"
+            f"**Nota:** se re-aplican los pesos y se recalculan los ejes "
+            f"deterministas (puesto, ubicación, seniority) y los deal-breakers. "
+            f"El eje **encaje_skills se PRESERVA del scoring original** — no se "
+            f"recalcula ni se degrada, porque la descripción no se almacena (WR-07). "
+            f"Útil para ajustar pesos y deal-breakers sin perder el match de skills.\n\n"
             f"¿Continuar?"
         )
         confirm_col, cancel_col = st.columns([1, 1])

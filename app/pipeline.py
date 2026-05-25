@@ -71,6 +71,69 @@ def _is_first_run(storage) -> bool:
     return len(storage.get_history(limit=1)) == 0
 
 
+def _stored_encaje_skills(row: dict) -> int | None:
+    """Extract the original encaje_skills from a get_history() row.
+
+    get_history() returns each row with a deserialized "score" dict
+    (JobScore.model_dump()) that contains desglose.encaje_skills. WR-07 needs
+    that original value to avoid degrading skills on re-score.
+
+    Returns the stored integer, or None if the row lacks a usable skills value
+    (caller then keeps the freshly-computed value as a safe fallback).
+    """
+    score = row.get("score")
+    if not isinstance(score, dict):
+        return None
+    desglose = score.get("desglose")
+    if not isinstance(desglose, dict):
+        return None
+    val = desglose.get("encaje_skills")
+    if isinstance(val, bool):  # bool is a subclass of int — reject explicitly
+        return None
+    if isinstance(val, int):
+        return val
+    return None
+
+
+def _merge_preserving_skills(job_score, stored_skills: int, pesos):
+    """Return a JobScore that keeps `stored_skills` for encaje_skills (WR-07).
+
+    Takes the freshly recomputed deterministic axes (puesto/ubicacion/seniority)
+    and deal-breaker state from `job_score`, substitutes the preserved
+    `stored_skills` into encaje_skills, and recomputes score_total from the merged
+    sub-scores using the effective `pesos`. Recommendation is re-derived from the
+    new score_total, then forced to skip if a deal-breaker still fires (mirrors
+    scorer.py PASO 6/7).
+    """
+    from app.models.schemas import Desglose, JobScore, Recommendation  # noqa: PLC0415
+    from app.scoring.scorer import _banda  # noqa: PLC0415
+
+    d = job_score.desglose
+    raw = (
+        d.encaje_puesto * pesos.puesto
+        + stored_skills * pesos.skills
+        + d.encaje_ubicacion * pesos.ubicacion
+        + d.encaje_seniority * pesos.seniority
+    )
+    score_total = max(0, min(100, round(raw)))
+    recommendation = _banda(score_total)
+    if job_score.deal_breaker_hit:
+        recommendation = Recommendation.skip
+
+    return job_score.model_copy(
+        update={
+            "score_total": score_total,
+            "recommendation": recommendation,
+            "desglose": Desglose(
+                encaje_puesto=d.encaje_puesto,
+                encaje_skills=stored_skills,
+                encaje_ubicacion=d.encaje_ubicacion,
+                encaje_seniority=d.encaje_seniority,
+            ),
+        }
+    )
+
+
 def _get_cv_profile() -> CVProfile:
     """Load CVProfile from disk cache (most recent .json in data/.cache/).
 
@@ -321,8 +384,12 @@ def rescore_stored(
     Differences from run_pipeline:
       - NO _fetch_all call (D-09: no JSearch fetch on re-score).
       - NO record_run (re-score is not a fetch run; runs table semantics preserved).
-      - description is "" (not stored in the DB) — encaje_skills will be neutral;
-        documented limitation surfaced in the UI cost warning (Plan 05).
+      - description is "" (not stored in the DB) — so encaje_skills CANNOT be
+        recomputed. WR-07: instead of clobbering the stored (good) skills score
+        with a neutral ~50, we PRESERVE the original encaje_skills and recompute
+        only the deterministic axes (puesto/ubicacion/seniority) + deal-breakers
+        with the effective profile, then recompute score_total from the merged
+        sub-scores using the effective weights.
 
     Import-clean: no streamlit, no apscheduler. All heavy deps deferred.
 
@@ -356,6 +423,8 @@ def rescore_stored(
     # Read stored jobs
     history = storage.get_history(limit=limit)
 
+    pesos = user_profile.pesos
+
     # Reconstruct minimal Job objects and re-score
     rescored: list[ScoredJob] = []
     for row in history:
@@ -370,10 +439,25 @@ def rescore_stored(
                 remote=RemoteJob(row["remote"]) if row.get("remote") else RemoteJob.unknown,
                 url=row.get("url"),
                 source=row.get("source") or "rescore",
-                # description is "" — not stored; encaje_skills neutral ~50 (D-09 limitation)
+                # description is "" — not stored; encaje_skills CANNOT be recomputed.
             )
             job_score = score_job(job, user_profile, cv_profile, embedder, client=None)
-            rescored.append(ScoredJob(job=job, score=job_score))
+
+            # WR-07: PRESERVE the original encaje_skills instead of overwriting it
+            # with the neutral ~50 that an empty description produces. The skills
+            # axis is the one most tied to "match against my real CV" and re-score
+            # has no description to recompute it from. We merge: keep stored
+            # encaje_skills, take the freshly-recomputed deterministic axes
+            # (puesto/ubicacion/seniority) + deal-breakers, and recompute
+            # score_total from the merged sub-scores using the effective weights.
+            stored_skills = _stored_encaje_skills(row)
+            if stored_skills is not None:
+                merged_score = _merge_preserving_skills(
+                    job_score, stored_skills, pesos
+                )
+            else:
+                merged_score = job_score
+            rescored.append(ScoredJob(job=job, score=merged_score))
         except Exception as exc:  # noqa: BLE001
             logger.warning("rescore_stored: score_job failed for job_id=%s: %s", row.get("id"), exc)
             result.errors.append(f"rescore({row.get('id')}): {exc}")

@@ -41,8 +41,8 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 
 ### Worker programado (SCHED)
 
-- [ ] **SCHED-01**: Worker siempre activo (APScheduler, **proceso propio**, sin importar Streamlit) que ejecuta el pipeline en un schedule configurable aunque la UI esté cerrada
-- [ ] **SCHED-02**: Pipeline compartido `fetch(JSearch) → normalizar → dedup (incl. cross-run contra la BD) → score → persistir`, reutilizable por el worker y por el botón "Run now" de la UI
+- [x] **SCHED-01**: Worker siempre activo (APScheduler, **proceso propio**, sin importar Streamlit) que ejecuta el pipeline en un schedule configurable aunque la UI esté cerrada
+- [x] **SCHED-02**: Pipeline compartido `fetch(JSearch) → normalizar → dedup (incl. cross-run contra la BD) → score → persistir`, reutilizable por el worker y por el botón "Run now" de la UI
 - [x] **SCHED-03**: Schedule configurable (intervalo/cron) desde settings; zona horaria `Europe/Madrid` (zoneinfo, no pytz); manejo de misfire (coalesce/grace) que sobrevive a reinicios
 
 ### Notificaciones / digest (NOTIF)
@@ -147,8 +147,8 @@ Mapeo de requisitos a fases.
 | SRC-01 | Phase 8 | Complete |
 | SRC-02 | Phase 8 | Complete |
 | SRC-03 | Phase 8 | Complete |
-| SCHED-01 | Phase 8 | Pending |
-| SCHED-02 | Phase 8 | Pending |
+| SCHED-01 | Phase 8 | Complete |
+| SCHED-02 | Phase 8 | Complete |
 | SCHED-03 | Phase 8 | Complete |
 | STORE-05 | Phase 8 | Complete |
 | STORE-07 | Phase 8 | Complete |

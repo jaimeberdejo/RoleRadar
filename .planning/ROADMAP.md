@@ -24,7 +24,7 @@ Detalle completo en `milestones/v1.0-ROADMAP.md`. 38 requisitos, 179 tests.
 
 - [x] **Phase 6: Architecture Cleanup & Storage Foundation** - Remove FastAPI/n8n, fix secrets, add settings/WAL (completed 2026-05-24)
 - [x] **Phase 7: Embeddings-First Scoring Refactor** - All numeric scores deterministic; OpenAI becomes optional enrichment (completed 2026-05-25)
-- [ ] **Phase 8: JSearch Client & Worker Pipeline** - App-owned fetch + APScheduler worker + runs table
+- [x] **Phase 8: JSearch Client & Worker Pipeline** - App-owned fetch + APScheduler worker + runs table (completed 2026-05-25)
 - [ ] **Phase 9: Notifications & Digest** - Telegram/email digest after each worker run
 - [ ] **Phase 10: Streamlit UI** - Full interactive app: CV upload, search config, results, settings, scheduler status
 
@@ -100,7 +100,7 @@ Plans:
 - [x] 08-03-PLAN.md — Wave 2b: Storage extensions (runs table, record_run, get_recent_runs, mark_seen)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 08-04-PLAN.md — Wave 3: Shared pipeline (app/pipeline.py) + worker.py wiring
+- [x] 08-04-PLAN.md — Wave 3: Shared pipeline (app/pipeline.py) + worker.py wiring
 
 ### Phase 9: Notifications & Digest
 **Goal**: After each pipeline run, new strong_fit/good_fit jobs above the configured threshold are delivered to a single chosen channel (Telegram or email) without duplicates; if no channel is configured, the run completes silently
@@ -139,6 +139,6 @@ Plans:
 | 5. Observabilidad, Robustez y Docs n8n | v1.0 | 3/3 | Complete | 2026-05-23 |
 | 6. Architecture Cleanup & Storage Foundation | v2.0 | 5/5 | Complete    | 2026-05-24 |
 | 7. Embeddings-First Scoring Refactor | v2.0 | 6/6 | Complete    | 2026-05-25 |
-| 8. JSearch Client & Worker Pipeline | v2.0 | 3/4 | In Progress|  |
+| 8. JSearch Client & Worker Pipeline | v2.0 | 4/4 | Complete   | 2026-05-25 |
 | 9. Notifications & Digest | v2.0 | 0/? | Not started | - |
 | 10. Streamlit UI | v2.0 | 0/? | Not started | - |

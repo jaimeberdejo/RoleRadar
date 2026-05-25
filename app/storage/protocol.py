@@ -34,6 +34,7 @@ class Storage(Protocol):
     - record_run: inserta fila en runs con métricas del pipeline run.
     - get_recent_runs: devuelve los runs más recientes ordenados por id desc.
     - mark_seen: establece seen=1 en la fila del job (phase 9 entrega).
+    - get_undelivered_qualifying: ofertas seen=0 que superan el umbral (fuente del digest).
     """
 
     def init_db(self) -> None: ...
@@ -63,3 +64,7 @@ class Storage(Protocol):
     def get_recent_runs(self, limit: int = 10) -> list[dict]: ...
 
     def mark_seen(self, job_id: str) -> None: ...
+
+    def get_undelivered_qualifying(
+        self, min_score: int, recommendations: list[str]
+    ) -> list[ScoredJob]: ...

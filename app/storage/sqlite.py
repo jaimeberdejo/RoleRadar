@@ -23,7 +23,7 @@ from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.models.schemas import JobScore, ScoredJob
+from app.models.schemas import Job, JobScore, RemoteJob, ScoredJob
 
 logger = logging.getLogger(__name__)
 
@@ -199,6 +199,50 @@ class SQLiteStorage:
                     "Error deserializando oferta %s del historial: %s",
                     row["id"],
                     exc,
+                )
+        return result
+
+    def get_undelivered_qualifying(
+        self, min_score: int, recommendations: list[str]
+    ) -> list[ScoredJob]:
+        """Ofertas aún NO entregadas que superan el umbral (fuente del digest, D-08).
+
+        Filtra seen=0 AND recommendation IN (...) AND score_total >= min_score,
+        ordenadas por score_total desc. Decoupla "qué entregar" de "qué se puntuó
+        este run": un job cuya entrega falló sigue seen=0 y reaparece aquí (SC3);
+        un job entregado pasa a seen=1 vía mark_seen y nunca reaparece (SC4).
+
+        Reconstruye ScoredJob completos (Job + JobScore) desde las columnas y
+        score_json — el digest necesita reasons_for + url. description no se
+        almacena en la tabla jobs, así que queda "" (irrelevante para el digest).
+        Filas con score_json corrupto se omiten con warning (T-09: aislamiento).
+        """
+        if not recommendations:
+            return []
+        placeholders = ",".join("?" * len(recommendations))
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                f"SELECT * FROM jobs WHERE seen=0 AND recommendation IN ({placeholders})"
+                " AND score_total >= ? ORDER BY score_total DESC",
+                (*recommendations, min_score),
+            ).fetchall()
+        result: list[ScoredJob] = []
+        for row in rows:
+            try:
+                score = JobScore.model_validate_json(row["score_json"])
+                job = Job(
+                    id=row["id"],
+                    title=row["title"],
+                    company=row["company"],
+                    location=row["location"],
+                    remote=RemoteJob(row["remote"]) if row["remote"] else RemoteJob.unknown,
+                    url=row["url"],
+                    source=row["source"] or "unknown",
+                )
+                result.append(ScoredJob(job=job, score=score))
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "get_undelivered_qualifying: omitiendo fila %s: %s", row["id"], exc
                 )
         return result
 

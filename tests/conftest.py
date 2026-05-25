@@ -298,18 +298,45 @@ def make_scoring_client(assessment: LLMJobAssessment) -> MagicMock:
 
 
 # ── LLM enrichment mock helpers (Phase 7 — enrich_job) ──────────────────────
-from app.scoring.llm import LLMEnrichment  # noqa: E402 — after make_scoring_client
+# CR-02 fix: LLMEnrichment import is DEFERRED to avoid pulling in openai+instructor
+# at pytest collection time, which broke tests/scoring/test_deal_breaker.py and
+# test_seniority.py in environments without the OpenAI SDK installed.
+# EXPECTED_ENRICHMENT is built lazily on first access via _get_expected_enrichment().
 
-EXPECTED_ENRICHMENT = LLMEnrichment(
-    razonamiento="El candidato tiene Python y LLMs que la oferta pide directamente.",
-    reasons_for=["Experiencia en Python", "Match con AI Engineer"],
-    reasons_against=["Requiere Kubernetes (no en CV)"],
-    matched_skills=["Python", "LLMs"],
-    missing_requirements=[],
-)
+def _get_expected_enrichment():
+    """Return the canonical LLMEnrichment fixture object (built lazily).
+
+    Deferred import of LLMEnrichment (and transitively openai+instructor) so that
+    test files with no LLM dependency can be collected without openai installed.
+    """
+    from app.scoring.llm import LLMEnrichment  # deferred — CR-02
+    return LLMEnrichment(
+        razonamiento="El candidato tiene Python y LLMs que la oferta pide directamente.",
+        reasons_for=["Experiencia en Python", "Match con AI Engineer"],
+        reasons_against=["Requiere Kubernetes (no en CV)"],
+        matched_skills=["Python", "LLMs"],
+        missing_requirements=[],
+    )
 
 
-def make_enrichment_client(enrichment: LLMEnrichment) -> MagicMock:
+class _LazyEnrichment:
+    """Proxy for EXPECTED_ENRICHMENT that defers LLMEnrichment import until first use.
+
+    Attribute access is forwarded to the real LLMEnrichment instance so callers
+    that do ``EXPECTED_ENRICHMENT.reasons_for`` work transparently.
+    """
+
+    def __getattr__(self, name):
+        obj = _get_expected_enrichment()
+        # Cache on the class to avoid repeated construction
+        object.__setattr__(self, "_instance", obj)
+        return getattr(obj, name)
+
+
+EXPECTED_ENRICHMENT = _LazyEnrichment()
+
+
+def make_enrichment_client(enrichment) -> MagicMock:
     """Mock instructor client that returns an LLMEnrichment from enrich_job().
 
     Args:

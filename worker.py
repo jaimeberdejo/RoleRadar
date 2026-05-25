@@ -1,8 +1,8 @@
 """Worker BuscadorDeEmpleo — proceso de fondo con APScheduler.
 
 Punto de entrada del contenedor `worker` en docker-compose.yml.
-En Fase 8 se implementará el pipeline completo; esta versión es un stub
-que arranca el scheduler vacío para que el contenedor permanezca activo.
+El pipeline real se implementa en app/pipeline.py (compartido con la UI).
+Este módulo solo gestiona el scheduler y delega la lógica al pipeline.
 
 NO instanciar APScheduler dentro de Streamlit — este módulo corre en un
 proceso separado.
@@ -14,17 +14,27 @@ from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 
+from app.pipeline import run_pipeline as _pipeline_run  # noqa: E402
+
 logger = logging.getLogger(__name__)
 
 
 def run_pipeline() -> None:
-    """Pipeline principal — implementado en Fase 8."""
-    logger.info("Pipeline stub: no implementado aún (Fase 8)")
+    """Wrapper del scheduler: llama al pipeline compartido y loguea el resultado."""
+    result = _pipeline_run()
+    logger.info(
+        "Scheduler pipeline run complete: fetched=%d deduped=%d scored=%d new=%d errors=%d",
+        result.fetched,
+        result.deduped,
+        result.scored,
+        result.new_seen,
+        len(result.errors),
+    )
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    logger.info("Worker arrancando (stub — Fase 8 implementa el pipeline)")
+    logger.info("Worker arrancando — pipeline real (Fase 8)")
 
     # Leer el intervalo desde la settings table (fuente de verdad configurable).
     # Fallback a 6 si la DB no está disponible todavía o la clave no existe.

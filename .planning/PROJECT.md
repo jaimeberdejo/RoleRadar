@@ -158,13 +158,12 @@ los digests por Telegram/email viven dentro de la app, y el **scoring corre en l
 - v1.1: dockerizado, auth `X-API-Key`, migración a OpenAI `gpt-4o-mini`, integración n8n end-to-end verificada (digest real a Telegram). **195 tests**. Vía quick tasks, sin roadmap.
 - Stack v1.x: Python 3.13 · FastAPI · Pydantic v2 + Instructor · OpenAI (scoring/CV) · BGE-M3 local (dedup) · SQLite · pytest · Docker.
 
-**En curso:** v2.0 Standalone App (Streamlit + Scheduler) — ver `## Current Milestone` arriba.
-- Reaprovecha el núcleo v1.x (cv/dedup/scoring/storage) importándolo en proceso.
-- Retira n8n + FastAPI; añade UI Streamlit, cliente JSearch propio, worker APScheduler, scoring local-first y entrega Telegram/email.
-- **Progreso v2.0: 4/5 fases completas.** Fase 6 (limpieza arquitectura), Fase 7 (scoring local-first), Fase 8 (cliente JSearch + worker pipeline) y Fase 9 (notificaciones/digest Telegram+email) hechas. **286 tests.** Queda solo la Fase 10 (UI Streamlit).
-- Fase 9 entrega: paquete `app/notifications/` (digest, Telegram vía httpx, email vía smtplib), `get_undelivered_qualifying` (fuente del digest = query seen=0), mark-seen-tras-entrega con atomicidad por chunk, `python-telegram-bot` retirado.
+**Completado:** v2.0 Standalone App (Streamlit + Scheduler) — **5/5 fases (6-10)**, 27 planes, **363 tests** (2026-05-25).
+- Reaprovecha el núcleo v1.x (cv/dedup/scoring/storage) importándolo en proceso; retira n8n + FastAPI.
+- Fase 6: limpieza de arquitectura (FastAPI/n8n fuera, settings table, SQLite WAL). Fase 7: scoring local-first (todos los sub-scores deterministas BGE-M3; OpenAI = enriquecimiento opcional). Fase 8: cliente JSearch propio + worker APScheduler + pipeline compartido + tabla runs. Fase 9: notificaciones/digest (paquete `app/notifications/`, Telegram vía httpx / email vía smtplib, `get_undelivered_qualifying` como fuente del digest = query seen=0, mark-seen-tras-entrega con atomicidad por chunk). Fase 10: app Streamlit multipágina (CV, Search Config, Results, Settings, Status; embedder `@st.cache_resource`; "Run now" en hilo no-bloqueante; overlay settings→perfil que el worker respeta; README v2.0).
+- Calidad: code reviews profundos (Opus) atajaron bugs reales antes de mergear — pérdida de datos en chunking de Telegram (Fase 9), y la página Search que no configuraba la búsqueda + Re-score que degradaba scores (Fase 10).
 
-**Pendiente del usuario (heredado):** sacar/rotar la RapidAPI key inline del `docker-compose.yml`; el CV real se parseó con `años_experiencia_total=None` (a afinar).
+**Pendiente del usuario:** 4 verificaciones visuales en navegador (ver `10-HUMAN-UAT.md`: caché de CV, sensación no-bloqueante de "Run now", vista de detalle, validación de pesos). Heredado: rotar la RapidAPI key (clave free-tier, riesgo aceptado); el CV real se parseó con `años_experiencia_total=None` (a afinar).
 
 ## Evolution
 
@@ -184,4 +183,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-25 — Phase 9 (Notifications & Digest) complete; v2.0 at 4/5 phases, 286 tests*
+*Last updated: 2026-05-25 — v2.0 Standalone App COMPLETE (phases 6-10, 27 plans, 363 tests); pending milestone audit + archive*

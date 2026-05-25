@@ -61,7 +61,16 @@ def _render() -> None:
         ):
             started = start_run()
             if started:
+                # WR-05: clear any stale completed-run headline before the new run.
+                st.session_state.pop("_last_run_summary", None)
                 st.rerun()
+
+    # If a previous poll stashed a completed-run headline, render it so it
+    # survives across reruns (WR-05). It is shown once the run is no longer
+    # in progress and is cleared on the next explicit Run now.
+    _last_summary = st.session_state.get("_last_run_summary")
+    if _last_summary and not _svc._RUN_STATUS["running"]:
+        st.success(_last_summary)
 
     # Polling fragment — D-04: only fragments rerun every 2 s while running
     @st.fragment(run_every="2s" if _svc._RUN_STATUS["running"] else None)
@@ -71,12 +80,17 @@ def _render() -> None:
             st.status(msg, state="running")
         elif state == "done":
             st.success(msg)
-            # Clear the result so the next idle rerun shows nothing
-            _svc._RUN_STATUS["result"] = None
+            # WR-05: stash the completed summary BEFORE clearing the result so
+            # the headline survives the rerun (the count is otherwise discarded).
+            st.session_state["_last_run_summary"] = msg
+            # WR-01: clear through the lock-guarded service helper, not by
+            # reaching into the module global, so we never race the thread.
+            _svc.clear_run_result()
             st.rerun()
         elif state == "error":
             st.error(msg)
-            _svc._RUN_STATUS["error"] = None
+            # WR-01: clear the error through the lock-guarded service helper.
+            _svc.clear_run_error()
 
     _poll()
 

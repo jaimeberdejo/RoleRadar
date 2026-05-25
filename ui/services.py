@@ -70,6 +70,23 @@ _RUN_LOCK = threading.Lock()
 _RUN_STATUS: dict = {"running": False, "result": None, "error": None}
 
 
+def clear_run_result() -> None:
+    """Clear the stored run result under _RUN_LOCK (WR-01).
+
+    The polling fragment in results.py must NOT reach into _RUN_STATUS directly:
+    the documented invariant is that ALL mutations go through _RUN_LOCK so the
+    background thread and the Streamlit script thread never race.
+    """
+    with _RUN_LOCK:
+        _RUN_STATUS["result"] = None
+
+
+def clear_run_error() -> None:
+    """Clear the stored run error under _RUN_LOCK (WR-01)."""
+    with _RUN_LOCK:
+        _RUN_STATUS["error"] = None
+
+
 def _run_pipeline_thread(storage, embedder, profile_path) -> None:
     """Runs in a background thread. NEVER calls st.* functions.
 

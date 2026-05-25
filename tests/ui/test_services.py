@@ -78,6 +78,36 @@ def test_embedder_singleton():
 
 
 # ---------------------------------------------------------------------------
+# Test: WR-01 lock-guarded clear helpers
+# ---------------------------------------------------------------------------
+
+def test_clear_run_result_clears_under_lock():
+    """clear_run_result() sets _RUN_STATUS['result'] to None (WR-01)."""
+    with ui.services._RUN_LOCK:
+        ui.services._RUN_STATUS["result"] = _FakePipelineResult(scored=3)
+
+    ui.services.clear_run_result()
+
+    with ui.services._RUN_LOCK:
+        assert ui.services._RUN_STATUS["result"] is None, (
+            "clear_run_result() must set result to None"
+        )
+
+
+def test_clear_run_error_clears_under_lock():
+    """clear_run_error() sets _RUN_STATUS['error'] to None (WR-01)."""
+    with ui.services._RUN_LOCK:
+        ui.services._RUN_STATUS["error"] = "boom"
+
+    ui.services.clear_run_error()
+
+    with ui.services._RUN_LOCK:
+        assert ui.services._RUN_STATUS["error"] is None, (
+            "clear_run_error() must set error to None"
+        )
+
+
+# ---------------------------------------------------------------------------
 # Test: double-run guard (D-06 / T-10-03-02)
 # ---------------------------------------------------------------------------
 

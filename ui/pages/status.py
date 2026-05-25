@@ -16,6 +16,25 @@ from __future__ import annotations
 
 from datetime import datetime
 
+_DISPLAY_FMT = "%Y-%m-%d %H:%M"
+
+
+def _format_ts(value) -> str:
+    """Format an ISO-8601 string or datetime for display (IN-03).
+
+    Returns "YYYY-MM-DD HH:MM" for a parseable value, or "—" when value is
+    None/empty/malformed. Never raises — a bad persisted timestamp must not
+    crash the Status page.
+    """
+    if value is None or value == "":
+        return "—"
+    if isinstance(value, datetime):
+        return value.strftime(_DISPLAY_FMT)
+    try:
+        return datetime.fromisoformat(str(value)).strftime(_DISPLAY_FMT)
+    except (ValueError, TypeError):
+        return str(value)
+
 
 def summarize_status(runs: list[dict], settings: dict) -> dict:
     """Compute the status summary dict from the runs list and settings.
@@ -76,10 +95,11 @@ def _render() -> None:
     # ── Headline metrics ──────────────────────────────────────────────────
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Último run", s["last_run"] or "—")
+        # IN-03: format ISO timestamp for readability (guarded against None/malformed)
+        st.metric("Último run", _format_ts(s["last_run"]))
     with col2:
-        next_run_str = s["next_run"].isoformat() if isinstance(s["next_run"], datetime) else "—"
-        st.metric("Próximo run", next_run_str)
+        # IN-03: format the computed next-run datetime the same way
+        st.metric("Próximo run", _format_ts(s["next_run"]))
     with col3:
         st.metric("Nuevas ofertas", s["new_seen"])
     with col4:

@@ -98,3 +98,38 @@ def test_summarize_status_importable_without_runtime():
     # If this import triggers _render() or st.* calls, it would raise StreamlitAPIException.
     from ui.pages.status import summarize_status  # noqa: F401
     assert callable(summarize_status)
+
+
+# ---------------------------------------------------------------------------
+# IN-03: _format_ts formats ISO timestamps and guards against None/malformed
+# ---------------------------------------------------------------------------
+
+
+def test_format_ts_iso_string():
+    """An ISO-8601 string is formatted to 'YYYY-MM-DD HH:MM'."""
+    from ui.pages.status import _format_ts
+
+    assert _format_ts("2026-05-25T10:00:00+00:00") == "2026-05-25 10:00"
+
+
+def test_format_ts_datetime():
+    """A datetime is formatted to 'YYYY-MM-DD HH:MM'."""
+    from ui.pages.status import _format_ts
+
+    dt = datetime(2026, 5, 25, 14, 30, tzinfo=timezone.utc)
+    assert _format_ts(dt) == "2026-05-25 14:30"
+
+
+def test_format_ts_none_and_empty():
+    """None / empty string render as the em-dash placeholder (no crash)."""
+    from ui.pages.status import _format_ts
+
+    assert _format_ts(None) == "—"
+    assert _format_ts("") == "—"
+
+
+def test_format_ts_malformed_does_not_crash():
+    """A malformed timestamp is returned as-is, not raised (IN-03 guard)."""
+    from ui.pages.status import _format_ts
+
+    assert _format_ts("not-a-timestamp") == "not-a-timestamp"

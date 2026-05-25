@@ -21,6 +21,28 @@ import json
 from ui.settings_logic import channel_status, pack_deal_breakers, validate_and_pack_weights
 
 
+def _to_float(s, default: float) -> float:
+    """Safely coerce a persisted setting string to float (WR-03).
+
+    settings.get(key, default) only applies the default when the KEY is absent.
+    A present-but-malformed value (empty string, "none", partial write) would
+    crash float(). This helper falls back to `default` instead of raising, so a
+    bad persisted value can never blank out the whole Settings page.
+    """
+    try:
+        return float(s)
+    except (TypeError, ValueError):
+        return default
+
+
+def _to_int(s, default: int) -> int:
+    """Safely coerce a persisted setting string to int (WR-03). See _to_float."""
+    try:
+        return int(s)
+    except (TypeError, ValueError):
+        return default
+
+
 def _render() -> None:
     """Streamlit page body for Settings (UI-05 + UI-06)."""
     import streamlit as st
@@ -43,7 +65,7 @@ def _render() -> None:
     with col1:
         peso_puesto = st.number_input(
             "Puesto",
-            value=float(settings.get("score_weight_puesto", "0.35")),
+            value=_to_float(settings.get("score_weight_puesto"), 0.35),
             min_value=0.0,
             max_value=1.0,
             step=0.05,
@@ -53,7 +75,7 @@ def _render() -> None:
     with col2:
         peso_skills = st.number_input(
             "Skills",
-            value=float(settings.get("score_weight_skills", "0.30")),
+            value=_to_float(settings.get("score_weight_skills"), 0.30),
             min_value=0.0,
             max_value=1.0,
             step=0.05,
@@ -63,7 +85,7 @@ def _render() -> None:
     with col3:
         peso_ubicacion = st.number_input(
             "Ubicación",
-            value=float(settings.get("score_weight_ubicacion", "0.20")),
+            value=_to_float(settings.get("score_weight_ubicacion"), 0.20),
             min_value=0.0,
             max_value=1.0,
             step=0.05,
@@ -73,7 +95,7 @@ def _render() -> None:
     with col4:
         peso_seniority = st.number_input(
             "Seniority",
-            value=float(settings.get("score_weight_seniority", "0.15")),
+            value=_to_float(settings.get("score_weight_seniority"), 0.15),
             min_value=0.0,
             max_value=1.0,
             step=0.05,
@@ -100,7 +122,7 @@ def _render() -> None:
     st.subheader("Umbral de notificación")
     threshold = st.number_input(
         "Umbral mínimo de score",
-        value=int(settings.get("notification_min_score", "70")),
+        value=_to_int(settings.get("notification_min_score"), 70),
         min_value=0,
         max_value=100,
         step=5,
@@ -116,8 +138,16 @@ def _render() -> None:
     st.subheader("Deal-breakers")
     st.caption("Uno por línea. Si una oferta cumple alguno → recommendation = skip.")
 
-    # Load persisted deal_breakers JSON and convert to textarea text
-    current_db = json.loads(settings.get("deal_breakers", "[]"))
+    # Load persisted deal_breakers JSON and convert to textarea text.
+    # WR-02: guard against malformed/legacy values (non-JSON, non-list, truncated
+    # write) — a bad value must not crash the whole Settings page.
+    raw_db = settings.get("deal_breakers", "[]")
+    try:
+        current_db = json.loads(raw_db)
+        if not isinstance(current_db, list):
+            current_db = []
+    except (json.JSONDecodeError, TypeError):
+        current_db = []
     deal_breakers_text = st.text_area(
         "Deal-breakers (uno por línea)",
         value="\n".join(current_db),

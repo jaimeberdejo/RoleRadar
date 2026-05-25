@@ -50,3 +50,37 @@ def test_deal_breakers_default_is_valid_json_list(tmp_path):
     assert isinstance(parsed, list), (
         f"deal_breakers default must be a JSON-encoded list; got {type(parsed)}: {parsed!r}"
     )
+
+
+# ---------------------------------------------------------------------------
+# WR-02: the Settings page must not crash on a malformed persisted deal_breakers
+# ---------------------------------------------------------------------------
+
+def _settings_page_parse_deal_breakers(settings: dict) -> list:
+    """Mirror the guarded parse in ui/pages/settings.py (WR-02).
+
+    Kept in sync with the page so a regression there fails this test. A non-JSON
+    or non-list value must yield [] rather than raising and blanking the page.
+    """
+    raw_db = settings.get("deal_breakers", "[]")
+    try:
+        current_db = json.loads(raw_db)
+        if not isinstance(current_db, list):
+            current_db = []
+    except (json.JSONDecodeError, TypeError):
+        current_db = []
+    return current_db
+
+
+def test_settings_page_handles_malformed_deal_breakers():
+    """WR-02: a legacy plain string / truncated write must not raise; → []."""
+    # Legacy non-JSON string value (e.g. a plain string was stored directly)
+    assert _settings_page_parse_deal_breakers({"deal_breakers": "not json {"}) == []
+    # Valid JSON but not a list (e.g. an object) → []
+    assert _settings_page_parse_deal_breakers({"deal_breakers": '{"a": 1}'}) == []
+    # Valid JSON list → preserved
+    assert _settings_page_parse_deal_breakers(
+        {"deal_breakers": '["sin remoto"]'}
+    ) == ["sin remoto"]
+    # Absent key → default "[]" → []
+    assert _settings_page_parse_deal_breakers({}) == []

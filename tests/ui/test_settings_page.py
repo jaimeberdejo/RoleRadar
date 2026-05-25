@@ -99,6 +99,41 @@ def test_pack_deal_breakers_only_blanks():
 
 
 # ---------------------------------------------------------------------------
+# WR-02 / WR-03: settings page safe-coerce helpers (malformed persisted values)
+# ---------------------------------------------------------------------------
+
+
+def test_to_float_valid():
+    """_to_float parses a valid numeric string."""
+    from ui.pages.settings import _to_float
+
+    assert _to_float("0.42", 0.35) == pytest.approx(0.42)
+
+
+@pytest.mark.parametrize("bad", ["", "none", None, "0.3x", "  "])
+def test_to_float_falls_back_on_malformed(bad):
+    """WR-03: malformed persisted value falls back to default instead of raising."""
+    from ui.pages.settings import _to_float
+
+    assert _to_float(bad, 0.35) == pytest.approx(0.35)
+
+
+def test_to_int_valid():
+    """_to_int parses a valid integer string."""
+    from ui.pages.settings import _to_int
+
+    assert _to_int("70", 50) == 70
+
+
+@pytest.mark.parametrize("bad", ["", "none", None, "7x", "  "])
+def test_to_int_falls_back_on_malformed(bad):
+    """WR-03: malformed persisted threshold falls back to default instead of raising."""
+    from ui.pages.settings import _to_int
+
+    assert _to_int(bad, 70) == 70
+
+
+# ---------------------------------------------------------------------------
 # channel_status — booleans only, NEVER secret values
 # ---------------------------------------------------------------------------
 

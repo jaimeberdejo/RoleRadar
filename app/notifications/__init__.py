@@ -117,8 +117,16 @@ def _send_telegram(storage, jobs, result: DigestResult) -> None:
 
 
 def _send_email(storage, jobs, result: DigestResult) -> None:
-    """Format + send all jobs in one email. Mark all seen on success (D-10)."""
+    """Format + send all jobs in one email. Mark all seen on success (D-10).
+
+    Never raises (honors the D-13 contract): besides smtplib.SMTPException, SMTP
+    delivery can fail at the transport layer with OSError (covers socket.gaierror
+    DNS failures, connection refused, and TimeoutError) or ssl.SSLError during
+    STARTTLS — none of which subclass SMTPException. All are caught here and
+    reported via result.errors so a bad SMTP_HOST never escapes send_digest (WR-01).
+    """
     import smtplib  # noqa: PLC0415
+    import ssl  # noqa: PLC0415
 
     from app.notifications.email_smtp import send_email_digest  # noqa: PLC0415
 
@@ -127,7 +135,7 @@ def _send_email(storage, jobs, result: DigestResult) -> None:
     subject = build_subject(len(jobs))
     try:
         send_email_digest(body, subject)
-    except smtplib.SMTPException as exc:
+    except (smtplib.SMTPException, OSError, ssl.SSLError) as exc:
         logger.error("Email delivery failed: %s", exc)
         result.errors.append(f"email: {exc}")
         return

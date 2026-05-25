@@ -23,7 +23,14 @@ DEFAULT_SMTP_PORT = 587
 
 
 def send_email_digest(body: str, subject: str) -> None:
-    """Send one plain-text digest email. Raises smtplib.SMTPException on failure.
+    """Send one plain-text digest email.
+
+    Failure surface (raised to the caller): besides smtplib.SMTPException (SMTP
+    protocol/auth errors), the connect/STARTTLS/login sequence can raise transport
+    errors that do NOT subclass SMTPException — OSError (including socket.gaierror
+    for DNS failures, connection refused, and TimeoutError) and ssl.SSLError during
+    STARTTLS. The caller (_send_email in __init__.py) catches all of these so the
+    failure never escapes send_digest (D-13 / WR-01).
 
     Reads SMTP_HOST/PORT/USER/PASSWORD (+ optional SMTP_TO) from env at call time,
     never at module level (D-04). To defaults to SMTP_USER (self-send) when SMTP_TO

@@ -31,13 +31,13 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 
 ### Scoring local-first (SCORE — continúa desde SCORE-08) ← **núcleo del milestone**
 
-- [ ] **SCORE-09**: Todos los sub-scores numéricos (encaje_puesto/skills/ubicación/seniority) se calculan **sin ninguna llamada a OpenAI**
+- [x] **SCORE-09**: Todos los sub-scores numéricos (encaje_puesto/skills/ubicación/seniority) se calculan **sin ninguna llamada a OpenAI**
 - [ ] **SCORE-10**: `encaje_skills` vía coseno BGE-M3 (texto del CV ↔ descripción de la oferta)
 - [ ] **SCORE-11**: `rango_puesto` / `puesto_detectado` vía similitud BGE-M3 título↔ranking(+sinónimos), reemplazando la detección por LLM
 - [ ] **SCORE-12**: `encaje_seniority` determinista (detección de años/nivel en la descripción vs `CVProfile`; `anios_experiencia_total=None` tratado como neutro)
 - [ ] **SCORE-13**: `deal_breaker_hit` determinista (match keyword/substring) — el filtro duro se preserva sin LLM
-- [ ] **SCORE-14**: OpenAI es **solo enriquecimiento opcional** — nunca importado/requerido al arrancar; activado por presencia de key; añade `reasons_for`/`reasons_against` + `matched_skills`/`missing_requirements`
-- [ ] **SCORE-15**: Razones de **fallback basadas en reglas** cuando no hay key — la app no queda degradada (explicaciones legibles generadas desde los scores deterministas)
+- [x] **SCORE-14**: OpenAI es **solo enriquecimiento opcional** — nunca importado/requerido al arrancar; activado por presencia de key; añade `reasons_for`/`reasons_against` + `matched_skills`/`missing_requirements`
+- [x] **SCORE-15**: Razones de **fallback basadas en reglas** cuando no hay key — la app no queda degradada (explicaciones legibles generadas desde los scores deterministas)
 
 ### Worker programado (SCHED)
 
@@ -135,13 +135,13 @@ Mapeo de requisitos a fases.
 | STORE-04 | Phase 6 | Complete |
 | STORE-06 | Phase 6 | Complete |
 | DOC-05 | Phase 6 | Complete |
-| SCORE-09 | Phase 7 | Pending |
+| SCORE-09 | Phase 7 | Complete |
 | SCORE-10 | Phase 7 | Pending |
 | SCORE-11 | Phase 7 | Pending |
 | SCORE-12 | Phase 7 | Pending |
 | SCORE-13 | Phase 7 | Pending |
-| SCORE-14 | Phase 7 | Pending |
-| SCORE-15 | Phase 7 | Pending |
+| SCORE-14 | Phase 7 | Complete |
+| SCORE-15 | Phase 7 | Complete |
 | QA-05 | Phase 7 | Pending |
 | QA-07 | Phase 7 | Pending |
 | SRC-01 | Phase 8 | Pending |

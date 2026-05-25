@@ -4,14 +4,14 @@ milestone: v2.0
 milestone_name: Standalone App (Streamlit + Scheduler)
 status: executing
 stopped_at: Completed 06-05-PLAN.md (Docker restructure + worker.py stub + .env.example v2.0). Phase 6 complete.
-last_updated: "2026-05-25T00:08:51.883Z"
+last_updated: "2026-05-25T07:42:48.554Z"
 last_activity: 2026-05-25 -- Phase 7 planning complete
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 11
-  completed_plans: 5
-  percent: 45
+  completed_plans: 11
+  percent: 91
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-05-24)
 ## Current Position
 
 Phase: 7
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-25 -- Phase 7 planning complete
+Plan: 07-05 complete; next 07-06
+Status: Executing — Phase 7
+Last activity: 2026-05-25 -- Plan 07-05 complete (scorer.py + llm.py v2.0 refactor, all 5 guard tests GREEN)
 
 Progress bar: [##--------] 20% (1/5 phases)
 
@@ -89,6 +89,9 @@ Recent decisions affecting current work:
 - [v2.0 Phase 6 P02]: Key rotation checkpoint SKIPPED — user accepts residual risk on a free-tier RapidAPI key (no billing exposure); key will not be rotated
 - [v2.0 Phase 6 P05]: Neutral Dockerfile CMD ('print Use: docker compose up') — each service overrides via compose command; no hard-coded entrypoint in image
 - [v2.0 Phase 6 P05]: EXPOSE 8000 removed from Dockerfile — v2.0 uses Streamlit port 8501 via compose; removing EXPOSE is cleaner than leaving a misleading port declaration
+- [v2.0 Phase 7 P05]: score_job signature v2.0: (job, user_profile, cv_profile, embedder, *, client=None) — user_profile 2nd per CONTEXT.md spec
+- [v2.0 Phase 7 P05]: LLMEnrichment local to llm.py (not schemas.py) — it is an implementation detail of enrichment step
+- [v2.0 Phase 7 P05]: puesto_match corpus text = titulo only (not titulo+sinonimos) — BGE-M3 generalizes semantics; titulo-only enables clean FakeEmbedder key lookup in tests
 
 ### Pending Todos
 
@@ -135,7 +138,7 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-05-24T23:39:39.802Z
-Stopped at: Completed 06-05-PLAN.md (Docker restructure + worker.py stub + .env.example v2.0). Phase 6 complete.
+Last session: 2026-05-25T07:41:39Z
+Stopped at: Completed 07-05-PLAN.md (scorer.py v2.0 + llm.py enrichment-only, guard tests GREEN).
 Resume file: None
-Next: execute Phase 7 plans (Embeddings-First Scoring Refactor)
+Next: execute Phase 7 Plan 07-06 (update test_scorer.py to v2.0 signature)

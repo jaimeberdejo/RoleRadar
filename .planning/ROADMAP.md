@@ -75,7 +75,7 @@ Plans:
 - [x] 07-04-PLAN.md — Wave 1: deal_breaker.py (deterministic keyword/substring matcher)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 07-05-PLAN.md — Wave 2: Refactor scorer.py (numbers-first + embedder injection) + llm.py (enrichment-only)
+- [x] 07-05-PLAN.md — Wave 2: Refactor scorer.py (numbers-first + embedder injection) + llm.py (enrichment-only)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 07-06-PLAN.md — Wave 3: Comprehensive tests (test_scorer, test_llm, test_seniority, test_deal_breaker, test_puesto_match)
@@ -128,7 +128,7 @@ Plans:
 | 4. API y Persistencia | v1.0 | 4/4 | Complete | 2026-05-23 |
 | 5. Observabilidad, Robustez y Docs n8n | v1.0 | 3/3 | Complete | 2026-05-23 |
 | 6. Architecture Cleanup & Storage Foundation | v2.0 | 5/5 | Complete    | 2026-05-24 |
-| 7. Embeddings-First Scoring Refactor | v2.0 | 4/6 | In Progress|  |
+| 7. Embeddings-First Scoring Refactor | v2.0 | 5/6 | In Progress|  |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 0/? | Not started | - |
 | 9. Notifications & Digest | v2.0 | 0/? | Not started | - |
 | 10. Streamlit UI | v2.0 | 0/? | Not started | - |

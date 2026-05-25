@@ -38,7 +38,7 @@ def send_digest(storage, settings: dict[str, str]) -> DigestResult:
     """Query undelivered qualifying jobs, send to the resolved channel, mark seen on success.
 
     Sequence (D-10):
-      1. min_score = int(settings.notification_min_score, default 70)
+      1. min_score = int(settings.get("notification_min_score", "70"))
       2. jobs = storage.get_undelivered_qualifying(min_score, ["strong_fit","good_fit"])
       3. if not jobs → return DigestResult(delivered=0)
       4. channel = resolve_channel(settings); if None → log, return (NO mark_seen)

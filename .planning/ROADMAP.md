@@ -111,18 +111,20 @@ Plans:
   2. When only `SMTP_*` vars are set (no Telegram), a digest email is sent instead; when neither is set, the run completes with no error and a log entry noting no channel is configured
   3. A job is marked `seen=1` in SQLite only after the delivery succeeds — if the Telegram/email call fails, the job remains unseen and will be included in the next run's digest
   4. A job that was already delivered in a previous run never appears in a subsequent digest, even after the worker restarts
-**Plans**: 5 plans (Wave 0: 1 plan; Wave 1: 3 plans parallel; Wave 2: 1 plan)
+**Plans**: 5 plans (Wave 0: 1 plan; Wave 1: 2 plans parallel; Wave 2: 1 plan; Wave 3: 1 plan)
 Plans:
 
 **Wave 0**
 - [ ] 09-01-PLAN.md — RED guard test scaffolding (tests/notifications/ + tests/storage/test_undelivered.py)
 
-**Wave 1** *(parallel — disjoint files)*
+**Wave 1** *(parallel — disjoint files: storage vs pyproject)*
 - [ ] 09-02-PLAN.md — Storage extensions: get_undelivered_qualifying + runs channel/notified migration
-- [ ] 09-03-PLAN.md — Notifications package: digest.py, telegram.py, email_smtp.py, send_digest
 - [ ] 09-04-PLAN.md — Remove python-telegram-bot from pyproject.toml + regenerate uv.lock
 
-**Wave 2** *(blocked on Wave 1 completion)*
+**Wave 2** *(blocked on 09-02 — needs get_undelivered_qualifying)*
+- [ ] 09-03-PLAN.md — Notifications package: digest.py, telegram.py, email_smtp.py, send_digest
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 09-05-PLAN.md — Wire send_digest into run_pipeline + record_run accounting + SC1-SC4 e2e tests
 
 ### Phase 10: Streamlit UI

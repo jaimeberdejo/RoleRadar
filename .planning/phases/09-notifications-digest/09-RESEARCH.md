@@ -661,22 +661,22 @@ def test_notifications_no_streamlit_apscheduler():
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **PTB removal confirmation**
    - What we know: PTB is unused after Phase 9; `Bot.send_message` is async; raw httpx is the right tool.
    - What's unclear: Whether the user wants to keep PTB for a potential future interactive bot (not in scope per REQUIREMENTS.md "Bot de Telegram interactivo → out of scope").
-   - Recommendation: Include PTB removal as a task in the plan with a comment. User can veto.
+   - **RESOLVED:** Remove PTB — implemented as plan 09-04 (pyproject.toml + uv.lock).
 
 2. **Gmail self-send vs separate recipient**
    - What we know: D-07 says "one email per run"; `.env.example` documents `SMTP_USER` and `SMTP_PASSWORD` but no `SMTP_TO`.
    - What's unclear: Should `To:` equal `SMTP_USER` (self-send) or require a separate `SMTP_TO` env var?
-   - Recommendation: Default to self-send (`To: SMTP_USER`) for a personal tool. Add `SMTP_TO` only if explicitly requested.
+   - **RESOLVED:** Default to self-send (`To: SMTP_USER`); optional `SMTP_TO` override documented in `.env.example` — implemented in plan 09-03 Task 2.
 
 3. **D-14 record_run update — pipeline.py call site**
    - What we know: `pipeline.py` currently calls `record_run(...)` at step 10 WITHOUT `channel`/`notified`. The digest result is only known AFTER step 11.
    - What's unclear: Should `record_run` be called twice (step 10 + update in step 11), or deferred to after `send_digest`?
-   - Recommendation: Call `record_run` once, AFTER `send_digest`, passing `channel` and `notified` from `DigestResult`. Move step 10 after step 11 (or merge). The "run started" timestamp still comes from step 10 via `started_at` local variable.
+   - **RESOLVED:** Call `record_run` once, AFTER `send_digest`, passing `channel`/`notified` from `DigestResult`; `started_at` local still captures run-start time — implemented in plan 09-05 Task 1.
 
 ---
 

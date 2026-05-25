@@ -32,10 +32,10 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 ### Scoring local-first (SCORE — continúa desde SCORE-08) ← **núcleo del milestone**
 
 - [x] **SCORE-09**: Todos los sub-scores numéricos (encaje_puesto/skills/ubicación/seniority) se calculan **sin ninguna llamada a OpenAI**
-- [ ] **SCORE-10**: `encaje_skills` vía coseno BGE-M3 (texto del CV ↔ descripción de la oferta)
-- [ ] **SCORE-11**: `rango_puesto` / `puesto_detectado` vía similitud BGE-M3 título↔ranking(+sinónimos), reemplazando la detección por LLM
-- [ ] **SCORE-12**: `encaje_seniority` determinista (detección de años/nivel en la descripción vs `CVProfile`; `anios_experiencia_total=None` tratado como neutro)
-- [ ] **SCORE-13**: `deal_breaker_hit` determinista (match keyword/substring) — el filtro duro se preserva sin LLM
+- [x] **SCORE-10**: `encaje_skills` vía coseno BGE-M3 (texto del CV ↔ descripción de la oferta)
+- [x] **SCORE-11**: `rango_puesto` / `puesto_detectado` vía similitud BGE-M3 título↔ranking(+sinónimos), reemplazando la detección por LLM
+- [x] **SCORE-12**: `encaje_seniority` determinista (detección de años/nivel en la descripción vs `CVProfile`; `anios_experiencia_total=None` tratado como neutro)
+- [x] **SCORE-13**: `deal_breaker_hit` determinista (match keyword/substring) — el filtro duro se preserva sin LLM
 - [x] **SCORE-14**: OpenAI es **solo enriquecimiento opcional** — nunca importado/requerido al arrancar; activado por presencia de key; añade `reasons_for`/`reasons_against` + `matched_skills`/`missing_requirements`
 - [x] **SCORE-15**: Razones de **fallback basadas en reglas** cuando no hay key — la app no queda degradada (explicaciones legibles generadas desde los scores deterministas)
 
@@ -73,9 +73,9 @@ Cada requisito mapea a una fase del roadmap (ver Traceability).
 
 ### Calidad / tests (QA — continúa desde QA-04)
 
-- [ ] **QA-05**: Tests del scorer local-first (scores numéricos deterministas y testeables **sin LLM**; enriquecimiento LLM mockeado)
+- [x] **QA-05**: Tests del scorer local-first (scores numéricos deterministas y testeables **sin LLM**; enriquecimiento LLM mockeado)
 - [ ] **QA-06**: Tests del cliente JSearch (httpx mockeado), del pipeline del worker, de notificaciones (envío mockeado) y del storage settings/runs
-- [ ] **QA-07**: Test del camino **"sin `OPENAI_API_KEY`"** (sin error de import, scores presentes y digest funcional)
+- [x] **QA-07**: Test del camino **"sin `OPENAI_API_KEY`"** (sin error de import, scores presentes y digest funcional)
 
 ### Documentación (DOC — continúa desde DOC-03)
 
@@ -136,14 +136,14 @@ Mapeo de requisitos a fases.
 | STORE-06 | Phase 6 | Complete |
 | DOC-05 | Phase 6 | Complete |
 | SCORE-09 | Phase 7 | Complete |
-| SCORE-10 | Phase 7 | Pending |
-| SCORE-11 | Phase 7 | Pending |
-| SCORE-12 | Phase 7 | Pending |
-| SCORE-13 | Phase 7 | Pending |
+| SCORE-10 | Phase 7 | Complete |
+| SCORE-11 | Phase 7 | Complete |
+| SCORE-12 | Phase 7 | Complete |
+| SCORE-13 | Phase 7 | Complete |
 | SCORE-14 | Phase 7 | Complete |
 | SCORE-15 | Phase 7 | Complete |
-| QA-05 | Phase 7 | Pending |
-| QA-07 | Phase 7 | Pending |
+| QA-05 | Phase 7 | Complete |
+| QA-07 | Phase 7 | Complete |
 | SRC-01 | Phase 8 | Pending |
 | SRC-02 | Phase 8 | Pending |
 | SRC-03 | Phase 8 | Pending |

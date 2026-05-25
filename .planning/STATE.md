@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Standalone App (Streamlit + Scheduler)
 status: executing
-stopped_at: Completed 06-05-PLAN.md (Docker restructure + worker.py stub + .env.example v2.0). Phase 6 complete.
-last_updated: "2026-05-25T07:42:48.554Z"
-last_activity: 2026-05-25 -- Phase 7 planning complete
+stopped_at: Completed 07-06-PLAN.md (235 tests GREEN, SC3 synonyms restored, scorer v2 tests, QA-07).
+last_updated: "2026-05-25T07:52:46.781Z"
+last_activity: 2026-05-25 -- Plan 07-05 complete (scorer.py + llm.py v2.0 refactor, all 5 guard tests GREEN)
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 11
   completed_plans: 11
-  percent: 91
+  percent: 100
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-05-24)
 ## Current Position
 
 Phase: 7
-Plan: 07-05 complete; next 07-06
-Status: Executing — Phase 7
-Last activity: 2026-05-25 -- Plan 07-05 complete (scorer.py + llm.py v2.0 refactor, all 5 guard tests GREEN)
+Plan: 07-06 complete; Phase 7 COMPLETE
+Status: Executing — Phase 7 complete
+Last activity: 2026-05-25 -- Plan 07-06 complete (235 tests GREEN, puesto_match SC3 synonyms restored, scorer v2 tests, QA-07 end-to-end no-API-key)
 
 Progress bar: [##--------] 20% (1/5 phases)
 
@@ -91,7 +91,7 @@ Recent decisions affecting current work:
 - [v2.0 Phase 6 P05]: EXPOSE 8000 removed from Dockerfile — v2.0 uses Streamlit port 8501 via compose; removing EXPOSE is cleaner than leaving a misleading port declaration
 - [v2.0 Phase 7 P05]: score_job signature v2.0: (job, user_profile, cv_profile, embedder, *, client=None) — user_profile 2nd per CONTEXT.md spec
 - [v2.0 Phase 7 P05]: LLMEnrichment local to llm.py (not schemas.py) — it is an implementation detail of enrichment step
-- [v2.0 Phase 7 P05]: puesto_match corpus text = titulo only (not titulo+sinonimos) — BGE-M3 generalizes semantics; titulo-only enables clean FakeEmbedder key lookup in tests
+- [v2.0 Phase 7 P06]: puesto_match corpus text = titulo+sinonimos joined (SC3 spec) — CORRECTION from P05 which wrongly used titulo-only; tests now key on full corpus text via _corpus_text() helper
 
 ### Pending Todos
 
@@ -139,6 +139,6 @@ Items acknowledged and carried forward:
 ## Session Continuity
 
 Last session: 2026-05-25T07:41:39Z
-Stopped at: Completed 07-05-PLAN.md (scorer.py v2.0 + llm.py enrichment-only, guard tests GREEN).
+Stopped at: Completed 07-06-PLAN.md (235 tests GREEN, SC3 synonyms restored, scorer v2 tests, QA-07).
 Resume file: None
-Next: execute Phase 7 Plan 07-06 (update test_scorer.py to v2.0 signature)
+Next: Phase 8 — JSearch Client and Worker Pipeline

@@ -23,7 +23,7 @@ Detalle completo en `milestones/v1.0-ROADMAP.md`. 38 requisitos, 179 tests.
 ### v2.0 Standalone App (Streamlit + Scheduler)
 
 - [x] **Phase 6: Architecture Cleanup & Storage Foundation** - Remove FastAPI/n8n, fix secrets, add settings/WAL (completed 2026-05-24)
-- [ ] **Phase 7: Embeddings-First Scoring Refactor** - All numeric scores deterministic; OpenAI becomes optional enrichment
+- [x] **Phase 7: Embeddings-First Scoring Refactor** - All numeric scores deterministic; OpenAI becomes optional enrichment (completed 2026-05-25)
 - [ ] **Phase 8: JSearch Client & Worker Pipeline** - App-owned fetch + APScheduler worker + runs table
 - [ ] **Phase 9: Notifications & Digest** - Telegram/email digest after each worker run
 - [ ] **Phase 10: Streamlit UI** - Full interactive app: CV upload, search config, results, settings, scheduler status
@@ -78,7 +78,7 @@ Plans:
 - [x] 07-05-PLAN.md — Wave 2: Refactor scorer.py (numbers-first + embedder injection) + llm.py (enrichment-only)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 07-06-PLAN.md — Wave 3: Comprehensive tests (test_scorer, test_llm, test_seniority, test_deal_breaker, test_puesto_match)
+- [x] 07-06-PLAN.md — Wave 3: Comprehensive tests (test_scorer, test_llm, test_seniority, test_deal_breaker, test_puesto_match)
 
 ### Phase 8: JSearch Client & Worker Pipeline
 **Goal**: The app fetches job offers from JSearch under its own power and a background worker process runs the full pipeline on a schedule; the pipeline function is shared so a manual UI trigger and the scheduled worker produce identical results
@@ -128,7 +128,7 @@ Plans:
 | 4. API y Persistencia | v1.0 | 4/4 | Complete | 2026-05-23 |
 | 5. Observabilidad, Robustez y Docs n8n | v1.0 | 3/3 | Complete | 2026-05-23 |
 | 6. Architecture Cleanup & Storage Foundation | v2.0 | 5/5 | Complete    | 2026-05-24 |
-| 7. Embeddings-First Scoring Refactor | v2.0 | 5/6 | In Progress|  |
+| 7. Embeddings-First Scoring Refactor | v2.0 | 6/6 | Complete    | 2026-05-25 |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 0/? | Not started | - |
 | 9. Notifications & Digest | v2.0 | 0/? | Not started | - |
 | 10. Streamlit UI | v2.0 | 0/? | Not started | - |

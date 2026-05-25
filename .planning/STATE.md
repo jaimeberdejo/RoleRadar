@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Standalone App (Streamlit + Scheduler)
-status: executing
+status: ready_to_plan
 stopped_at: Completed 07-06-PLAN.md (235 tests GREEN, SC3 synonyms restored, scorer v2 tests, QA-07).
 last_updated: "2026-05-25T07:52:46.781Z"
 last_activity: 2026-05-25 -- Plan 07-05 complete (scorer.py + llm.py v2.0 refactor, all 5 guard tests GREEN)
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 11
   completed_plans: 11
-  percent: 100
+  percent: 60
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-05-24)
 
 ## Current Position
 
-Phase: 7
-Plan: 07-06 complete; Phase 7 COMPLETE
-Status: Executing — Phase 7 complete
-Last activity: 2026-05-25 -- Plan 07-06 complete (235 tests GREEN, puesto_match SC3 synonyms restored, scorer v2 tests, QA-07 end-to-end no-API-key)
+Phase: 8
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-05-25
 
 Progress bar: [##--------] 20% (1/5 phases)
 
@@ -36,7 +36,7 @@ Progress bar: [##--------] 20% (1/5 phases)
 
 **Velocity (v1.0 reference):**
 
-- Total plans completed: 24 (v1.0)
+- Total plans completed: 30 (v1.0)
 - Average duration: ~15-30 min/plan
 - Total execution time: ~5-7 hours
 

@@ -11,10 +11,15 @@ UI's Settings page (score weights + deal-breakers) on top of profile.yaml.
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
+
+from pydantic import ValidationError
 
 from app.config.loader import load_user_profile
 from app.models.schemas import PesosScoring, UserProfile
+
+logger = logging.getLogger(__name__)
 
 
 def build_effective_profile(
@@ -40,20 +45,37 @@ def build_effective_profile(
         UserProfile with pesos and deal_breakers from settings, identity from yaml.
 
     Raises:
-        ValueError: If PesosScoring sum-to-1.0 validator fires (bad weights in DB).
-                    Surfaces early at overlay construction time (T-10-02-02 mitig.).
         FileNotFoundError: If profile.yaml is missing.
+
+    Notes:
+        WR-04: if the persisted score_weight_* are malformed or do not sum to 1.0
+        (legacy/partial data, manual DB edit, weights from an older build), this
+        falls back to the profile.yaml pesos (known valid) with a logged warning
+        instead of raising. This keeps both the Run now and Re-score paths alive
+        rather than dying with an uncaught ValueError.
     """
     base = load_user_profile(path=profile_path)
 
     # --- Overlay pesos (score weights) ---
-    # PesosScoring validator raises ValueError if sum != 1.0 (D-08 / T-10-02-02).
-    new_pesos = PesosScoring(
-        puesto=float(settings.get("score_weight_puesto", "0.35")),
-        skills=float(settings.get("score_weight_skills", "0.30")),
-        ubicacion=float(settings.get("score_weight_ubicacion", "0.20")),
-        seniority=float(settings.get("score_weight_seniority", "0.15")),
-    )
+    # WR-04: PesosScoring's validator raises if the weights don't sum to 1.0, and
+    # float() raises if a value is malformed. Either way, fall back to base.pesos
+    # (the profile.yaml weights, already known valid) so a bad DB value can never
+    # crash the worker / Run now / Re-score paths.
+    try:
+        new_pesos = PesosScoring(
+            puesto=float(settings.get("score_weight_puesto", "0.35")),
+            skills=float(settings.get("score_weight_skills", "0.30")),
+            ubicacion=float(settings.get("score_weight_ubicacion", "0.20")),
+            seniority=float(settings.get("score_weight_seniority", "0.15")),
+        )
+    except (ValidationError, ValueError, TypeError) as exc:
+        logger.warning(
+            "build_effective_profile: persisted score_weight_* invalid (%s) — "
+            "falling back to profile.yaml pesos %s",
+            exc,
+            base.pesos,
+        )
+        new_pesos = base.pesos
 
     # --- Overlay deal_breakers (JSON list string from settings table) ---
     # T-10-02-01: bad JSON / wrong type → fall back to profile.yaml's deal_breakers.

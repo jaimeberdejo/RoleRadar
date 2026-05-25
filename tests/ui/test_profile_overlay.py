@@ -6,7 +6,7 @@ They define the exact contract build_effective_profile must satisfy:
 - Overlay settings-table deal_breakers onto profile.yaml UserProfile.
 - Identity fields (ranking_puestos, datos_personales) come from profile.yaml unchanged.
 - Falls back to yaml deal_breakers when "deal_breakers" key is absent from settings.
-- Raises ValueError when constructed PesosScoring weights don't sum to 1.0.
+- Falls back to yaml pesos when persisted weights are invalid/don't sum to 1.0 (WR-04).
 
 Import pattern: deferred inside each test via _import() so:
   - pytest --collect-only succeeds (no collection errors).
@@ -148,11 +148,12 @@ def test_overlay_empty_deal_breakers_setting_falls_back_to_yaml(tmp_path):
     )
 
 
-def test_overlay_invalid_weights_raise(tmp_path):
-    """Settings weights that don't sum to 1.0 must raise ValueError.
+def test_overlay_invalid_weights_fall_back_to_yaml_pesos(tmp_path):
+    """WR-04: weights that don't sum to 1.0 fall back to profile.yaml pesos.
 
-    PesosScoring sum-to-1.0 validator must fire when overlay builds PesosScoring.
-    Settings summing to 0.90 (0.30+0.30+0.20+0.10) must raise.
+    Previously the overlay raised ValueError (which killed the Run now and
+    Re-score paths with an uncaught crash). Now it logs a warning and uses the
+    known-valid profile.yaml pesos (0.35/0.30/0.20/0.15) instead of raising.
     """
     build_effective_profile = _import()
     profile_path = _write_minimal_profile(tmp_path)
@@ -160,7 +161,32 @@ def test_overlay_invalid_weights_raise(tmp_path):
         "score_weight_puesto": "0.30",
         "score_weight_skills": "0.30",
         "score_weight_ubicacion": "0.20",
-        "score_weight_seniority": "0.10",   # sum = 0.90
+        "score_weight_seniority": "0.10",   # sum = 0.90 → invalid
     }
-    with pytest.raises(ValueError):
-        build_effective_profile(bad_settings, profile_path=profile_path)
+    result = build_effective_profile(bad_settings, profile_path=profile_path)
+
+    # Must NOT raise — falls back to the profile.yaml pesos.
+    assert result.pesos.puesto == pytest.approx(0.35)
+    assert result.pesos.skills == pytest.approx(0.30)
+    assert result.pesos.ubicacion == pytest.approx(0.20)
+    assert result.pesos.seniority == pytest.approx(0.15)
+
+
+def test_overlay_malformed_weight_value_falls_back(tmp_path):
+    """WR-04: a non-numeric persisted weight value falls back to yaml pesos.
+
+    A truncated/garbage value (e.g. '') previously crashed float(); now it must
+    fall back to the profile.yaml pesos instead of raising.
+    """
+    build_effective_profile = _import()
+    profile_path = _write_minimal_profile(tmp_path)
+    bad_settings = {
+        "score_weight_puesto": "",          # malformed → float() would raise
+        "score_weight_skills": "0.30",
+        "score_weight_ubicacion": "0.20",
+        "score_weight_seniority": "0.15",
+    }
+    result = build_effective_profile(bad_settings, profile_path=profile_path)
+
+    assert result.pesos.puesto == pytest.approx(0.35)
+    assert result.pesos.seniority == pytest.approx(0.15)

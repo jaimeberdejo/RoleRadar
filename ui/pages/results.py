@@ -126,15 +126,23 @@ def _render() -> None:
             if st.button("Sí, re-puntuar", key="btn_rescore_confirm"):
                 from app.pipeline import rescore_stored  # noqa: PLC0415
 
-                with st.spinner("Re-puntuando…"):
-                    res = rescore_stored(
-                        storage=get_storage(),
-                        embedder=get_embedder(),
-                        profile_path=None,
-                    )
-                st.session_state["_rescore_confirm"] = False
-                st.success(f"Re-puntuadas {res.scored} ofertas.")
-                st.rerun()
+                # WR-04: surface any error (e.g. invalid persisted weights) via
+                # st.error instead of letting it propagate into the page-render
+                # gate and leave a dead "Re-puntuando…" spinner with no feedback.
+                try:
+                    with st.spinner("Re-puntuando…"):
+                        res = rescore_stored(
+                            storage=get_storage(),
+                            embedder=get_embedder(),
+                            profile_path=None,
+                        )
+                except Exception as exc:  # noqa: BLE001
+                    st.session_state["_rescore_confirm"] = False
+                    st.error(f"Re-score falló: {exc}")
+                else:
+                    st.session_state["_rescore_confirm"] = False
+                    st.success(f"Re-puntuadas {res.scored} ofertas.")
+                    st.rerun()
         with cancel_col:
             if st.button("Cancelar", key="btn_rescore_cancel"):
                 st.session_state["_rescore_confirm"] = False

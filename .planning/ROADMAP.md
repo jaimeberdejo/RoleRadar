@@ -25,7 +25,7 @@ Detalle completo en `milestones/v1.0-ROADMAP.md`. 38 requisitos, 179 tests.
 - [x] **Phase 6: Architecture Cleanup & Storage Foundation** - Remove FastAPI/n8n, fix secrets, add settings/WAL (completed 2026-05-24)
 - [x] **Phase 7: Embeddings-First Scoring Refactor** - All numeric scores deterministic; OpenAI becomes optional enrichment (completed 2026-05-25)
 - [x] **Phase 8: JSearch Client & Worker Pipeline** - App-owned fetch + APScheduler worker + runs table (completed 2026-05-25)
-- [ ] **Phase 9: Notifications & Digest** - Telegram/email digest after each worker run
+- [x] **Phase 9: Notifications & Digest** - Telegram/email digest after each worker run (completed 2026-05-25)
 - [ ] **Phase 10: Streamlit UI** - Full interactive app: CV upload, search config, results, settings, scheduler status
 
 ## Phase Details
@@ -125,7 +125,7 @@ Plans:
 - [x] 09-03-PLAN.md — Notifications package: digest.py, telegram.py, email_smtp.py, send_digest
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 09-05-PLAN.md — Wire send_digest into run_pipeline + record_run accounting + SC1-SC4 e2e tests
+- [x] 09-05-PLAN.md — Wire send_digest into run_pipeline + record_run accounting + SC1-SC4 e2e tests
 
 ### Phase 10: Streamlit UI
 **Goal**: Jaime can run the entire tool from a browser tab: upload his CV, configure search parameters and scoring weights, browse and filter all scored offers with full score breakdowns, trigger an immediate run, and inspect the scheduler status — with all settings persisted so the worker respects them
@@ -154,5 +154,5 @@ Plans:
 | 6. Architecture Cleanup & Storage Foundation | v2.0 | 5/5 | Complete    | 2026-05-24 |
 | 7. Embeddings-First Scoring Refactor | v2.0 | 6/6 | Complete    | 2026-05-25 |
 | 8. JSearch Client & Worker Pipeline | v2.0 | 4/4 | Complete   | 2026-05-25 |
-| 9. Notifications & Digest | v2.0 | 4/5 | In Progress|  |
+| 9. Notifications & Digest | v2.0 | 5/5 | Complete   | 2026-05-25 |
 | 10. Streamlit UI | v2.0 | 0/? | Not started | - |

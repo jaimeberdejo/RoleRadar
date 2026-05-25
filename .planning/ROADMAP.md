@@ -96,8 +96,8 @@ Plans:
 - [x] 08-01-PLAN.md — Wave 1: RED guard test scaffolding (tests/sources/, tests/test_pipeline.py, tests/storage/test_runs.py)
 
 **Wave 2** *(parallel — disjoint files)*
-- [ ] 08-02-PLAN.md — Wave 2a: JSearch HTTP client (app/sources/jsearch.py)
-- [ ] 08-03-PLAN.md — Wave 2b: Storage extensions (runs table, record_run, get_recent_runs, mark_seen)
+- [x] 08-02-PLAN.md — Wave 2a: JSearch HTTP client (app/sources/jsearch.py)
+- [x] 08-03-PLAN.md — Wave 2b: Storage extensions (runs table, record_run, get_recent_runs, mark_seen)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 08-04-PLAN.md — Wave 3: Shared pipeline (app/pipeline.py) + worker.py wiring
@@ -139,6 +139,6 @@ Plans:
 | 5. Observabilidad, Robustez y Docs n8n | v1.0 | 3/3 | Complete | 2026-05-23 |
 | 6. Architecture Cleanup & Storage Foundation | v2.0 | 5/5 | Complete    | 2026-05-24 |
 | 7. Embeddings-First Scoring Refactor | v2.0 | 6/6 | Complete    | 2026-05-25 |
-| 8. JSearch Client & Worker Pipeline | v2.0 | 1/4 | In Progress|  |
+| 8. JSearch Client & Worker Pipeline | v2.0 | 3/4 | In Progress|  |
 | 9. Notifications & Digest | v2.0 | 0/? | Not started | - |
 | 10. Streamlit UI | v2.0 | 0/? | Not started | - |

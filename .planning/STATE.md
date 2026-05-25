@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Standalone App (Streamlit + Scheduler)
 status: executing
-stopped_at: Completed 07-06-PLAN.md (235 tests GREEN, SC3 synonyms restored, scorer v2 tests, QA-07).
-last_updated: "2026-05-25T08:42:52.715Z"
-last_activity: 2026-05-25 -- Phase 8 planning complete
+stopped_at: Phase 8 COMPLETE — 259 tests GREEN, all review fixes merged (CR-01, CR-02, WR-01..WR-04).
+last_updated: "2026-05-25T09:00:00.000Z"
+last_activity: 2026-05-25 -- Phase 8 complete with review fixes
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 15
-  completed_plans: 15
-  percent: 100
+  total_plans: 19
+  completed_plans: 19
+  percent: 60
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-24)
 
 **Core value:** Puntuar y filtrar ofertas con honestidad contra el perfil REAL de Jaime (CV verdadero + ranking de puestos + preferencias); el ranking pesa graduado, los deal-breakers filtran en duro. En v2.0 el scoring es local-first (BGE-M3 + reglas), OpenAI es enriquecimiento opcional, y todo vive en una app Streamlit autónoma con worker APScheduler.
-**Current focus:** Phase 6 — Architecture Cleanup & Storage Foundation
+**Current focus:** Phase 9 — Notifications & Digest
 
 ## Current Position
 
-Phase: 8
+Phase: 9
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-25 -- Phase 8 planning complete
+Status: Ready to discuss/plan
+Last activity: 2026-05-25 -- Phase 8 complete (259 tests GREEN, review fixes merged)
 
-Progress bar: [##--------] 20% (1/5 phases)
+Progress bar: [######----] 60% (3/5 phases)
 
 ## Performance Metrics
 
@@ -141,4 +141,4 @@ Items acknowledged and carried forward:
 Last session: 2026-05-25T08:42:52.712Z
 Stopped at: Completed 07-06-PLAN.md (235 tests GREEN, SC3 synonyms restored, scorer v2 tests, QA-07).
 Resume file: None
-Next: Phase 8 — JSearch Client and Worker Pipeline
+Next: Phase 9 — Notifications & Digest

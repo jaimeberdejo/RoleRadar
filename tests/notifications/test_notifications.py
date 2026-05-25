@@ -533,3 +533,213 @@ def test_telegram_partial_chunk_failure_marks_only_delivered(tmp_path, monkeypat
         assert jid not in next_run_ids, (
             f"delivered job {jid} must NOT reappear in next qualifying query"
         )
+
+
+# ---------------------------------------------------------------------------
+# SC1: telegram message contains all required fields per offer (NOTIF-01)
+# ---------------------------------------------------------------------------
+
+def test_sc1_telegram_message_contains_required_fields(tmp_path, monkeypatch):
+    """SC1: telegram-only env + 1 qualifying job → Telegram message contains all required fields.
+
+    Verifies the exact payload sent to the Telegram Bot API includes:
+    job title, company, score_total, recommendation value, ≥1 reason_for, and the URL.
+    """
+    from app.notifications import send_digest  # noqa: PLC0415
+
+    db_path = str(tmp_path / "test.db")
+    storage = SQLiteStorage(db_path)
+    storage.init_db()
+    storage.set_setting("notification_channel", "telegram")
+
+    sjob = _make_scored_job(
+        "sc1-job-1",
+        recommendation=Recommendation.good_fit,
+        score_total=85,
+        reasons=["Excellent Python skills", "Remote OK"],
+    )
+    storage.upsert_scored_jobs([sjob])
+
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token-sc1")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "111222333")
+    monkeypatch.delenv("SMTP_HOST", raising=False)
+    monkeypatch.delenv("SMTP_USER", raising=False)
+    monkeypatch.delenv("SMTP_PASSWORD", raising=False)
+
+    with patch("app.notifications.telegram.httpx.Client") as MockClient:
+        instance = MockClient.return_value.__enter__.return_value
+        instance.post.return_value = _make_200_response()
+
+        result = send_digest(storage, storage.get_settings())
+
+    assert result.channel == "telegram", f"expected channel='telegram', got {result.channel!r}"
+    assert result.delivered == 1, f"expected delivered=1, got {result.delivered}"
+    assert instance.post.called, "httpx.Client.post must have been called"
+
+    # Capture the text payload sent in the POST request
+    call_args = instance.post.call_args
+    assert call_args is not None, "post must have been called with arguments"
+
+    # Extract the text from the JSON payload (may be keyword arg or positional)
+    post_kwargs = call_args.kwargs if hasattr(call_args, "kwargs") else call_args[1]
+    json_payload = post_kwargs.get("json", {})
+    sent_text = json_payload.get("text", "")
+
+    assert "AI Engineer" in sent_text, f"title must appear in Telegram message; got: {sent_text[:200]}"
+    assert "Corp" in sent_text, f"company must appear in Telegram message; got: {sent_text[:200]}"
+    assert "85" in sent_text, f"score_total must appear in Telegram message; got: {sent_text[:200]}"
+    assert "good_fit" in sent_text, f"recommendation must appear in Telegram message; got: {sent_text[:200]}"
+    assert "Excellent Python skills" in sent_text, (
+        f"at least one reason_for must appear in Telegram message; got: {sent_text[:200]}"
+    )
+    assert "https://example.com/apply/sc1-job-1" in sent_text, (
+        f"URL must appear in Telegram message; got: {sent_text[:200]}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# SC2a: smtp-only env delivers via email (NOTIF-02)
+# ---------------------------------------------------------------------------
+
+def test_sc2_email_path_when_only_smtp(tmp_path, monkeypatch):
+    """SC2: only SMTP env set + channel 'auto' → email delivered via smtplib."""
+    from app.notifications import send_digest  # noqa: PLC0415
+
+    storage = SQLiteStorage(str(tmp_path / "test.db"))
+    storage.init_db()
+    storage.set_setting("notification_channel", "auto")
+    storage.upsert_scored_jobs([_make_scored_job("sc2a-job-1")])
+
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("SMTP_USER", "user@example.com")
+    monkeypatch.setenv("SMTP_PASSWORD", "fake-password")
+
+    with patch("app.notifications.email_smtp.smtplib.SMTP") as MockSMTP:
+        mock_smtp = MockSMTP.return_value.__enter__.return_value
+        mock_smtp.send_message.return_value = None
+
+        result = send_digest(storage, storage.get_settings())
+
+    assert result.channel == "email", f"expected channel='email', got {result.channel!r}"
+    assert result.delivered == 1, f"expected delivered=1, got {result.delivered}"
+    assert mock_smtp.send_message.called, "smtp.send_message must have been called"
+
+
+# ---------------------------------------------------------------------------
+# SC2b: neither channel configured → silent no error, job stays unseen (NOTIF-02)
+# ---------------------------------------------------------------------------
+
+def test_sc2_neither_channel_silent_no_mark(tmp_path, monkeypatch):
+    """SC2: no telegram + no smtp env → send_digest is silent, no exception, job stays seen=0."""
+    from app.notifications import send_digest  # noqa: PLC0415
+
+    db_path = str(tmp_path / "test.db")
+    storage = SQLiteStorage(db_path)
+    storage.init_db()
+    storage.upsert_scored_jobs([_make_scored_job("sc2b-job-1")])
+
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+    monkeypatch.delenv("SMTP_HOST", raising=False)
+    monkeypatch.delenv("SMTP_USER", raising=False)
+    monkeypatch.delenv("SMTP_PASSWORD", raising=False)
+
+    # Must not raise
+    result = send_digest(storage, storage.get_settings())
+
+    assert result.channel is None, f"expected channel=None, got {result.channel!r}"
+    assert result.delivered == 0, f"expected delivered=0, got {result.delivered}"
+    assert len(result.errors) == 0, f"expected no errors, got {result.errors}"
+
+    # Job must remain seen=0 so it reappears next run
+    reappeared = storage.get_undelivered_qualifying(70, ["strong_fit", "good_fit"])
+    assert len(reappeared) == 1, "job must reappear in next qualifying query (still seen=0)"
+    assert reappeared[0].job.id == "sc2b-job-1"
+
+
+# ---------------------------------------------------------------------------
+# SC3: send failure leaves seen=0 → job reappears in next run (NOTIF-03 / D-10)
+# ---------------------------------------------------------------------------
+
+def test_sc3_failure_keeps_job_for_next_run(tmp_path, monkeypatch):
+    """SC3: telegram POST returns 400 → errors non-empty, delivered=0, job reappears.
+
+    Also verifies SC3 retryability: a second send_digest with 200 delivers the job.
+    """
+    from app.notifications import send_digest  # noqa: PLC0415
+
+    db_path = str(tmp_path / "test.db")
+    storage = SQLiteStorage(db_path)
+    storage.init_db()
+    storage.set_setting("notification_channel", "telegram")
+    storage.upsert_scored_jobs([_make_scored_job("sc3-job-1")])
+
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token-sc3")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "444555666")
+
+    # First send: POST returns 400 (delivery failure)
+    with patch("app.notifications.telegram.httpx.Client") as MockClient:
+        instance = MockClient.return_value.__enter__.return_value
+        instance.post.return_value = _make_error_response(400)
+
+        result = send_digest(storage, storage.get_settings())
+
+    assert len(result.errors) > 0, "errors must be non-empty on delivery failure"
+    assert result.delivered == 0, f"expected delivered=0, got {result.delivered}"
+
+    # Job must still be seen=0 → reappears in next qualifying query
+    reappeared = storage.get_undelivered_qualifying(70, ["strong_fit", "good_fit"])
+    assert len(reappeared) == 1, "failed job must reappear in next qualifying query (SC3)"
+    assert reappeared[0].job.id == "sc3-job-1"
+
+    # SC3 retryability: second send with 200 delivers the job
+    with patch("app.notifications.telegram.httpx.Client") as MockClient2:
+        instance2 = MockClient2.return_value.__enter__.return_value
+        instance2.post.return_value = _make_200_response()
+
+        result2 = send_digest(storage, storage.get_settings())
+
+    assert result2.delivered == 1, f"second send must deliver the job; got delivered={result2.delivered}"
+    reappeared_after = storage.get_undelivered_qualifying(70, ["strong_fit", "good_fit"])
+    assert len(reappeared_after) == 0, "job must be absent after successful retry"
+
+
+# ---------------------------------------------------------------------------
+# SC4: success marks seen=1 → absent from next digest even after simulated restart
+# ---------------------------------------------------------------------------
+
+def test_sc4_success_absent_after_restart(tmp_path, monkeypatch):
+    """SC4: delivery success → seen=1 → job absent from next digest even after worker restart.
+
+    Simulates a worker restart by creating a NEW SQLiteStorage instance on the same
+    db file and calling get_undelivered_qualifying on it.
+    """
+    from app.notifications import send_digest  # noqa: PLC0415
+
+    db_path = str(tmp_path / "test.db")
+    storage = SQLiteStorage(db_path)
+    storage.init_db()
+    storage.set_setting("notification_channel", "telegram")
+    storage.upsert_scored_jobs([_make_scored_job("sc4-job-1")])
+
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-token-sc4")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "777888999")
+
+    with patch("app.notifications.telegram.httpx.Client") as MockClient:
+        instance = MockClient.return_value.__enter__.return_value
+        instance.post.return_value = _make_200_response()
+
+        result = send_digest(storage, storage.get_settings())
+
+    assert result.delivered == 1, f"expected delivered=1, got {result.delivered}"
+
+    # Simulate worker restart: NEW storage instance on the same db file
+    storage2 = SQLiteStorage(db_path)
+    storage2.init_db()  # idempotent — does not reset data
+
+    next_run = storage2.get_undelivered_qualifying(70, ["strong_fit", "good_fit"])
+    assert next_run == [], (
+        "delivered job must be absent from next digest even after simulated restart (SC4)"
+    )

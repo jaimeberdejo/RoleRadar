@@ -213,7 +213,19 @@ def score_job(
     # PASO 3: Encaje skills vía embedder coseno
     # --------------------------------------------------------------------------
     cv_text = _build_cv_text(cv_profile)
-    encaje_skills = encaje_skills_por_coseno(cv_text, job.description or "", embedder)
+    if cv_text == "sin_skills":
+        # WR-01: "sin_skills" sentinel → the CV has no skills/techs/domains.
+        # Embedding it would yield a semantically unrelated vector (BGE-M3 has
+        # no concept of "empty CV"), producing a wrongly low score that penalises
+        # every job as if the candidate had no matching skills.  Return neutral 50
+        # consistent with the seniority.py None→50 pattern.
+        encaje_skills = 50
+        logger.warning(
+            "score_job: CVProfile sin skills/tecnologías/dominios → "
+            "encaje_skills=50 (neutral). Re-parsea el CV para obtener un score real."
+        )
+    else:
+        encaje_skills = encaje_skills_por_coseno(cv_text, job.description or "", embedder)
 
     # --------------------------------------------------------------------------
     # PASO 4: Seniority determinista

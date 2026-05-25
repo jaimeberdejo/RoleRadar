@@ -240,7 +240,25 @@ def run_pipeline(
     result.new_seen = len(scored_list)
 
     # ------------------------------------------------------------------
-    # 10. Record run metrics
+    # 10. Send digest notification (deferred import — keeps pipeline import-clean, D-12)
+    #     Failures here NEVER abort the run or crash the worker (D-13).
+    # ------------------------------------------------------------------
+    digest_channel: str | None = None
+    digest_notified = 0
+    try:
+        from app.notifications import send_digest  # noqa: PLC0415
+
+        digest_result = send_digest(storage, settings)
+        digest_channel = digest_result.channel
+        digest_notified = digest_result.delivered
+        if digest_result.errors:
+            result.errors.extend(digest_result.errors)
+    except Exception as exc:  # noqa: BLE001
+        logger.error("send_digest failed: %s", exc)
+        result.errors.append(f"notify: {exc}")
+
+    # ------------------------------------------------------------------
+    # 11. Record run metrics (AFTER digest so channel + notified land in one INSERT, D-14)
     # ------------------------------------------------------------------
     finished_at = _now_iso()
     storage.record_run(
@@ -251,10 +269,12 @@ def run_pipeline(
         scored=result.scored,
         new_seen=result.new_seen,
         errors=result.errors if result.errors else None,
+        channel=digest_channel,
+        notified=digest_notified,
     )
 
     # ------------------------------------------------------------------
-    # 11. Structured log summary
+    # 12. Structured log summary
     # ------------------------------------------------------------------
     logger.info(
         "Pipeline complete: fetched=%d deduped=%d scored=%d new=%d errors=%d",
